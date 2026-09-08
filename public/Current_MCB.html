@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MC Balans — Website Mock-up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F8F5EE;
+    --white:#FFFFFF;
+    --ink:#1C2B27;
+    --jade:#3A5A50;
+    --jade-dark:#26382F;
+    --jade-tint:#E9EEE7;
+    --amber:#B5793C;
+    --amber-tint:#F1E3CC;
+    --red:#A23B2C;
+    --mist:#E1E7E0;
+    --stone:#6B6A63;
+    --line: rgba(28,43,39,0.14);
+    --font-display:'Fraunces', serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+    --font-hand:'Caveat', cursive;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--font-body); font-size:16px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(28,43,39,0.025) 0px, rgba(28,43,39,0.025) 1px, transparent 1px, transparent 34px);
+  }
+  a{color:inherit; text-decoration:none;}
+  img{max-width:100%; display:block;}
+  button{font-family:inherit; cursor:pointer;}
+  .eyebrow{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--jade); display:flex; align-items:center; gap:8px;
+  }
+  .eyebrow::before{content:''; width:16px; height:1px; background:var(--jade);}
+  h1,h2,h3,h4{font-family:var(--font-display); font-weight:600; margin:0; color:var(--ink); letter-spacing:-0.01em;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 32px; position:relative;}
+  @media (max-width:720px){.wrap{padding:0 20px;}}
+  .hand{font-family:var(--font-hand); color:var(--red); font-size:20px; transform:rotate(-2deg); display:inline-block;}
+
+  /* ---------- HEADER ---------- */
+  header.site{
+    position:sticky; top:0; z-index:50; background:rgba(248,245,238,0.94);
+    backdrop-filter:blur(10px); border-bottom:1px solid var(--line);
+  }
+  .header-inner{display:flex; align-items:center; justify-content:space-between; gap:24px; padding:15px 32px;}
+  .logo{font-family:var(--font-display); font-weight:600; font-size:20px; letter-spacing:-0.01em; display:flex; align-items:baseline; gap:6px; cursor:pointer;}
+  .logo .dot{color:var(--red);}
+  nav.main-nav{display:flex; align-items:center; gap:2px;}
+  nav.main-nav a{
+    font-size:13.5px; font-weight:500; color:var(--ink); opacity:.7; position:relative; padding:8px 13px;
+    cursor:pointer; border-radius:2px;
+  }
+  nav.main-nav a:hover{opacity:1; background:var(--jade-tint);}
+  nav.main-nav a.active{opacity:1; background:var(--jade-tint); color:var(--jade-dark); font-weight:600;}
+  .header-right{display:flex; align-items:center; gap:12px;}
+  .ask-mini{
+    display:flex; align-items:center; gap:8px; background:var(--white); border:1px solid var(--line);
+    border-radius:2px; padding:9px 14px; min-width:200px; color:var(--stone); font-size:12.5px;
+    position:relative;
+  }
+  .ask-mini svg{width:13px; height:13px; flex-shrink:0; opacity:.6;}
+  .ask-mini-input{
+    border:none; outline:none; background:transparent; font-family:var(--font-body); font-size:12.5px;
+    color:var(--ink); width:100%;
+  }
+  .ask-mini-input::placeholder{color:var(--stone);}
+  .ask-mini-results{
+    position:absolute; top:calc(100% + 8px); left:0; right:0; background:var(--white); border:1px solid var(--line);
+    border-radius:2px; box-shadow:0 12px 28px rgba(28,43,39,.16); z-index:60; overflow:hidden; display:none;
+  }
+  .ask-mini-results.show{display:block;}
+  .ask-mini-result{
+    display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:11px 14px;
+    cursor:pointer; border-bottom:1px solid var(--line); font-size:13px; color:var(--ink);
+  }
+  .ask-mini-result:last-child{border-bottom:none;}
+  .ask-mini-result:hover{background:var(--jade-tint);}
+  .ask-mini-result .kind{
+    font-family:var(--font-mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--jade); white-space:nowrap;
+  }
+  .ask-mini-empty{padding:12px 14px; font-size:12.5px; color:var(--stone);}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; padding:10px 18px;
+    border-radius:2px; border:1px solid transparent; white-space:nowrap;
+  }
+  .btn-primary{background:var(--jade); color:var(--white);}
+  .btn-primary:hover{background:var(--jade-dark);}
+  .btn-outline{background:transparent; color:var(--ink); border-color:var(--line);}
+  .btn-outline:hover{border-color:var(--jade);}
+  .btn-phone{font-family:var(--font-mono); font-size:12.5px;}
+  .mobile-toggle{display:none; background:none; border:none; padding:4px;}
+  @media (max-width:1020px){
+    nav.main-nav{display:none;}
+    .ask-mini{display:none;}
+    .mobile-toggle{display:block;}
+  }
+
+  /* ---------- HERO / DOSSIER COVER ---------- */
+  .hero{padding:56px 0 0; position:relative; overflow:hidden;}
+  .hero-tag{
+    display:inline-flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:11px;
+    text-transform:uppercase; letter-spacing:.08em; border:1px solid var(--ink); padding:6px 12px;
+    color:var(--ink); margin-bottom:22px; transform:rotate(-1deg);
+  }
+  .hero-tag .dotred{width:6px; height:6px; border-radius:50%; background:var(--red);}
+  .hero-grid{display:grid; grid-template-columns:1.05fr .95fr; gap:56px; align-items:center; position:relative;}
+  @media (max-width:900px){.hero-grid{grid-template-columns:1fr; gap:36px;}}
+  .hero-ghost{
+    position:absolute; top:-64px; left:-18px; font-family:var(--font-display); font-weight:600; font-size:220px;
+    color:var(--ink); opacity:.045; line-height:1; pointer-events:none; user-select:none;
+  }
+  @media (max-width:900px){.hero-ghost{font-size:130px; top:-30px;}}
+  .hero-copy{position:relative;}
+  .hero-copy h1{font-size:45px; line-height:1.1; margin-bottom:20px;}
+  .hero-copy h1 em{font-style:italic; color:var(--jade); font-weight:500;}
+  @media (max-width:520px){.hero-copy h1{font-size:32px;}}
+  .hero-copy p.lede{font-size:16.5px; color:var(--stone); max-width:46ch; margin-bottom:26px;}
+  .hero-cta-row{display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin-bottom:10px;}
+  .hero-cta-row .callnote{font-size:12.5px; color:var(--stone);}
+  .hero-portrait{position:relative;}
+  .portrait-frame{
+    aspect-ratio:4/5; background:linear-gradient(155deg,#DCE3D9,#C7D2C1);
+    border-radius:2px; position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line);
+  }
+  .portrait-placeholder{color:var(--jade-dark); opacity:.45; font-family:var(--font-mono); font-size:12px; text-align:center; letter-spacing:.05em;}
+  .stamp{
+    position:absolute; width:118px; height:118px; border-radius:50%;
+    border:1.5px solid var(--ink); background:var(--paper);
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    transform:rotate(-9deg); box-shadow:0 6px 18px rgba(28,43,39,.18);
+  }
+  .stamp-inner{border:1px solid var(--ink); border-radius:50%; width:96px; height:96px; display:flex; align-items:center; justify-content:center; padding:8px;}
+  .stamp .stamp-text{font-family:var(--font-mono); font-size:9.5px; line-height:1.35; letter-spacing:.03em; text-transform:uppercase;}
+  .stamp.hero-stamp{bottom:-16px; right:-16px; border-color:var(--red); color:var(--red);}
+  .stamp.hero-stamp .stamp-inner{border-color:var(--red);}
+  .stamp.hero-stamp .stamp-text{color:var(--red);}
+
+  /* Stamp tooltip (credential explainer on hover) */
+  [data-tooltip]{position:relative; cursor:help;}
+  [data-tooltip]::after{
+    content:attr(data-tooltip);
+    position:absolute; bottom:calc(100% + 10px); left:50%; transform:translateX(-50%) rotate(6deg);
+    background:var(--ink); color:var(--paper); font-family:var(--font-body); text-transform:none;
+    font-size:12px; line-height:1.4; letter-spacing:normal; font-weight:400;
+    padding:8px 12px; border-radius:4px; width:180px; text-align:left;
+    opacity:0; visibility:hidden; transition:opacity .15s ease, visibility .15s ease;
+    pointer-events:none; z-index:20; box-shadow:0 8px 20px rgba(0,0,0,.22);
+  }
+  [data-tooltip]::before{
+    content:''; position:absolute; bottom:100%; left:50%; transform:translateX(-50%) rotate(6deg) translateY(4px);
+    border:6px solid transparent; border-top-color:var(--ink);
+    opacity:0; visibility:hidden; transition:opacity .15s ease, visibility .15s ease; z-index:20;
+  }
+  [data-tooltip]:hover::after, [data-tooltip]:hover::before{opacity:1; visibility:visible;}
+  .stamp.tiny[data-tooltip]::after, .stamp.small[data-tooltip]::after{bottom:calc(100% + 8px); width:160px; font-size:11.5px;}
+  .stamp.hero-stamp[data-tooltip]::after{bottom:auto; top:50%; left:auto; right:calc(100% + 14px); transform:translateY(-50%) rotate(9deg); width:170px;}
+  .stamp.hero-stamp[data-tooltip]::before{bottom:auto; top:50%; left:auto; right:100%; transform:translateY(-50%) rotate(9deg) translateX(-4px); border-top-color:transparent; border-left-color:var(--ink);}
+  .clip-label{
+    position:absolute; top:14px; left:14px; background:var(--ink); color:var(--paper); font-family:var(--font-mono);
+    font-size:10px; padding:5px 10px; letter-spacing:.05em; text-transform:uppercase;
+  }
+
+  /* Ask band */
+  .ask-band{background:var(--jade); margin-top:60px; position:relative;}
+  .ask-band::before{content:''; position:absolute; top:0; left:0; right:0; height:3px; background:repeating-linear-gradient(90deg, var(--amber) 0 14px, transparent 14px 24px);}
+  .ask-band-inner{padding:26px 32px; display:flex; align-items:center; gap:24px; flex-wrap:wrap;}
+  .ask-band .eyebrow{color:var(--amber-tint);}
+  .ask-band .eyebrow::before{background:var(--amber-tint);}
+  .ask-band h3{color:var(--white); font-size:19px; font-weight:500; margin:6px 0 0;}
+  .ask-form{flex:1; min-width:280px; display:flex; gap:10px;}
+  .ask-input{
+    flex:1; padding:14px 18px; border-radius:2px; border:1px solid rgba(255,255,255,.25);
+    background:rgba(255,255,255,.08); color:var(--white); font-size:14px; font-family:var(--font-body);
+  }
+  .ask-input::placeholder{color:rgba(255,255,255,.55);}
+  .ask-input:disabled, .ask-submit:disabled{opacity:.55; cursor:not-allowed;}
+  .ask-submit{background:var(--amber); color:var(--ink); border:none; padding:0 20px; border-radius:2px; font-weight:600; font-size:14px;}
+  .ask-note{font-size:11px; color:rgba(255,255,255,.5); margin-top:6px; width:100%; font-family:var(--font-mono);}
+
+  /* ---------- ASK RESULTS PANEL ---------- */
+  .ask-results-panel{width:100%; margin-top:22px; display:none;}
+  .ask-results-panel.show{display:block;}
+  .ask-results-head{
+    font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color:rgba(255,255,255,.65); margin-bottom:12px;
+  }
+  .ask-results-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px;}
+  .ask-result-card{
+    background:var(--paper); border-radius:2px; padding:18px 20px; cursor:pointer; text-align:left;
+    border:1px solid transparent; transition:transform .15s, border-color .15s;
+  }
+  .ask-result-card:hover{transform:translateY(-2px); border-color:var(--amber);}
+  .ask-result-card .tag{font-family:var(--font-mono); font-size:10px; color:var(--amber); text-transform:uppercase; letter-spacing:.07em; margin-bottom:8px;}
+  .ask-result-card h4{font-size:16px; margin-bottom:6px; color:var(--ink);}
+  .ask-result-card p{font-size:12.8px; color:var(--stone); margin:0 0 10px;}
+  .ask-result-card .arrow{font-size:12.5px; color:var(--jade); font-weight:600;}
+  .ask-no-results{
+    background:rgba(255,255,255,.08); border:1px dashed rgba(255,255,255,.35); border-radius:2px;
+    padding:16px 18px; font-size:13.5px; color:rgba(255,255,255,.85);
+  }
+  .ask-no-results a{color:var(--amber-tint); text-decoration:underline; cursor:pointer;}
+
+  /* ---------- CASE BOARD (credibility) ---------- */
+  .section{padding:84px 0;}
+  .section.tight{padding:60px 0;}
+  .section-head{max-width:640px; margin-bottom:44px;}
+  .section-head h2{font-size:31px; margin-top:10px;}
+  .section-head p{color:var(--stone); font-size:15px; margin-top:12px;}
+  .caseboard{position:relative; padding-top:22px;}
+  .caseboard-thread{position:absolute; top:56px; left:26px; right:26px; height:1px; background:repeating-linear-gradient(90deg, var(--red) 0 8px, transparent 8px 14px); z-index:0;}
+  .cred-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:24px; position:relative; z-index:1;}
+  @media (max-width:900px){.cred-grid{grid-template-columns:1fr 1fr;} .caseboard-thread{display:none;}}
+  @media (max-width:560px){.cred-grid{grid-template-columns:1fr;}}
+  .cred-card{background:var(--white); border:1px solid var(--line); padding:26px 22px 22px; border-radius:2px; position:relative;}
+  .cred-card:nth-child(2){margin-top:26px;}
+  .cred-card:nth-child(4){margin-top:26px;}
+  @media (max-width:900px){.cred-card:nth-child(2), .cred-card:nth-child(4){margin-top:0;}}
+  .cred-pin{position:absolute; top:-6px; left:50%; transform:translateX(-50%); width:11px; height:11px; border-radius:50%; background:var(--red); box-shadow:0 2px 4px rgba(0,0,0,.25);}
+  .cred-num{
+    width:48px; height:48px; border-radius:50%; border:1.5px solid var(--ink); display:flex; align-items:center;
+    justify-content:center; font-family:var(--font-mono); font-size:10.5px; margin-bottom:16px; color:var(--ink);
+  }
+  .cred-card h4{font-size:16px; margin-bottom:9px;}
+  .cred-card p{font-size:13.5px; color:var(--stone); margin:0;}
+  .stat-strip{display:flex; gap:36px; flex-wrap:wrap; margin-top:44px; padding-top:28px; border-top:1px dashed var(--line);}
+  .stat{display:flex; flex-direction:column;}
+  .stat .n{font-family:var(--font-mono); font-size:26px; color:var(--jade);}
+  .stat .l{font-size:12.5px; color:var(--stone); max-width:16ch; margin-top:2px;}
+
+  /* ---------- CONDITIONS GRID ---------- */
+  .cond-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+  @media (max-width:900px){.cond-grid{grid-template-columns:1fr 1fr;}}
+  @media (max-width:600px){.cond-grid{grid-template-columns:1fr;}}
+  .cond-card{
+    background:var(--white); border:1px solid var(--line); padding:26px; border-radius:2px; cursor:pointer;
+    transition:border-color .15s, transform .15s;
+    display:flex; flex-direction:column; justify-content:space-between; min-height:172px;
+    position:relative;
+  }
+  .cond-card::before{content:''; position:absolute; top:0; left:22px; width:34px; height:8px; background:var(--amber-tint); border-radius:0 0 3px 3px;}
+  .cond-card:hover{border-color:var(--jade); transform:translateY(-2px);}
+  .cond-card .tag{font-family:var(--font-mono); font-size:10.5px; color:var(--amber); text-transform:uppercase; letter-spacing:.08em; margin-bottom:14px;}
+  .cond-card h4{font-size:19px; margin-bottom:8px;}
+  .cond-card p{font-size:13.3px; color:var(--stone); margin:0;}
+  .cond-card .arrow{margin-top:16px; font-size:13px; color:var(--jade); font-weight:600;}
+
+  /* ---------- DR LIN SECTION ---------- */
+  .lin-section{background:var(--ink); color:var(--paper); padding:92px 0; position:relative; overflow:hidden;}
+  .lin-watermark{
+    position:absolute; right:-80px; top:50%; transform:translateY(-50%) rotate(-8deg); width:420px; height:420px;
+    border-radius:50%; border:2px solid rgba(250,248,243,.06); display:flex; align-items:center; justify-content:center;
+    pointer-events:none;
+  }
+  .lin-watermark::before{content:''; position:absolute; inset:22px; border-radius:50%; border:1px solid rgba(250,248,243,.06);}
+  .lin-watermark span{font-family:var(--font-mono); font-size:13px; color:rgba(250,248,243,.06); letter-spacing:.15em; text-transform:uppercase; text-align:center;}
+  .lin-grid{display:grid; grid-template-columns:.85fr 1.15fr; gap:56px; align-items:center; position:relative;}
+  @media (max-width:900px){.lin-grid{grid-template-columns:1fr;}}
+  .lin-photo{aspect-ratio:1; background:linear-gradient(155deg,#33473F,#1C2B27); border-radius:2px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(250,248,243,.12);}
+  .lin-photo span{font-family:var(--font-mono); font-size:11px; color:rgba(250,248,243,.35); text-align:center; letter-spacing:.05em;}
+  .lin-section .eyebrow{color:var(--amber);}
+  .lin-section .eyebrow::before{background:var(--amber);}
+  .lin-section h2{color:var(--white); font-size:29px; margin:14px 0 18px;}
+  .lin-section p.body{color:rgba(250,248,243,.72); font-size:15px; max-width:56ch; margin-bottom:14px;}
+  .lin-facts{display:flex; gap:28px; margin-top:26px; flex-wrap:wrap;}
+  .lin-fact{border-left:1.5px solid var(--amber); padding-left:14px;}
+  .lin-fact .n{font-family:var(--font-mono); font-size:21px; color:var(--white);}
+  .lin-fact .l{font-size:12px; color:rgba(250,248,243,.55); margin-top:2px; max-width:16ch;}
+
+  /* ---------- INSURANCE BAND ---------- */
+  .insurance-band{background:var(--amber-tint); padding:34px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .insurance-inner{display:flex; gap:20px; align-items:flex-start;}
+  .insurance-inner svg{flex-shrink:0; margin-top:2px;}
+  .insurance-inner p{font-size:14.3px; margin:0; color:var(--ink);}
+  .insurance-inner strong{font-weight:600;}
+
+  /* ---------- RESOURCES ---------- */
+  .resource-card{
+    background:var(--white); border:1px solid var(--line); border-radius:2px; padding:28px; display:flex;
+    gap:26px; align-items:center; flex-wrap:wrap;
+  }
+  .resource-badge{
+    font-family:var(--font-mono); font-size:10.5px; background:var(--jade-tint); color:var(--jade); padding:6px 12px;
+    letter-spacing:.05em; text-transform:uppercase; border-radius:100px;
+  }
+  .resource-card h4{font-size:19px; margin:12px 0 8px;}
+  .resource-card p{color:var(--stone); font-size:13.5px; margin:0;}
+  .resource-card .rc-text{flex:1; min-width:240px;}
+  .resource-card .rc-meta{font-family:var(--font-mono); font-size:12px; color:var(--stone);}
+
+  /* ---------- FOOTER ---------- */
+  footer.site{background:var(--jade-dark); color:rgba(250,248,243,.8); padding:60px 0 26px;}
+  .footer-grid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:36px; margin-bottom:44px;}
+  @media (max-width:800px){.footer-grid{grid-template-columns:1fr 1fr; row-gap:32px;}}
+  .footer-grid h5{color:var(--white); font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em; margin-bottom:16px; font-weight:500;}
+  .footer-grid a, .footer-grid p{display:block; font-size:13.5px; color:rgba(250,248,243,.72); margin-bottom:10px; cursor:pointer;}
+  .footer-logo{font-family:var(--font-display); color:var(--white); font-size:19px; margin-bottom:14px;}
+  .footer-bottom{border-top:1px solid rgba(250,248,243,.15); padding-top:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; font-size:12px; color:rgba(250,248,243,.5);}
+  .lang-switch{display:flex; gap:8px;}
+  .lang-switch span{border:1px solid rgba(250,248,243,.25); padding:3px 9px; font-family:var(--font-mono); font-size:10.5px;}
+
+  /* ---------- SUBPAGE / DOSSIER HEADER ---------- */
+  .subhero{padding:44px 0 38px; border-bottom:1px solid var(--line); position:relative;}
+  .folio{
+    position:absolute; top:44px; right:32px; text-align:right; font-family:var(--font-mono); font-size:10.5px;
+    color:var(--stone); line-height:1.6;
+  }
+  @media (max-width:720px){.folio{position:static; margin-bottom:14px; text-align:left;}}
+  .breadcrumb{font-family:var(--font-mono); font-size:12px; color:var(--stone); margin-bottom:16px;}
+  .breadcrumb a{color:var(--jade); cursor:pointer;}
+  .subhero h1{font-size:34px; margin-bottom:14px; max-width:80%;}
+  @media (max-width:720px){.subhero h1{max-width:100%;}}
+  .subhero p.lede{color:var(--stone); font-size:15px; max-width:70ch;}
+  .chip-row{display:flex; gap:9px; flex-wrap:wrap; margin-top:22px;}
+  .chip{
+    font-family:var(--font-mono); font-size:11.5px; background:var(--jade-tint); color:var(--jade-dark);
+    padding:7px 15px; cursor:pointer; border:1px solid transparent; border-radius:100px; line-height:1.4;
+  }
+  .chip:hover{border-color:var(--jade);}
+  .chip-groups{display:flex; flex-direction:column; gap:20px; margin-top:20px;}
+  .chip-group{display:flex; flex-direction:column;}
+  .chip-group-label{
+    font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+    color:var(--stone); margin-bottom:9px;
+  }
+  .chip-group .chip-row{margin-top:0;}
+  .chip-group-viewall{
+    display:inline-block; font-family:var(--font-mono); font-size:11px; color:var(--amber);
+    text-transform:uppercase; letter-spacing:.05em; margin-top:10px; cursor:pointer; align-self:flex-start;
+  }
+  .chip-group-viewall:hover{text-decoration:underline;}
+
+  /* Accordion (conditions) */
+  .accordion{border-top:1px solid var(--line);}
+  .acc-item{border-bottom:1px solid var(--line);}
+  .acc-head{
+    display:flex; justify-content:space-between; align-items:center; padding:21px 0; cursor:pointer;
+  }
+  .acc-head h4{font-size:17px; font-weight:500;}
+  .acc-head .plus{font-family:var(--font-mono); font-size:18px; color:var(--jade); transition:transform .2s;}
+  .acc-item.open .acc-head .plus{transform:rotate(45deg);}
+  .acc-body{max-height:0; overflow:hidden; transition:max-height .25s ease;}
+  .acc-item.open .acc-body{max-height:600px;}
+  .acc-body-inner{padding:0 0 24px; display:flex; gap:44px; flex-wrap:wrap;}
+  .acc-body-inner p{color:var(--stone); font-size:14px; max-width:52ch; margin:0 0 14px;}
+  .acc-treatments{font-size:12px;}
+  .acc-treatments .lbl{font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.06em; color:var(--stone); margin-bottom:8px; display:block;}
+
+  /* Treatment detail page */
+  .treat-layout{display:grid; grid-template-columns:1.5fr .9fr; gap:56px; padding-top:48px;}
+  @media (max-width:900px){.treat-layout{grid-template-columns:1fr;}}
+  .treat-body h3{font-size:19px; margin:34px 0 12px;}
+  .treat-body h3:first-child{margin-top:0;}
+  .treat-body p{color:var(--stone); font-size:14.7px; margin:0;}
+  .treat-side{position:sticky; top:88px; align-self:start;}
+  .info-card{background:var(--white); border:1px solid var(--line); padding:24px; border-radius:2px; margin-bottom:18px;}
+  .info-card .row{display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line); font-size:13.5px; gap:12px;}
+  .info-card .row:last-child{border-bottom:none;}
+  .info-card .row .k{color:var(--stone); flex-shrink:0;}
+  .info-card .row .v{font-family:var(--font-mono); text-align:right;}
+  .practitioner-row{display:flex; gap:9px; margin-top:6px; flex-wrap:wrap;}
+  .prac-chip{font-family:var(--font-mono); font-size:11.5px; background:var(--jade-tint); color:var(--jade); padding:6px 14px; border-radius:100px; line-height:1.4;}
+  .faq-item{border-top:1px solid var(--line); padding:15px 0;}
+  .faq-item .q{font-weight:600; font-size:14.3px; margin-bottom:5px;}
+  .faq-item .a{color:var(--stone); font-size:13.3px;}
+  .faq-tbd{font-family:var(--font-mono); font-size:11px; color:var(--amber); text-transform:uppercase;}
+
+  /* Team / About page */
+  .about-tabs{display:flex; gap:6px; flex-wrap:wrap; margin-top:24px;}
+  .about-tab{
+    font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:.05em;
+    padding:11px 18px 9px; background:var(--mist); color:var(--stone); cursor:pointer; border-radius:4px 4px 0 0;
+    border:1px solid var(--line); border-bottom:none; position:relative; top:1px;
+  }
+  .about-tab.active{background:var(--white); color:var(--ink); font-weight:600;}
+  .about-panel{display:none; border-top:1px solid var(--line); padding-top:44px;}
+  .about-panel.active{display:block;}
+  .team-lead{display:grid; grid-template-columns:.8fr 1.2fr; gap:48px; align-items:center; padding-bottom:56px;}
+  @media (max-width:900px){.team-lead{grid-template-columns:1fr;}}
+  .team-lead p.body{color:var(--stone); font-size:15px; margin:16px 0 20px; max-width:58ch;}
+  .stamp-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:22px;}
+  .stamp.small{width:78px; height:78px; position:static; transform:rotate(-6deg); flex-shrink:0;}
+  .stamp.small .stamp-inner{width:62px; height:62px;}
+  .stamp.small .stamp-text{font-size:7px;}
+  .stamp.tiny{width:56px; height:56px; position:static; transform:rotate(-6deg); flex-shrink:0;}
+  .stamp.tiny .stamp-inner{width:44px; height:44px;}
+  .stamp.tiny .stamp-text{font-size:5.6px;}
+  .stamp-strip{display:flex; gap:12px; margin-top:24px; align-items:center;}
+  .stamp-strip .label{font-family:var(--font-mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--stone); margin-right:4px;}
+  .team-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:22px; padding-bottom:20px;}
+  @media (max-width:900px){.team-grid{grid-template-columns:1fr 1fr;}}
+  .team-card{background:var(--white); border:1px solid var(--line); border-radius:2px; overflow:hidden;}
+  .team-photo{aspect-ratio:3/4; background:linear-gradient(155deg,#DCE3D9,#C7D2C1); display:flex; align-items:center; justify-content:center;}
+  .team-photo span{font-family:var(--font-mono); font-size:10px; color:var(--jade-dark); opacity:.4;}
+  .team-info{padding:18px;}
+  .team-info h4{font-size:16px; margin-bottom:4px;}
+  .team-info .role{font-size:12px; color:var(--amber); font-family:var(--font-mono); margin-bottom:8px;}
+  .team-info p{font-size:12.5px; color:var(--stone); margin:0;}
+  .placeholder-box{
+    background:var(--mist); border:1px dashed var(--line); border-radius:2px; padding:40px; text-align:center;
+    font-family:var(--font-mono); font-size:12px; color:var(--stone);
+  }
+  .pricing-table{width:100%; border-collapse:collapse; margin-top:8px;}
+  .pricing-table th{text-align:left; font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--stone); padding:10px 14px; border-bottom:1px solid var(--ink);}
+  .pricing-table th.price{text-align:right;}
+  .pricing-table td{padding:14px; border-bottom:1px solid var(--line); font-size:14px;}
+  .pricing-table td.price{font-family:var(--font-mono); text-align:right; white-space:nowrap;}
+  .pricing-table tr:hover td{background:var(--jade-tint); cursor:pointer;}
+
+  /* Contact page */
+  .contact-grid{display:grid; grid-template-columns:1fr 1fr; gap:56px; padding:52px 0 88px;}
+  @media (max-width:800px){.contact-grid{grid-template-columns:1fr;}}
+  .contact-block{margin-bottom:26px;}
+  .contact-block h4{font-size:12.5px; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.06em; color:var(--stone); margin-bottom:10px;}
+  .contact-block .big{font-family:var(--font-mono); font-size:23px; color:var(--jade);}
+  .map-placeholder{
+    aspect-ratio:4/3; background:var(--mist); border-radius:2px; display:flex; align-items:center; justify-content:center; border:1px dashed var(--line);
+  }
+  .map-placeholder span{font-family:var(--font-mono); font-size:11px; color:var(--stone);}
+  .form-field{margin-bottom:16px;}
+  .form-field label{display:block; font-size:12.5px; color:var(--stone); margin-bottom:6px;}
+  .form-field input, .form-field textarea{
+    width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:2px; font-family:var(--font-body);
+    font-size:14px; background:var(--white);
+  }
+
+  /* Page visibility */
+  .page{display:none;}
+  .page.active{display:block;}
+  .badge-empty{
+    display:inline-flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:10.5px;
+    color:var(--stone); border:1px dashed var(--line); padding:4px 10px; margin-top:10px;
+  }
+
+  ::selection{background:var(--amber-tint);}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="header-inner">
+    <div class="logo" onclick="go('home')">MC Balans<span class="dot">.</span></div>
+    <nav class="main-nav" id="mainNav">
+      <a data-page="conditions" onclick="go('conditions')">What We Treat</a>
+      <a data-page="treatments" onclick="go('treatments')">Treatments</a>
+      <a data-page="resources" onclick="go('resources')">Resources</a>
+      <a data-page="team" onclick="go('team')">About</a>
+      <a data-page="contact" onclick="go('contact')">Contact</a>
+    </nav>
+    <div class="header-right">
+      <div class="ask-mini" id="miniSearchWrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input class="ask-mini-input" id="miniSearchInput" type="text" placeholder="Ask MC Balans…" autocomplete="off">
+        <div class="ask-mini-results" id="miniSearchResults"></div>
+      </div>
+      <a class="btn btn-primary" onclick="go('contact')">Book Now</a>
+      <button class="mobile-toggle" aria-label="menu">☰</button>
+    </div>
+  </div>
+</header>
+
+<!-- ================= HOME ================= -->
+<div class="page active" id="page-home">
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <h1>A <em>balanced</em> approach to the health of mind and body.</h1>
+        <p class="lede">Dr. Wenzhi Lin brings over 40 years of dual experience between China and the Netherlands. Her comprehensive approach combines Western and Chinese medicine to give patients a more complete view of what's going on.</p>
+        <div class="hero-cta-row">
+          <a class="btn btn-primary" onclick="go('contact')">Book an appointment</a>
+          <a class="btn btn-outline btn-phone">070 388 8111</a>
+        </div>
+      </div>
+      <div class="hero-portrait">
+        <div class="portrait-frame">
+          <div class="clip-label">Exhibit A — Dr. Lin</div>
+          <div class="portrait-placeholder">PHOTOGRAPHY<br>commissioned separately<br>(placeholder)</div>
+        </div>
+        <div class="stamp hero-stamp" data-tooltip="Registered as a doctor with the Dutch BIG register — the official record of licensed healthcare professionals.">
+          <div class="stamp-inner">
+            <div class="stamp-text">BIG Registered<br>Licensed&nbsp;MD<br>NL</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="ask-band">
+    <div class="wrap ask-band-inner">
+      <div style="flex-basis:100%; max-width:340px;">
+        <div class="eyebrow">Don't know where to start?</div>
+        <h3>Tell me what's bothering you, and I'll point you in the right direction.</h3>
+      </div>
+      <form class="ask-form" id="heroAskForm">
+        <input class="ask-input" id="heroAskInput" type="text" placeholder="e.g. I've had trouble sleeping for weeks…" autocomplete="off">
+        <button class="ask-submit" type="submit">Ask →</button>
+      </form>
+      <div class="ask-note">KEYWORD-MATCHED SUGGESTIONS · DEMO LOGIC FOR THIS MOCK-UP — FULL AI-GUIDED SEARCH (RAG) IS PHASE 2</div>
+      <div class="ask-results-panel" id="heroAskResults">
+        <div class="ask-results-head">Based on that, this may be relevant:</div>
+        <div class="ask-results-grid" id="heroAskResultsGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="wrap caseboard">
+      <div class="section-head">
+        <h2>Why do patients trust Dr. Lin?</h2>
+      </div>
+      <div class="caseboard-thread"></div>
+      <div class="cred-grid">
+        <div class="cred-card"><div class="cred-pin"></div>
+          <div class="cred-num">01</div>
+          <h4>Credible</h4>
+          <p>A practising, licensed medical doctor in the Netherlands. Consultations are covered under standard Dutch health insurance — a formal credential, not a marketing claim.</p>
+        </div>
+        <div class="cred-card"><div class="cred-pin"></div>
+          <div class="cred-num">02</div>
+          <h4>Experienced</h4>
+          <p>40+ years of sustained practice across Chinese and Western medicine — proof this dual approach has worked, repeatedly, not just in theory.</p>
+        </div>
+        <div class="cred-card"><div class="cred-pin"></div>
+          <div class="cred-num">03</div>
+          <h4>Respected</h4>
+          <p>A monthly <em>Medisch Dossier</em> column, a feature in an NPO documentary, and Knighthood in the Order of Orange-Nassau (2012) for her contribution to Dutch healthcare.</p>
+        </div>
+        <div class="cred-card"><div class="cred-pin"></div>
+          <div class="cred-num">04</div>
+          <h4>Successful</h4>
+          <p>Reviews that support claims about treatment effectiveness — added as the practice collects them.</p>
+        </div>
+      </div>
+      <div class="stat-strip">
+        <div class="stat"><div class="n">9/10</div><div class="l">first visits that book a follow-up</div></div>
+        <div class="stat"><div class="n">10+</div><div class="l">visits, a typical course of treatment</div></div>
+        <div class="stat"><div class="n">4</div><div class="l">languages spoken across the team</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section tight" style="background:var(--jade-tint);">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">What brings patients in?</div>
+        <h2>See what we treat.</h2>
+      </div>
+      <div class="cond-grid" id="homeCondGrid"></div>
+    </div>
+  </section>
+
+  <section class="lin-section">
+    <div class="lin-watermark"><span>Order of<br>Orange-Nassau<br>2012</span></div>
+    <div class="wrap lin-grid">
+      <div class="lin-photo"><span>PHOTOGRAPHY<br>placeholder</span></div>
+      <div>
+        <div class="eyebrow">Before the first visit</div>
+        <h2>Insurance Coverage</h2>
+        <div style="margin-top:24px; display:flex; flex-direction:column; gap:20px;">
+          <div style="border-left:1.5px solid var(--amber); padding-left:16px;">
+            <div style="font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--amber); margin-bottom:6px;">Medical consultations</div>
+            <p class="body" style="margin:0;">Covered under standard health insurance (basisverzekering) — the same as a visit to a GP.</p>
+          </div>
+          <div style="border-left:1.5px solid var(--amber); padding-left:16px;">
+            <div style="font-family:var(--font-mono); font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--amber); margin-bottom:6px;">TCM treatments</div>
+            <p class="body" style="margin:0;">Acupuncture, cupping, herbal medicine and the rest may be covered under a supplementary policy (aanvullende verzekering), depending on the patient's insurer.</p>
+          </div>
+        </div>
+        <div style="margin-top:28px;"><a class="btn btn-outline" style="border-color:rgba(250,248,243,.3); color:var(--white);" onclick="go('contact')">Check insurance coverage →</a></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">From the Medisch Dossier column</div>
+        <h2>Resources</h2>
+      </div>
+      <div class="resource-card">
+        <div class="rc-text">
+          <span class="resource-badge">Journal</span>
+          <h4>Acupuncture for knee injury</h4>
+          <p>Written by Dr. Lin · cross-linked to Pain → Joints Pain and to Acupuncture as a treatment.</p>
+        </div>
+        <div class="rc-meta">21.07.2026 · Dr. Lin</div>
+        <a class="btn btn-outline" onclick="go('resources')">Read →</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= RESOURCES ================= -->
+<div class="page" id="page-resources">
+  <div class="subhero wrap">
+    <div class="folio">DOSSIER — RESOURCES<br>MEDISCH DOSSIER COLUMN</div>
+    <div class="breadcrumb"><a onclick="go('home')">Home</a> / Resources</div>
+    <h1>Resources</h1>
+    <p class="lede">Dr. Lin's monthly Medisch Dossier column, published natively and cross-linked to the conditions and treatments it covers.</p>
+  </div>
+  <section class="section">
+    <div class="wrap">
+      <div class="resource-card" style="margin-bottom:16px; cursor:pointer;" onclick="openCondition('Pain')">
+        <div class="rc-text">
+          <span class="resource-badge">Journal</span>
+          <h4>Acupuncture for knee injury</h4>
+          <p>Written by Dr. Lin · cross-linked to Pain → Joints Pain and to Acupuncture as a treatment.</p>
+        </div>
+        <div class="rc-meta">21.07.2026 · Dr. Lin</div>
+        <a class="btn btn-outline">Read →</a>
+      </div>
+      <div class="placeholder-box">Further Medisch Dossier articles — content pending from MC Balans. Each entry publishes here, cross-linked to its related category, condition and treatment.</div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= CONDITIONS OVERVIEW ================= -->
+<div class="page" id="page-conditions">
+  <div class="subhero wrap">
+    <div class="folio">DOSSIER — CONDITIONS<br>7 CATEGORIES ON FILE</div>
+    <div class="breadcrumb"><a onclick="go('home')">Home</a> / Conditions</div>
+    <h1>What we treat</h1>
+    <p class="lede">Organised by the complaint, not the treatment — find where it hurts, or what's been going on, to see how we approach it.</p>
+  </div>
+  <section class="section">
+    <div class="wrap">
+      <div class="cond-grid" id="allCondGrid"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= CONDITION DETAIL (dynamic) ================= -->
+<div class="page" id="page-condition">
+  <div class="subhero wrap">
+    <div class="folio" id="condFolio"></div>
+    <div class="breadcrumb"><a onclick="go('home')">Home</a> / <a onclick="go('conditions')">Conditions</a> / <span id="condName"></span></div>
+    <h1 id="condTitle"></h1>
+    <p class="lede" id="condHero"></p>
+    <div class="chip-row" id="condTreatChips"></div>
+    <div class="stamp-strip">
+      <span class="label">Treated by</span>
+      <div class="stamp tiny" data-tooltip="Registered as a doctor with the Dutch BIG register — the official record of licensed healthcare professionals."><div class="stamp-inner"><div class="stamp-text">Licensed MD</div></div></div>
+      <div class="stamp tiny" data-tooltip="Over 40 years of combined experience in Western and Chinese medicine."><div class="stamp-inner"><div class="stamp-text">40+ Years</div></div></div>
+      <div class="stamp tiny" data-tooltip="Knighted in the Order of Orange-Nassau (2012) for her contribution to Dutch healthcare."><div class="stamp-inner"><div class="stamp-text">Order of<br>Orange-<br>Nassau</div></div></div>
+      <div class="stamp tiny" data-tooltip="Writes a monthly column for Medisch Dossier, an independent medical knowledge platform."><div class="stamp-inner"><div class="stamp-text">Medisch<br>Dossier</div></div></div>
+    </div>
+  </div>
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head" style="margin-bottom:18px;">
+        <div class="eyebrow">Sub-conditions</div>
+        <h2 style="font-size:23px;">Tap to expand</h2>
+        <p style="font-size:12.5px; color:var(--stone);">Every condition below can expand for more detail, without leaving this page.</p>
+      </div>
+      <div class="accordion" id="condAccordion"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= TREATMENTS OVERVIEW ================= -->
+<div class="page" id="page-treatments">
+  <div class="subhero wrap">
+    <div class="folio">DOSSIER — TREATMENTS<br>11 ON FILE</div>
+    <div class="breadcrumb"><a onclick="go('home')">Home</a> / Treatments</div>
+    <h1>Treatments</h1>
+    <p class="lede">See how each treatment works, and what to expect.</p>
+  </div>
+  <section class="section">
+    <div class="wrap">
+      <div class="cond-grid" id="allTreatGrid"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= TREATMENT DETAIL ================= -->
+<div class="page" id="page-treatment">
+  <div class="subhero wrap">
+    <div class="folio" id="treatFolio"></div>
+    <div class="breadcrumb"><a onclick="go('home')">Home</a> / <a onclick="go('treatments')">Treatments</a> / <span id="treatName"></span></div>
+    <h1 id="treatTitle"></h1>
+    <p class="lede" id="treatSummary"></p>
+    <div class="stamp-strip">
+      <span class="label">Performed by</span>
+      <div class="stamp tiny" data-tooltip="Registered as a doctor with the Dutch BIG register — the official record of licensed healthcare professionals."><div class="stamp-inner"><div class="stamp-text">Licensed MD</div></div></div>
+      <div class="stamp tiny" data-tooltip="Over 40 years of combined experience in Western and Chinese medicine."><div class="stamp-inner"><div class="stamp-text">40+ Years</div></div></div>
+      <div class="stamp tiny" data-tooltip="Knighted in the Order of Orange-Nassau (2012) for her contribution to Dutch healthcare."><div class="stamp-inner"><div class="stamp-text">Order of<br>Orange-<br>Nassau</div></div></div>
+      <div class="stamp tiny" data-tooltip="Writes a monthly column for Medisch Dossier, an independent medical knowledge platform."><div class="stamp-inner"><div class="stamp-text">Medisch<br>Dossier</div></div></div>
+    </div>
+  </div>
+  <div class="wrap treat-layout">
+    <div class="treat-body">
+      <h3>Intake</h3>
+      <p id="treatIntake"></p>
+      <h3>The treatment</h3>
+      <p id="treatBody"></p>
+      <h3>Aftercare</h3>
+      <p id="treatAftercare"></p>
+      <h3>Combines well with</h3>
+      <div class="chip-row" id="treatCombines"></div>
+      <h3>Frequently asked</h3>
+      <div class="faq-item"><div class="q">Question — TBD</div><div class="a faq-tbd">Content pending from MC Balans</div></div>
+      <div class="faq-item"><div class="q">Question — TBD</div><div class="a faq-tbd">Content pending from MC Balans</div></div>
+      <div class="faq-item"><div class="q">Question — TBD</div><div class="a faq-tbd">Content pending from MC Balans</div></div>
+    </div>
+    <div class="treat-side">
+      <div class="info-card">
+        <div class="row"><div class="k">Price</div><div class="v" id="treatPrice"></div></div>
+        <div class="row"><div class="k">Duration</div><div class="v" id="treatDuration"></div></div>
+        <div class="row"><div class="k">Insurance</div><div class="v" id="treatInsurance" style="max-width:58%;"></div></div>
+      </div>
+      <div class="info-card">
+        <div class="k" style="font-size:12px; color:var(--stone); margin-bottom:10px;">Practitioners</div>
+        <div class="practitioner-row" id="treatPrac"></div>
+      </div>
+      <div class="info-card">
+        <div class="k" style="font-size:12px; color:var(--stone); margin-bottom:10px;">Treats these conditions</div>
+        <div class="chip-groups" id="treatConditions"></div>
+      </div>
+      <a class="btn btn-primary" style="width:100%; justify-content:center;" onclick="go('contact')">Book an appointment</a>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CONDITION STANDALONE TRIAL — BACK PAIN ================= -->
+<div class="page" id="page-backpain-trial">
+  <div class="subhero wrap">
+    <div class="folio">TRIAL — STANDALONE CONDITION PAGE<br>PROMOTED FROM: PAIN</div>
+    <div class="breadcrumb"><a onclick="go('home')">Home</a> / <a onclick="go('conditions')">What We Treat</a> / <a onclick="openCondition('Pain')">Pain</a> / Back Pain</div>
+    <h1>Back Pain</h1>
+    <p class="lede">Back pain is one of the most common musculoskeletal complaints. We provide personalised treatment plans aimed at relieving discomfort and improving mobility.</p>
+    <div class="stamp-strip">
+      <span class="label">Treated by</span>
+      <div class="stamp tiny" data-tooltip="Registered as a doctor with the Dutch BIG register — the official record of licensed healthcare professionals."><div class="stamp-inner"><div class="stamp-text">Licensed MD</div></div></div>
+      <div class="stamp tiny" data-tooltip="Over 40 years of combined experience in Western and Chinese medicine."><div class="stamp-inner"><div class="stamp-text">40+ Years</div></div></div>
+      <div class="stamp tiny" data-tooltip="Knighted in the Order of Orange-Nassau (2012) for her contribution to Dutch healthcare."><div class="stamp-inner"><div class="stamp-text">Order of<br>Orange-<br>Nassau</div></div></div>
+      <div class="stamp tiny" data-tooltip="Writes a monthly column for Medisch Dossier, an independent medical knowledge platform."><div class="stamp-inner"><div class="stamp-text">Medisch<br>Dossier</div></div></div>
+    </div>
+  </div>
+  <div class="wrap treat-layout">
+    <div class="treat-body">
+      <h3>Description &amp; symptoms</h3>
+      <p>Aching, stiffness or sharp pain anywhere along the spine, from a dull daily ache to pain that limits bending, sitting or standing for long periods.</p>
+      <h3>The MC Balans approach</h3>
+      <p>We assess posture, movement patterns and any underlying tension before building a plan — often combining acupuncture or acupotomy for targeted relief with nutrition and movement guidance to support longer-term mobility.</p>
+      <h3>Related resources</h3>
+      <div class="resource-card" style="cursor:pointer;" onclick="go('resources')">
+        <div class="rc-text">
+          <span class="resource-badge">Journal</span>
+          <h4>Acupuncture for knee injury</h4>
+          <p>Written by Dr. Lin · closest published article on file for this condition.</p>
+        </div>
+        <a class="btn btn-outline">Read →</a>
+      </div>
+      <h3>Frequently asked</h3>
+      <div class="faq-item"><div class="q">Question — TBD</div><div class="a faq-tbd">Content pending from MC Balans</div></div>
+      <div class="faq-item"><div class="q">Question — TBD</div><div class="a faq-tbd">Content pending from MC Balans</div></div>
+    </div>
+    <div class="treat-side">
+      <div class="info-card">
+        <div class="k" style="font-size:12px; color:var(--stone); margin-bottom:10px;">How we treat it</div>
+        <div class="chip-row">
+          <span class="chip" onclick="openTreatment('Acupuncture')">Acupuncture</span>
+          <span class="chip" onclick="openTreatment('Acupotomy')">Acupotomy</span>
+          <span class="chip" onclick="openTreatment('Cupping')">Cupping</span>
+          <span class="chip" onclick="openTreatment('Chinese Herbal Medicine')">Chinese Herbal Medicine</span>
+          <span class="chip" onclick="openTreatment('Nutrition & Movement')">Nutrition & Movement</span>
+          <span class="chip" onclick="openTreatment('Ear Acupuncture')">Ear Acupuncture</span>
+        </div>
+      </div>
+      <div class="info-card">
+        <div class="k" style="font-size:12px; color:var(--stone); margin-bottom:10px;">Practitioners</div>
+        <div class="practitioner-row">
+          <span class="prac-chip">Dr. Lin</span>
+          <span class="prac-chip">Dr. Wang</span>
+        </div>
+      </div>
+      <a class="btn btn-primary" style="width:100%; justify-content:center;" onclick="go('contact')">Book for Back Pain →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CONDITION STANDALONE (dynamic, trial) ================= -->
+<div class="page" id="page-standalone">
+  <div class="subhero wrap">
+    <div class="folio" id="standaloneFolio"></div>
+    <div class="breadcrumb"><a onclick="go('home')">Home</a> / <a onclick="go('conditions')">What We Treat</a> / <a id="standaloneBreadcrumbCat" onclick=""></a> / <span id="standaloneName"></span></div>
+    <h1 id="standaloneTitle"></h1>
+    <p class="lede" id="standaloneLede"></p>
+    <div class="stamp-strip">
+      <span class="label">Treated by</span>
+      <div class="stamp tiny" data-tooltip="Registered as a doctor with the Dutch BIG register — the official record of licensed healthcare professionals."><div class="stamp-inner"><div class="stamp-text">Licensed MD</div></div></div>
+      <div class="stamp tiny" data-tooltip="Over 40 years of combined experience in Western and Chinese medicine."><div class="stamp-inner"><div class="stamp-text">40+ Years</div></div></div>
+      <div class="stamp tiny" data-tooltip="Knighted in the Order of Orange-Nassau (2012) for her contribution to Dutch healthcare."><div class="stamp-inner"><div class="stamp-text">Order of<br>Orange-<br>Nassau</div></div></div>
+      <div class="stamp tiny" data-tooltip="Writes a monthly column for Medisch Dossier, an independent medical knowledge platform."><div class="stamp-inner"><div class="stamp-text">Medisch<br>Dossier</div></div></div>
+    </div>
+  </div>
+  <div class="wrap treat-layout">
+    <div class="treat-body">
+      <h3>Description &amp; symptoms</h3>
+      <p id="standaloneDescription"></p>
+      <h3>The MC Balans approach</h3>
+      <p id="standaloneApproach"></p>
+      <h3>Related resources</h3>
+      <div class="resource-card" style="cursor:pointer;" onclick="go('resources')">
+        <div class="rc-text">
+          <span class="resource-badge">Journal</span>
+          <h4>Acupuncture for knee injury</h4>
+          <p id="standaloneResourceNote">Written by Dr. Lin · closest published article on file for this condition.</p>
+        </div>
+        <a class="btn btn-outline">Read →</a>
+      </div>
+      <h3>Frequently asked</h3>
+      <div class="faq-item"><div class="q">Question — TBD</div><div class="a faq-tbd">Content pending from MC Balans</div></div>
+      <div class="faq-item"><div class="q">Question — TBD</div><div class="a faq-tbd">Content pending from MC Balans</div></div>
+    </div>
+    <div class="treat-side">
+      <div class="info-card">
+        <div class="k" style="font-size:12px; color:var(--stone); margin-bottom:10px;">How we treat it</div>
+        <div class="chip-row" id="standaloneTreatChips"></div>
+      </div>
+      <div class="info-card">
+        <div class="k" style="font-size:12px; color:var(--stone); margin-bottom:10px;">Practitioners</div>
+        <div class="practitioner-row" id="standalonePrac"></div>
+      </div>
+      <a class="btn btn-primary" id="standaloneBookBtn" style="width:100%; justify-content:center;" onclick="go('contact')">Book →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ABOUT (Team / Clinic / Pricing / Philosophy) ================= -->
+<div class="page" id="page-team">
+  <div class="subhero wrap">
+    <div class="folio">DOSSIER — ABOUT</div>
+    <div class="breadcrumb"><a onclick="go('home')">Home</a> / About</div>
+    <h1>About MC Balans</h1>
+    <p class="lede">Meet the team, see the clinic, check pricing, or read about our approach.</p>
+    <div class="about-tabs">
+      <div class="about-tab active" data-tab="ourteam" onclick="aboutTab('ourteam')">Our Team</div>
+      <div class="about-tab" data-tab="ourclinic" onclick="aboutTab('ourclinic')">Our Clinic</div>
+      <div class="about-tab" data-tab="pricing" onclick="aboutTab('pricing')">Pricing</div>
+      <div class="about-tab" data-tab="philosophy" onclick="aboutTab('philosophy')">Our Philosophy</div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="wrap">
+
+      <div class="about-panel active" id="panel-ourteam">
+        <div class="team-lead">
+          <div class="lin-photo" style="aspect-ratio:4/5; background:linear-gradient(155deg,#DCE3D9,#C7D2C1); border-color:var(--line);"><span style="color:var(--jade-dark); opacity:.4; font-family:var(--font-mono); font-size:10px;">PHOTOGRAPHY<br>placeholder</span></div>
+          <div>
+            <div class="eyebrow">Head of the clinic</div>
+            <h2 style="font-size:27px; margin-top:10px;">Dr. Wenzhi Lin</h2>
+            <p class="body">40+ years, trained in both Western and Chinese medicine. Leads Western and TCM consultations, acupuncture, acupotomy and herbal medicine at MC Balans.</p>
+            <div class="stamp-row">
+              <div class="stamp small" data-tooltip="Registered as a doctor with the Dutch BIG register — the official record of licensed healthcare professionals."><div class="stamp-inner"><div class="stamp-text">Licensed MD</div></div></div>
+              <div class="stamp small" data-tooltip="Over 40 years of combined experience in Western and Chinese medicine."><div class="stamp-inner"><div class="stamp-text">40+ Years</div></div></div>
+              <div class="stamp small" data-tooltip="Knighted in the Order of Orange-Nassau (2012) for her contribution to Dutch healthcare."><div class="stamp-inner"><div class="stamp-text">Order of<br>Orange-<br>Nassau</div></div></div>
+              <div class="stamp small" data-tooltip="Writes a monthly column for Medisch Dossier, an independent medical knowledge platform."><div class="stamp-inner"><div class="stamp-text">Medisch<br>Dossier<br>Column</div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="section-head" style="margin-bottom:22px;">
+          <div class="eyebrow">The wider team</div>
+          <h2 style="font-size:22px;">Practitioners and support staff</h2>
+        </div>
+        <div class="team-grid" id="teamGrid"></div>
+      </div>
+
+      <div class="about-panel" id="panel-ourclinic">
+        <div class="section-head" style="margin-bottom:22px;">
+          <div class="eyebrow">Our Clinic</div>
+          <h2 style="font-size:22px;">The space, in The Hague</h2>
+        </div>
+        <div class="placeholder-box">Clinic photography + description — content pending from MC Balans (Our Clinic sheet currently unpopulated).</div>
+      </div>
+
+      <div class="about-panel" id="panel-pricing">
+        <div class="section-head" style="margin-bottom:8px;">
+          <div class="eyebrow">Pricing</div>
+          <h2 style="font-size:22px;">What each treatment costs</h2>
+          <p>Most treatments are covered under supplementary insurance — see the Insurance Coverage section for details, or ask us directly.</p>
+        </div>
+        <table class="pricing-table" id="pricingTable">
+          <thead><tr><th>Treatment</th><th>Duration</th><th class="price">Price</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="about-panel" id="panel-philosophy">
+        <div class="section-head" style="margin-bottom:22px;">
+          <div class="eyebrow">Our Philosophy</div>
+          <h2 style="font-size:22px;">Vision &amp; Mission</h2>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+          <div class="placeholder-box">Vision — content pending from MC Balans</div>
+          <div class="placeholder-box">Mission — content pending from MC Balans</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<!-- ================= CONTACT ================= -->
+<div class="page" id="page-contact">
+  <div class="subhero wrap">
+    <div class="folio">DOSSIER — CONTACT</div>
+    <div class="breadcrumb"><a onclick="go('home')">Home</a> / Contact</div>
+    <h1>Book an appointment</h1>
+    <p class="lede">Most patients book by phone — call directly, or send a message and expect a reply by email.</p>
+  </div>
+  <div class="wrap contact-grid">
+    <div>
+      <div class="contact-block">
+        <h4>Phone</h4>
+        <div class="big">070 388 8111</div>
+      </div>
+      <div class="contact-block">
+        <h4>Email</h4>
+        <div class="big" style="font-size:17px;">info@mcbalans.nl</div>
+      </div>
+      <div class="contact-block">
+        <h4>Hours</h4>
+        <p style="margin:0; font-size:14.3px;">Monday – Friday, 9:30 – 17:00</p>
+      </div>
+      <div class="contact-block">
+        <h4>Insurance</h4>
+        <p style="margin:0; font-size:14.3px; color:var(--stone);">Licensed medical doctor consultations are covered under standard health insurance. TCM treatments may be covered depending on the patient's supplementary policy — we can help confirm this.</p>
+      </div>
+    </div>
+    <div>
+      <div class="map-placeholder" style="margin-bottom:24px;"><span>MAP — The Hague<br>(placeholder)</span></div>
+      <div class="form-field"><label>Name</label><input type="text" placeholder="Full name"></div>
+      <div class="form-field"><label>What's going on?</label><textarea rows="3" placeholder="Briefly describe the complaint"></textarea></div>
+      <a class="btn btn-primary" style="width:100%; justify-content:center;">Send message</a>
+      <div class="badge-empty">Form not wired up in this mock-up</div>
+    </div>
+  </div>
+</div>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-logo">MC Balans</div>
+        <p>Western and Traditional Chinese Medicine, The Hague. Led by Dr. Wenzhi Lin.</p>
+        <div class="lang-switch"><span>NL</span><span>EN</span><span>中文</span></div>
+      </div>
+      <div>
+        <h5>Explore</h5>
+        <a onclick="go('conditions')">What We Treat</a>
+        <a onclick="go('treatments')">Treatments</a>
+        <a onclick="go('team')">Our Team</a>
+        <a onclick="go('team')">Pricing</a>
+      </div>
+      <div>
+        <h5>Contact</h5>
+        <a onclick="go('contact')">070 388 8111</a>
+        <a onclick="go('contact')">info@mcbalans.nl</a>
+        <p style="margin:0;">Mon–Fri, 9:30–17:00</p>
+      </div>
+      <div>
+        <h5>Legal</h5>
+        <a>Privacy policy</a>
+        <a>Terms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 MC Balans — mock-up for internal review, not a live site</div>
+      <div>Prepared against RFP dated 12 August 2026</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ---------------- DATA (sourced from Content Architecture spreadsheet) ----------------
+const categories = {
+  "Pain": {
+    hero: "For patients dealing with chronic pain, MC Balans combines Western medicine expertise with TCM knowledge to provide a plan tailored to each patient's specific needs. Our all-embracing approach doesn't focus exclusively on the area where the pain is felt, but rather aims at tracking a pattern of tension and imbalance in the body.",
+    treatments: ["Acupuncture","Acupotomy","Cupping","Chinese Herbal Medicine","Nutrition & Movement"],
+    conditions: [
+      {name:"Head, Neck and Facial Discomfort", summary:"Pain and tension affecting the head, neck, or face can have many possible causes. Our treatments are tailored to each patient's individual symptoms and overall health.", treatments:"Acupuncture · Acupotomy · Cupping · Chinese Herbal Medicine · Ear Acupuncture"},
+      {name:"Migraines", summary:"Migraines can have a significant impact on daily life. We take an individualised approach to helping manage symptoms and supporting long-term wellbeing.", treatments:"Acupuncture · Acupotomy · Cupping · Chinese Herbal Medicine · Nutrition & Movement · Ear Acupuncture"},
+      {name:"Back Pain", summary:"Back pain is one of the most common musculoskeletal complaints. We provide personalised treatment plans aimed at relieving discomfort and improving mobility.", treatments:"Acupuncture · Acupotomy · Cupping · Chinese Herbal Medicine · Nutrition & Movement · Ear Acupuncture"},
+      {name:"Hip Pain", summary:"Hip pain can affect movement, posture, and quality of life. We take a personalised approach to supporting recovery and improving mobility.", treatments:"Acupuncture · Acupotomy · Cupping · Chinese Herbal Medicine · Nutrition & Movement · Ear Acupuncture"},
+      {name:"Joints Pain", summary:"Joint pain can make everyday movement more difficult. Treatment focuses on improving comfort, supporting mobility, and promoting overall wellbeing.", treatments:"Acupuncture · Acupotomy · Cupping · Chinese Herbal Medicine · Nutrition & Movement · Ear Acupuncture"},
+      {name:"Muscle & Sport Injuries", summary:"Whether recovering from an injury or managing ongoing muscle pain, treatment is tailored to support healing, reduce discomfort, and encourage recovery.", treatments:"Acupuncture · Acupotomy · Cupping · Chinese Herbal Medicine · Nutrition & Movement"},
+      {name:"Fibromyalgia & Nerve Related Pain", summary:"Chronic pain conditions can be complex and affect daily life in many ways. Our holistic approach focuses on supporting symptom management and improving overall wellbeing.", treatments:"Acupuncture · Acupotomy · Cupping · Chinese Herbal Medicine · Nutrition & Movement · Ear Acupuncture"}
+    ]
+  },
+  "Stress": {
+    hero: "Stress is a natural response to the challenges of everyday life. However, when stress becomes prolonged or overwhelming, it can affect both physical and mental wellbeing. At MC Balans, we take an all-embracing approach to stress-related complaints, looking at the underlying factors rather than only the symptoms.",
+    treatments: ["Acupuncture","Chinese Herbal Medicine","Nutrition & Movement"],
+    conditions: [
+      {name:"Burnout & work-related stress", summary:"Burnout is a state of physical and emotional exhaustion caused by prolonged stress. We provide personalised support to help restore energy, resilience, and overall wellbeing.", treatments:"Acupuncture · Cupping · Chinese Herbal Medicine · Nutrition & Movement · Ear Acupuncture"},
+      {name:"Anxiety & nervous tension", summary:"Persistent anxiety can affect both mental and physical wellbeing. Our holistic approach aims to help reduce tension, restore balance, and support emotional health.", treatments:"Acupuncture · Cupping · Chinese Herbal Medicine · Nutrition & Movement · Ear Acupuncture"},
+      {name:"Sleep Problems", summary:"Sleep plays a vital role in physical and mental health. We take a personalised approach to identifying factors that may be affecting sleep and supporting long-term improvement.", treatments:"Acupuncture · Chinese Herbal Medicine · Nutrition & Movement · Ear Acupuncture"},
+      {name:"Fatigue & low energy", summary:"Persistent fatigue can impact every aspect of daily life. Treatment focuses on understanding possible underlying factors while supporting energy levels and overall wellbeing.", treatments:"Acupuncture · Chinese Herbal Medicine · Nutrition & Movement"}
+    ]
+  },
+  "Allergies & Seasonal Health": {
+    hero: "Season changes affect the body in different ways. Some people experience recurring symptoms such as hay fever, frequent colds, or sinus complaints during particular times of the year. Treatment is tailored to both the individual's symptoms and the underlying imbalance.",
+    treatments: ["Acupuncture","Chinese Herbal Medicine","Nutrition & Movement"],
+    conditions: [
+      {name:"Hay Fever", summary:"Hay fever can significantly affect comfort and quality of life during allergy season. We offer personalised treatments aimed at helping manage symptoms and supporting the body's natural balance.", treatments:"Acupuncture · Chinese Herbal Medicine · Nutrition & Movement · Cupping"},
+      {name:"Recurring Colds", summary:"Frequent colds may indicate that the body's resilience could benefit from additional support. We take a holistic approach to strengthening overall wellbeing and recovery.", treatments:"Acupuncture · Chinese Herbal Medicine · Nutrition & Movement · Moxa Therapy · Cupping"},
+      {name:"Seasonal Depression", summary:"Changes in the seasons can affect mood, motivation, and energy. Our personalised approach aims to support emotional wellbeing and restore balance throughout the year.", treatments:"Acupuncture · Chinese Herbal Medicine · Nutrition & Movement"}
+    ]
+  },
+  "Women's Health": {
+    hero: "Throughout life, women experience a number of natural physical and hormonal changes. While these transitions are normal, they can sometimes be accompanied by complaints that affect everyday wellbeing. Treatment is always tailored to the individual.",
+    treatments: ["Acupuncture","Chinese Herbal Medicine","Nutrition & Movement"],
+    conditions: [
+      {name:"Menstrual Complaints", summary:"Menstrual symptoms can vary greatly from person to person. We create personalised treatment plans to support hormonal balance and improve overall wellbeing.", treatments:"Acupuncture · Chinese Herbal Medicine · Nutrition & Movement · Cupping"},
+      {name:"Fertility Support", summary:"Trying to conceive can be both physically and emotionally demanding. We provide complementary care designed to support fertility, alongside conventional medical treatment where appropriate.", treatments:"Acupuncture · Chinese Herbal Medicine · Nutrition & Movement"},
+      {name:"Pregnancy Complaints", summary:"Pregnancy brings many physical and emotional changes. Our treatments are tailored to support comfort, wellbeing, and relaxation throughout pregnancy.", treatments:"Acupuncture · Chinese Herbal Medicine · Nutrition & Movement"},
+      {name:"Menopause", summary:"Hormonal changes during menopause can lead to a wide range of symptoms. We offer personalised care to help support wellbeing during this stage of life.", treatments:"Acupuncture · Chinese Herbal Medicine · Nutrition & Movement · Cupping"}
+    ]
+  },
+  "Addiction": {
+    hero: "Addiction can affect both physical and emotional wellbeing. At MC Balans, we take a holistic approach, combining Traditional Chinese Medicine with personalised care to support recovery, reduce cravings, restore balance, and improve overall health alongside conventional treatment where appropriate.",
+    treatments: ["Acupuncture","Chinese Herbal Medicine","Nutrition & Movement"],
+    conditions: [
+      {name:"Smoking Addiction", summary:"Smoking addiction is a dependence on nicotine that can make it difficult to stop smoking despite the desire to quit. Treatment focuses on supporting the individual in reducing or stopping smoking.", treatments:"Acupuncture · Chinese Herbal Medicine · Ear Acupuncture · Nutrition & Movement"},
+      {name:"Sugar Dependency", summary:"Sugar dependency refers to a recurring desire or reliance on sweet foods and drinks that can make it difficult to reduce sugar intake. Treatment focuses on understanding individual habits and supporting healthier patterns.", treatments:"Acupuncture · Chinese Herbal Medicine · Nutrition & Movement"}
+    ]
+  },
+  "Beauty Treatments": {
+    hero: "For patients looking to improve the health and appearance of their skin or hair, MC Balans combines Western medicine expertise with TCM knowledge, looking beyond the surface to understand the underlying factors affecting skin, hair and overall wellbeing.",
+    treatments: ["PRP Therapy","Acupuncture","Nutrition & Movement"],
+    conditions: [
+      {name:"Hair Transplant Aftercare", summary:"Proper aftercare plays an important role in recovery following a hair transplant. We offer supportive treatments designed to promote healing and overall scalp health.", treatments:"PRP Therapy"},
+      {name:"Hair Loss", summary:"Hair loss can occur for many different reasons and affect confidence as well as wellbeing. We provide personalised support aimed at addressing underlying factors where appropriate.", treatments:"PRP Therapy"}
+    ]
+  },
+  "General Wellness": {
+    hero: "For patients looking to improve overall health, energy and wellbeing, MC Balans combines Western medicine expertise with TCM knowledge. Our holistic approach looks beyond individual symptoms to identify patterns of imbalance that may be affecting how the patient feels and functions.",
+    treatments: ["Acupuncture","Chinese Herbal Medicine","Nutrition & Movement"],
+    conditions: [
+      {name:"Digestive Complaints", summary:"Digestive issues can affect comfort, energy, and overall health. We aim to support digestive wellbeing through personalised treatment plans tailored to each patient's needs.", treatments:"Acupuncture · Chinese Herbal Medicine · Nutrition & Movement"},
+      {name:"Weight Management", summary:"Sustainable weight management involves more than diet alone. We provide personalised guidance and complementary treatments to support long-term health goals.", treatments:"Chinese Herbal Medicine · Nutrition & Movement · Acupuncture"},
+      {name:"Eye-related Complaints", summary:"Some eye-related symptoms may benefit from complementary treatment alongside conventional care. We take an individual approach based on each patient's symptoms and overall health.", treatments:"Acupuncture · Chinese Herbal Medicine · Nutrition & Movement"},
+      {name:"Asthma", summary:"Asthma can affect breathing and everyday activities. Complementary treatments may help support overall wellbeing alongside existing medical care.", treatments:"Acupuncture · Chinese Herbal Medicine · Nutrition & Movement"}
+    ]
+  }
+};
+
+// Copy sourced from MC Balans Condition Placeholder Copy (Word doc) for the
+// standalone condition-page trial. Back Pain is excluded here — it already
+// has its own hardcoded page (page-backpain-trial).
+const standaloneCopy = {
+  "Head, Neck and Facial Discomfort": {
+    description: "Tension, tightness or aching around the head, neck, jaw or face — often worse after long hours at a desk, poor sleep, or stress. May include headaches, jaw tension, or a stiff neck that limits movement.",
+    approach: "We start by identifying where the tension pattern originates rather than only treating the area that hurts. Acupuncture and cupping are often combined to release tightness, with Chinese Herbal Medicine supporting longer-term recovery where needed."
+  },
+  "Migraines": {
+    description: "Recurring, often one-sided headaches that can come with nausea, light sensitivity or visual disturbances, and can disrupt work and daily life for hours or days at a time.",
+    approach: "Treatment looks at possible triggers and patterns — sleep, stress, diet, hormonal cycles — alongside acupuncture and, where appropriate, ear acupuncture, aiming to reduce frequency and intensity over a course of sessions."
+  },
+  "Hip Pain": {
+    description: "Discomfort in or around the hip joint that can affect walking, sitting, or sleeping on one side, sometimes linked to posture, overuse or joint wear.",
+    approach: "Treatment focuses on releasing surrounding tension and improving mobility, using acupuncture, cupping and — for more stubborn cases — acupotomy, alongside movement advice to support recovery."
+  },
+  "Joints Pain": {
+    description: "Stiffness, swelling or aching in one or more joints — knees, shoulders, wrists, elbows — that can make everyday movement uncomfortable.",
+    approach: "We look at the joint itself and the surrounding muscular pattern together, combining acupuncture and cupping with herbal support where appropriate to help manage discomfort and support mobility."
+  },
+  "Muscle & Sport Injuries": {
+    description: "Strains, sprains or overuse injuries from sport or physical activity — including ongoing soreness, reduced range of motion, or slow recovery after activity.",
+    approach: "Treatment is built around the stage of recovery, using acupuncture and cupping to support healing and reduce tension, with nutrition and movement guidance to help prevent re-injury."
+  },
+  "Fibromyalgia & Nerve Related Pain": {
+    description: "Widespread pain, tenderness or nerve-related sensations that can be difficult to pin to one cause, and often come with fatigue or sleep disruption.",
+    approach: "Because these conditions are often complex, we take a broader view of the whole pattern — combining acupuncture, cupping and herbal medicine with nutrition and movement support, adjusted as the picture becomes clearer over several sessions."
+  },
+  "Burnout & work-related stress": {
+    description: "Low energy, difficulty concentrating, and a sense of being unable to switch off, often following a sustained period of work pressure.",
+    approach: "We look at restoring the nervous system's balance as much as addressing symptoms directly, using acupuncture and cupping alongside nutrition and movement guidance to help rebuild energy and resilience."
+  },
+  "Anxiety & nervous tension": {
+    description: "Persistent worry, restlessness or physical tension — tight shoulders, a racing mind, or difficulty relaxing — that can affect daily functioning.",
+    approach: "Treatment aims to calm the nervous system directly through acupuncture and, where helpful, ear acupuncture, combined with herbal support and practical guidance on sleep and routine."
+  },
+  "Sleep Problems": {
+    description: "Difficulty falling asleep, staying asleep, or waking unrefreshed — often connected to stress, hormonal change or an overactive mind at night.",
+    approach: "We look for the underlying pattern disrupting sleep rather than only the symptom, using acupuncture and herbal medicine alongside practical lifestyle guidance to support longer-term improvement."
+  },
+  "Fatigue & low energy": {
+    description: "Ongoing tiredness that doesn't improve with rest, sometimes with low motivation or difficulty getting through the day.",
+    approach: "Treatment focuses on identifying what may be depleting energy — physical, hormonal or lifestyle-related — combining acupuncture and herbal medicine with nutrition and movement support."
+  },
+  "Hay Fever": {
+    description: "Sneezing, itchy or watery eyes, and a blocked or runny nose during pollen season, which can affect sleep and concentration.",
+    approach: "We aim to support the body's resilience ahead of and during allergy season, using acupuncture and herbal medicine, with cupping sometimes added for related congestion."
+  },
+  "Recurring Colds": {
+    description: "Catching colds more often than seems normal, or being slow to shake them off, which may point to lower overall resilience.",
+    approach: "Treatment focuses on strengthening the body's underlying resistance using acupuncture, herbal medicine and, where appropriate, Moxa therapy, alongside nutrition and movement guidance."
+  },
+  "Seasonal Depression": {
+    description: "Low mood, low energy or reduced motivation that tends to arrive with the darker months and lift as the seasons change.",
+    approach: "We support mood and energy through acupuncture and herbal medicine, combined with practical guidance on nutrition and movement to help through the season."
+  },
+  "Menstrual Complaints": {
+    description: "Painful, irregular or otherwise disruptive periods, including cramping, mood changes or heavy bleeding.",
+    approach: "We look at hormonal balance and any underlying pattern, combining acupuncture, cupping and herbal medicine with nutrition and movement guidance tailored to the cycle."
+  },
+  "Fertility Support": {
+    description: "Support for those trying to conceive, whether starting out or alongside ongoing fertility treatment, where stress and hormonal balance can play a role.",
+    approach: "We work alongside conventional care rather than in place of it, using acupuncture, herbal medicine and nutrition guidance to support the body through the process."
+  },
+  "Pregnancy Complaints": {
+    description: "Common pregnancy discomforts — nausea, back pain, fatigue or sleep disruption — at different stages of pregnancy.",
+    approach: "Treatment is adapted carefully to each stage of pregnancy, using gentle acupuncture, herbal medicine and nutrition guidance to support comfort and wellbeing."
+  },
+  "Menopause": {
+    description: "Hot flushes, sleep disruption, mood changes and other symptoms linked to hormonal change during perimenopause and menopause.",
+    approach: "We take a whole-body view of the hormonal transition, combining acupuncture, cupping and herbal medicine with nutrition and movement guidance to help manage symptoms."
+  },
+  "Smoking Addiction": {
+    description: "Cravings, irritability and difficulty stopping despite wanting to quit.",
+    approach: "We support the process of quitting using acupuncture and ear acupuncture to help manage cravings, alongside herbal medicine and nutrition guidance."
+  },
+  "Sugar Dependency": {
+    description: "A recurring pull toward sweet foods or drinks that can feel difficult to control, sometimes linked to energy dips or stress.",
+    approach: "Treatment looks at the habits and patterns behind the craving, combining acupuncture and herbal medicine with practical nutrition guidance."
+  },
+  "Hair Transplant Aftercare": {
+    description: "Support during recovery after a hair transplant procedure, where healing and scalp health matter for the result.",
+    approach: "We use PRP therapy to support healing and scalp health following the procedure, guided by the practitioner's assessment of recovery progress."
+  },
+  "Hair Loss": {
+    description: "Thinning hair or hair loss with a range of possible causes, which can affect confidence as well as appearance.",
+    approach: "We assess the individual pattern and use PRP therapy to support scalp health, including for those who are not candidates for a transplant."
+  },
+  "Digestive Complaints": {
+    description: "Bloating, discomfort, irregularity or other digestive issues that affect daily comfort and energy.",
+    approach: "We look at diet, stress and underlying patterns together, combining acupuncture and herbal medicine with nutrition and movement guidance."
+  },
+  "Weight Management": {
+    description: "Difficulty managing weight sustainably despite diet and exercise efforts, sometimes linked to hormonal or metabolic factors.",
+    approach: "Rather than a diet plan alone, we combine herbal medicine, nutrition and movement guidance with acupuncture to support the body's overall balance."
+  },
+  "Eye-related Complaints": {
+    description: "Eye strain, dryness or other symptoms that may benefit from complementary support alongside conventional eye care.",
+    approach: "We take an individual approach based on the symptoms and overall health, combining acupuncture, herbal medicine and nutrition guidance."
+  },
+  "Asthma": {
+    description: "Breathing difficulty, wheezing or tightness in the chest that can affect everyday activity, usually managed alongside conventional medical care.",
+    approach: "Complementary treatment — acupuncture, herbal medicine and nutrition guidance — is used to support overall wellbeing alongside existing medical management, never replacing it."
+  }
+};
+
+const treatments = {
+  "Western Medicine Consultation": {
+    summary: "A consultation with Dr. Lin to assess the patient's symptoms, medical history and individual health needs — a medical perspective alongside MC Balans' broader approach, ruling out life-threatening issues first.",
+    intake: "Upon arrival, patients complete an intake form covering health history, current symptoms and reason for the visit, then are called in for the consultation with Dr. Lin.",
+    body: "During a Western Medicine Consultation, Dr. Lin discusses the patient's symptoms, medical history and current concerns. Where appropriate, the consultation may include a physical assessment and recommendations for further investigation, referral or treatment — and can help determine whether Western medical care, TCM, or a combination may be the right fit.",
+    aftercare: "The consultation can form part of a broader approach to understanding each patient's individual health needs, in combination with other treatments where appropriate.",
+    price: "€35 (<20 min) · €60 (>20 min)", duration: "By case",
+    insurance: "Covered under standard health insurance (basisverzekering)",
+    practitioners: ["Dr. Lin"], combines: ["Acupuncture","Chinese Herbal Medicine","Cupping","Nutrition & Movement"],
+    conditions: ["Pain","Stress","Allergies & Seasonal Health","Women's Health","Addiction","Beauty Treatments"]
+  },
+  "TCM Consultation": {
+    summary: "A consultation focused on understanding why the body may not be functioning as it should — combining conventional assessment with an extensive look at structural, functional and TCM balance.",
+    intake: "Upon arrival, patients complete an intake form with personal and insurance details, then are called in for the consultation with Dr. Lin or Dr. Wang.",
+    body: "We look beyond which disease may be present and instead explore what may be disrupting the way the body functions — including structural and functional patterns and, where appropriate, TCM balance. Safety comes first: where there are indications a condition needs further medical diagnosis, the patient is referred back to their GP or specialist. Particularly relevant when complaints continue despite normal test results.",
+    aftercare: "Follow-up consultations track progress and adjust the approach as needed.",
+    price: "€45 first (or €60 if >30 min) · €25 follow-up", duration: "By case",
+    insurance: "Claimable if additionally insured for alternative care",
+    practitioners: ["Dr. Lin","Dr. Wang"], combines: ["Acupuncture","Chinese Herbal Medicine","Cupping"],
+    conditions: ["Pain","Stress","Allergies & Seasonal Health","Women's Health","Addiction","General Wellness"]
+  },
+  "Acupuncture": {
+    summary: "A traditional Chinese medicine technique using fine needles placed at specific points on the body to relieve tension and restore balance.",
+    intake: "After the intake examination, patient and doctor will together build a personal treatment plan, including an estimate of sessions needed and a realistic expected outcome — so the patient can make an informed decision.",
+    body: "A proven method originating in China, in which a trained acupuncturist places needles — sized to the condition — into the skin to help regulate the body's balance. In line with MC Balans' dual vocation, acupuncture is performed in combination with an array of other methods to meet each patient's actual needs.",
+    aftercare: "Each session is evaluated with the patient to track feeling, progress, and desire to continue. Follow-up examination sessions are recommended for certain conditions.",
+    price: "€70", duration: "15–45 min",
+    insurance: "Claimable if additionally insured for alternative care",
+    practitioners: ["Dr. Lin","Dr. Wang"], combines: ["Chinese Herbal Medicine","Cupping","Nutrition & Movement","Conventional medical treatment"],
+    conditions: ["Pain","Stress","Allergies & Seasonal Health","Women's Health","Addiction","Beauty Treatments","General Wellness"]
+  },
+  "Chinese Herbal Medicine": {
+    summary: "An individually tailored herbal prescription, prepared to match each patient's specific symptoms and treatment goals.",
+    intake: "After the intake examination, patient and doctor will together build a personal treatment plan.",
+    body: "One of the oldest TCM treatment methods. Rather than a standard prescription, formulas are tailored to the individual, taking into account symptoms and the pattern identified during consultation. Every prescription is prepared specifically for the patient, and often used alongside acupuncture and cupping.",
+    aftercare: "Patients receive a personalised formula with clear instructions on preparation and use. Prescriptions are adjusted at follow-ups as the condition changes.",
+    price: "From €6/bag (tea) · €70/3 bags (herbs) · €15/jar (pills) · €65 (cream)", duration: "Ongoing",
+    insurance: "Claimable if additionally insured for alternative care",
+    practitioners: ["Dr. Lin","Dr. Wang"], combines: ["Acupuncture","Cupping","Moxa Therapy","Ear Acupuncture","Nutrition & Movement"],
+    conditions: ["Pain","Stress","Allergies & Seasonal Health","Women's Health","Addiction","Beauty Treatments"]
+  },
+  "Cupping": {
+    summary: "A suction-based therapy using cups placed on the skin to improve circulation and release muscular tension.",
+    intake: "After the intake examination, patient and doctor will together build a personal treatment plan.",
+    body: "Special cups are placed on the skin to create gentle suction, stimulating circulation, releasing muscle tension, and supporting the body's natural recovery. Used both as a standalone treatment and in combination with other therapies.",
+    aftercare: "The doctor adapts the number of cups, placement and duration to the patient's individual condition and comfort.",
+    price: "€10", duration: "5–10 min",
+    insurance: "Claimable if additionally insured for alternative care",
+    practitioners: ["Dr. Lin","Dr. Wang"], combines: ["Acupuncture","Moxa Therapy","Ear Acupuncture","Chinese Herbal Medicine","Nutrition & Movement"],
+    conditions: ["Pain","Stress","Allergies & Seasonal Health"]
+  },
+  "Acupotomy": {
+    summary: "A specialised technique that combines acupuncture with a fine surgical needle to relieve chronic pain and release tension in muscles, tendons, and joints.",
+    intake: "After the intake examination, patient and doctor will together build a personal treatment plan.",
+    body: "Also called needle knife acupuncture — a slightly thicker needle with a small flattened tip targets areas of chronic tension, scar tissue, or adhesions beneath the skin. Used when standard acupuncture has had limited effect; the doctor determines size and placement based on the area and severity.",
+    aftercare: "At each session, the doctor explains needle size, placement, reasoning and session duration in detail.",
+    price: "€85 (small) · €130 (multifocus)", duration: "Varies",
+    insurance: "Claimable if additionally insured for alternative care",
+    practitioners: ["Dr. Lin"], combines: ["Acupuncture","Cupping","Moxa Therapy"],
+    conditions: ["Pain"]
+  },
+  "Nutrition & Movement": {
+    summary: "Personalised nutrition and lifestyle guidance that supports recovery and helps prevent recurring complaints.",
+    intake: "Recommendations are tailored to each patient's individual situation and complement other treatment methods.",
+    body: "Nutrition and movement form the foundation of a healthy lifestyle and support both recovery and prevention, integrated into treatment wherever appropriate.",
+    aftercare: "Patients receive practical, tailored advice — nutrition, movement or other lifestyle adjustments — alongside any medical or TCM treatments.",
+    price: "Case by case", duration: "Ongoing",
+    insurance: "Claimable if additionally insured for alternative care",
+    practitioners: ["Dr. Lin","Dr. Wang"], combines: ["Acupuncture","Chinese Herbal Medicine","Cupping","Ear Acupuncture","Moxa Therapy"],
+    conditions: ["Pain","Stress","Allergies & Seasonal Health","Women's Health","Addiction","Beauty Treatments","General Wellness"]
+  },
+  "PRP Therapy": {
+    summary: "A Platelet Rich Plasma treatment used to support hair transplant aftercare and help with hair loss.",
+    intake: "A small amount of blood is drawn and processed to separate the platelet-rich plasma.",
+    body: "The PRP is prepared and administered to the treatment area via a series of injections. Many people not eligible for a hair transplant can also be well helped with PRP alone; our practitioners are specifically trained for this.",
+    aftercare: "The practitioner guides the patient through the procedure and provides relevant aftercare instructions.",
+    price: "€370", duration: "45–60 min",
+    insurance: "Claimable if additionally insured for alternative care",
+    practitioners: ["Dr. Lin"], combines: [],
+    conditions: ["Beauty Treatments"]
+  },
+  "Moxa Therapy": {
+    summary: "A supplementary TCM technique that uses the heat of a burning moxa stick (mugwort herb) to stimulate acupuncture points.",
+    intake: "After the intake examination, patient and doctor will together build a personal treatment plan.",
+    body: "Typically used alongside acupuncture. A cigar-shaped mugwort stick is either held above the skin or used to warm the acupuncture needles themselves — the heat is thought to stimulate the flow of energy through the body.",
+    aftercare: "The practitioner heats the relevant points depending on the treatment plan.",
+    price: "€70 + €21 add-on", duration: "10–30 min",
+    insurance: "Claimable if additionally insured for alternative care",
+    practitioners: ["Dr. Lin"], combines: ["Chinese Herbal Medicine","Cupping","Nutrition & Movement"],
+    conditions: ["Allergies & Seasonal Health"]
+  },
+  "Ear Acupuncture": {
+    summary: "A specialisation within acupuncture using very fine needles (or adhesive patches) placed on specific points of the outer ear.",
+    intake: "After the intake examination, patient and doctor will together build a personal treatment plan.",
+    body: "A professional acupuncturist places very thin needles — or an ear seed — in the skin of the ear, stimulating the acupuncture points located there.",
+    aftercare: "The acupuncturist identifies the relevant points and applies needles or an ear seed depending on the patient's situation and preference.",
+    price: "€40 + €11 add-on", duration: "15–45 min",
+    insurance: "Claimable if additionally insured for alternative care",
+    practitioners: ["Dr. Lin"], combines: ["Chinese Herbal Medicine","Acupuncture","Moxa Therapy","Cupping","Nutrition & Movement"],
+    conditions: ["Pain","Stress","Addiction","General Wellness"]
+  }
+};
+
+const team = [
+  {name:"Dr. Lin", role:"Doctor, Head of the Clinic", treat:"Western & TCM consultation, Acupuncture, Acupotomy, Herbal Medicine"},
+  {name:"Dr. Wang", role:"Acupuncture Specialist", treat:"TCM Consultation, Acupuncture"},
+  {name:"Cahyanne", role:"Assistant, Herbal Dispenser", treat:"—"},
+  {name:"Assistant", role:"Assistant, Herbal Dispenser", treat:"—"}
+];
+
+// ---------------- SEARCH ----------------
+// Lightweight keyword matcher over the conditions/treatments data above.
+// Not a real AI/RAG model — just tokenized overlap + a small alias list so
+// common everyday phrasing ("can't sleep", "quit smoking") still finds
+// the right dossier entry.
+const searchAliases = {
+  "Sleep Problems": "insomnia can't cant sleep sleeping trouble restless awake night",
+  "Fatigue & low energy": "tired exhausted no energy drained fatigue burnt out",
+  "Burnout & work-related stress": "burnout overwhelmed work stress exhausted job pressure",
+  "Anxiety & nervous tension": "anxious anxiety nervous worry worrying panic tense on edge",
+  "Migraines": "migraine headache head pain throbbing",
+  "Head, Neck and Facial Discomfort": "headache neck pain jaw face tmj tension stiff neck",
+  "Back Pain": "back pain lower back spine ache backache",
+  "Hip Pain": "hip pain hips",
+  "Joints Pain": "joint pain joints knees elbow arthritis stiff",
+  "Muscle & Sport Injuries": "muscle strain sports injury sore pulled sprain",
+  "Fibromyalgia & Nerve Related Pain": "fibromyalgia nerve pain tingling numbness chronic pain nerve damage",
+  "Hay Fever": "hay fever allergy allergies sneezing itchy eyes pollen runny nose",
+  "Recurring Colds": "colds sick often flu immune keep getting sick",
+  "Seasonal Depression": "seasonal depression winter blues mood low light",
+  "Menstrual Complaints": "period cramps menstrual pms painful periods",
+  "Fertility Support": "fertility trying to conceive pregnant ivf getting pregnant",
+  "Pregnancy Complaints": "pregnancy pregnant morning sickness",
+  "Menopause": "menopause hot flashes hormones perimenopause",
+  "Smoking Addiction": "smoking quit smoking cigarettes nicotine stop smoking",
+  "Sugar Dependency": "sugar cravings sweets sweet tooth addiction",
+  "Hair Transplant Aftercare": "hair transplant aftercare recovery",
+  "Hair Loss": "hair loss balding thinning hair",
+  "Digestive Complaints": "digestion stomach bloating ibs gut nausea",
+  "Weight Management": "weight loss diet overweight losing weight",
+  "Eye-related Complaints": "eyes vision dry eyes eye strain",
+  "Asthma": "asthma breathing wheeze shortness of breath"
+};
+const STOPWORDS = new Set(["i","ive","i've","a","an","the","and","or","of","to","for","with","in","on","at","have","had","has","been","having","my","me","it","is","are","was","were","been","that","this","weeks","week","days","day","months","month","feel","feeling","felt","really","very","lot","lots","bit","little","some","been","get","getting","got","also","just","been"]);
+function tokenize(str){
+  return (str||'').toLowerCase().replace(/[^a-z0-9\s']/g,' ').split(/\s+/).filter(w=>w && !STOPWORDS.has(w));
+}
+function buildIndex(){
+  const items = [];
+  Object.entries(categories).forEach(([catName,data])=>{
+    data.conditions.forEach(c=>{
+      const alias = searchAliases[c.name] || "";
+      const text = [c.name, c.summary, c.treatments, alias].join(' ');
+      items.push({type:'condition', label:c.name, category:catName, blurb:truncate(c.summary,90),
+        tokens:tokenize(text), nameTokens:tokenize(c.name + ' ' + alias)});
+    });
+  });
+  Object.entries(treatments).forEach(([tName,t])=>{
+    const text = [tName, t.summary, t.conditions.join(' ')].join(' ');
+    items.push({type:'treatment', label:tName, category:t.conditions[0]||'', blurb:truncate(t.summary,90),
+      tokens:tokenize(text), nameTokens:tokenize(tName)});
+  });
+  return items;
+}
+const searchIndex = buildIndex();
+function scoreItem(queryTokens, item){
+  let score = 0;
+  queryTokens.forEach(qt=>{
+    item.tokens.forEach(it=>{
+      if(it === qt) score += 2;
+      else if(it.length>3 && qt.length>3 && (it.startsWith(qt) || qt.startsWith(it))) score += 1;
+    });
+    item.nameTokens.forEach(nt=>{
+      if(nt === qt || (nt.length>3 && qt.length>3 && (nt.startsWith(qt) || qt.startsWith(nt)))) score += 2;
+    });
+  });
+  return score;
+}
+function runSearch(query, limit){
+  const qTokens = tokenize(query);
+  if(!qTokens.length) return [];
+  const scored = searchIndex.map(item => ({item, score: scoreItem(qTokens, item)}))
+    .filter(s => s.score > 0)
+    .sort((a,b) => b.score - a.score);
+  const seen = new Set();
+  const out = [];
+  for(const s of scored){
+    const key = s.item.type + ':' + s.item.label;
+    if(seen.has(key)) continue;
+    seen.add(key);
+    out.push(s.item);
+    if(out.length >= limit) break;
+  }
+  return out;
+}
+function openSearchResult(item){
+  if(item.type === 'condition') openCondition(item.category);
+  else openTreatment(item.label);
+}
+
+// -- Header mini search (dropdown) --
+const miniInput = document.getElementById('miniSearchInput');
+const miniResults = document.getElementById('miniSearchResults');
+const miniWrap = document.getElementById('miniSearchWrap');
+function renderMiniResults(query){
+  const results = runSearch(query, 6);
+  miniResults.innerHTML = '';
+  if(!query.trim()){ miniResults.classList.remove('show'); return; }
+  if(!results.length){
+    miniResults.innerHTML = `<div class="ask-mini-empty">No matches yet — try a symptom like "back pain" or "sleep".</div>`;
+  } else {
+    results.forEach(item=>{
+      const row = document.createElement('div');
+      row.className = 'ask-mini-result';
+      row.innerHTML = `<span>${item.label}</span><span class="kind">${item.type === 'condition' ? item.category : 'Treatment'}</span>`;
+      row.onclick = ()=>{ openSearchResult(item); miniInput.value=''; miniResults.classList.remove('show'); };
+      miniResults.appendChild(row);
+    });
+  }
+  miniResults.classList.add('show');
+}
+if(miniInput){
+  miniInput.addEventListener('input', e=>renderMiniResults(e.target.value));
+  miniInput.addEventListener('focus', e=>{ if(e.target.value.trim()) renderMiniResults(e.target.value); });
+  miniInput.addEventListener('keydown', e=>{
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      const results = runSearch(miniInput.value, 1);
+      if(results.length){ openSearchResult(results[0]); miniInput.value=''; miniResults.classList.remove('show'); }
+    } else if(e.key === 'Escape'){
+      miniResults.classList.remove('show'); miniInput.blur();
+    }
+  });
+  document.addEventListener('click', e=>{
+    if(miniWrap && !miniWrap.contains(e.target)) miniResults.classList.remove('show');
+  });
+}
+
+// -- Hero "ask" band search --
+const heroAskForm = document.getElementById('heroAskForm');
+const heroAskInput = document.getElementById('heroAskInput');
+const heroAskResults = document.getElementById('heroAskResults');
+const heroAskResultsGrid = document.getElementById('heroAskResultsGrid');
+function renderHeroResults(query){
+  const results = runSearch(query, 3);
+  heroAskResultsGrid.innerHTML = '';
+  if(!results.length){
+    heroAskResultsGrid.innerHTML = '';
+    heroAskResults.innerHTML = `<div class="ask-results-head">Based on that, this may be relevant:</div>
+      <div class="ask-no-results">We couldn't match that to a specific dossier yet — try naming the symptom directly (e.g. "migraines" or "quit smoking"), or <a onclick="go('conditions')">browse everything we treat</a>.</div>`;
+  } else {
+    heroAskResults.innerHTML = `<div class="ask-results-head">Based on that, this may be relevant:</div>
+      <div class="ask-results-grid" id="heroAskResultsGrid"></div>`;
+    const grid = document.getElementById('heroAskResultsGrid');
+    results.forEach(item=>{
+      const card = document.createElement('div');
+      card.className = 'ask-result-card';
+      card.onclick = ()=>openSearchResult(item);
+      card.innerHTML = `<div class="tag">${item.type === 'condition' ? item.category : 'Treatment'}</div>
+        <h4>${item.label}</h4><p>${item.blurb}</p>
+        <div class="arrow">${item.type === 'condition' ? 'Explore →' : 'View treatment →'}</div>`;
+      grid.appendChild(card);
+    });
+  }
+  heroAskResults.classList.add('show');
+}
+if(heroAskForm){
+  heroAskForm.addEventListener('submit', e=>{
+    e.preventDefault();
+    renderHeroResults(heroAskInput.value);
+  });
+}
+
+// ---------------- RENDER ----------------
+function pad2(n){ return String(n).padStart(2,'0'); }
+function truncate(str, len){
+  if(str.length <= len) return str;
+  const cut = str.slice(0, len);
+  const lastSpace = cut.lastIndexOf(' ');
+  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim() + '…';
+}
+function condCard(name, data, idx){
+  const div = document.createElement('div');
+  div.className = 'cond-card';
+  div.onclick = () => openCondition(name);
+  div.innerHTML = `<div><div class="tag">N° ${pad2(idx+1)} · ${data.conditions.length} conditions</div><h4>${name}</h4><p>${truncate(data.hero,110)}</p></div><div class="arrow">Explore →</div>`;
+  return div;
+}
+const homeGrid = document.getElementById('homeCondGrid');
+const allGrid = document.getElementById('allCondGrid');
+Object.entries(categories).forEach(([name,data],idx)=>{
+  homeGrid.appendChild(condCard(name,data,idx));
+  allGrid.appendChild(condCard(name,data,idx));
+});
+
+function openCondition(name){
+  const data = categories[name];
+  const idx = Object.keys(categories).indexOf(name) + 1;
+  document.getElementById('condFolio').textContent = `DOSSIER N° ${pad2(idx)} — ${name.toUpperCase()}`;
+  document.getElementById('condName').textContent = name;
+  document.getElementById('condTitle').textContent = name;
+  document.getElementById('condHero').textContent = data.hero;
+  const chips = document.getElementById('condTreatChips');
+  chips.innerHTML = '';
+  data.treatments.forEach(t=>{
+    const c = document.createElement('span');
+    c.className = 'chip'; c.textContent = t;
+    c.onclick = ()=>openTreatment(t);
+    chips.appendChild(c);
+  });
+  const acc = document.getElementById('condAccordion');
+  acc.innerHTML = '';
+  data.conditions.forEach((c,i)=>{
+    const item = document.createElement('div');
+    item.className = 'acc-item' + (i===0 ? ' open':'');
+    const treatChips = c.treatments.split(' · ').map(t=>
+      `<span class="chip" onclick="event.stopPropagation(); openTreatment('${t.trim()}')">${t.trim()}</span>`
+    ).join('');
+    const trialLink = c.name === 'Back Pain'
+      ? `<a onclick="event.stopPropagation(); go('backpain-trial')" style="font-family:var(--font-mono); font-size:11px; color:var(--amber); text-transform:uppercase; letter-spacing:.05em; align-self:flex-start; margin-top:-6px;">View as standalone page (trial) →</a>`
+      : (standaloneCopy[c.name]
+        ? `<a onclick="event.stopPropagation(); openStandalone('${c.name}')" style="font-family:var(--font-mono); font-size:11px; color:var(--amber); text-transform:uppercase; letter-spacing:.05em; align-self:flex-start; margin-top:-6px;">View as standalone page (trial) →</a>`
+        : '');
+    item.innerHTML = `
+      <div class="acc-head" onclick="this.parentElement.classList.toggle('open')">
+        <h4>${c.name}</h4><span class="plus">+</span>
+      </div>
+      <div class="acc-body"><div class="acc-body-inner" style="flex-direction:column; gap:16px;">
+        <p style="max-width:60ch;">${c.summary}</p>
+        <div class="acc-treatments">
+          <span class="lbl">How we treat it</span>
+          <div class="chip-row" style="margin-top:0;">${treatChips}</div>
+        </div>
+        <a class="btn btn-primary" style="align-self:flex-start; margin-top:4px;" onclick="event.stopPropagation(); go('contact')">Book for ${c.name} →</a>
+        ${trialLink}
+      </div></div>`;
+    acc.appendChild(item);
+  });
+  go('condition');
+}
+
+function findCondition(name){
+  for(const [catName, catData] of Object.entries(categories)){
+    const c = catData.conditions.find(x=>x.name===name);
+    if(c) return {category:catName, cond:c};
+  }
+  return null;
+}
+
+function openStandalone(name){
+  const found = findCondition(name);
+  const copy = standaloneCopy[name];
+  if(!found || !copy) return;
+  const {category, cond} = found;
+
+  document.getElementById('standaloneFolio').innerHTML = `TRIAL — STANDALONE CONDITION PAGE<br>PROMOTED FROM: ${category.toUpperCase()}`;
+  const catLink = document.getElementById('standaloneBreadcrumbCat');
+  catLink.textContent = category;
+  catLink.onclick = ()=>openCondition(category);
+  document.getElementById('standaloneName').textContent = name;
+  document.getElementById('standaloneTitle').textContent = name;
+  document.getElementById('standaloneLede').textContent = cond.summary;
+  document.getElementById('standaloneDescription').textContent = copy.description;
+  document.getElementById('standaloneApproach').textContent = copy.approach;
+
+  // Only one Medisch Dossier article exists on file (Acupuncture for knee
+  // injury, cross-linked to Joints Pain). For every other condition it's
+  // shown as the closest available match rather than a direct hit.
+  document.getElementById('standaloneResourceNote').textContent = name === 'Joints Pain'
+    ? 'Written by Dr. Lin · directly cross-linked to this condition.'
+    : 'Written by Dr. Lin · closest published article on file for this condition.';
+
+  const treatList = cond.treatments.split(' · ').map(t=>t.trim());
+  const chipsWrap = document.getElementById('standaloneTreatChips');
+  chipsWrap.innerHTML = '';
+  treatList.forEach(t=>{
+    const chip = document.createElement('span');
+    chip.className = 'chip'; chip.textContent = t;
+    chip.onclick = ()=>openTreatment(t);
+    chipsWrap.appendChild(chip);
+  });
+
+  const pracSet = new Set();
+  treatList.forEach(t=>{
+    const tr = treatments[t];
+    if(tr) tr.practitioners.forEach(p=>pracSet.add(p));
+  });
+  const pracWrap = document.getElementById('standalonePrac');
+  pracWrap.innerHTML = '';
+  pracSet.forEach(p=>{
+    const s = document.createElement('span'); s.className = 'prac-chip'; s.textContent = p;
+    pracWrap.appendChild(s);
+  });
+
+  document.getElementById('standaloneBookBtn').textContent = `Book for ${name} →`;
+  go('standalone');
+}
+
+// Routes a single condition chip to the most direct page available:
+// its own standalone trial page when one exists, otherwise the parent
+// category page (from which the condition can still be browsed via the
+// accordion). Back Pain is a special case — it has a hardcoded trial page.
+function openConditionDeepLink(name, category){
+  if(name === 'Back Pain'){ go('backpain-trial'); return; }
+  if(standaloneCopy[name]){ openStandalone(name); return; }
+  openCondition(category);
+}
+
+function openTreatment(name){
+  const t = treatments[name];
+  if(!t) return;
+  document.getElementById('treatFolio').textContent = `DOSSIER — TREATMENTS — ${name.toUpperCase()}`;
+  document.getElementById('treatName').textContent = name;
+  document.getElementById('treatTitle').textContent = name;
+  document.getElementById('treatSummary').textContent = t.summary;
+  document.getElementById('treatIntake').textContent = t.intake;
+  document.getElementById('treatBody').textContent = t.body;
+  document.getElementById('treatAftercare').textContent = t.aftercare;
+  document.getElementById('treatPrice').textContent = t.price;
+  document.getElementById('treatDuration').textContent = t.duration;
+  document.getElementById('treatInsurance').textContent = t.insurance;
+  const prac = document.getElementById('treatPrac'); prac.innerHTML='';
+  t.practitioners.forEach(p=>{ const s=document.createElement('span'); s.className='prac-chip'; s.textContent=p; prac.appendChild(s); });
+  // Grouped by category, pulling straight from `categories` so there's no
+  // separate condition list to maintain here. Each group surfaces the first
+  // 3–4 conditions on file and links straight to the condition itself
+  // (standalone page where one exists), with a "view all" escape hatch to
+  // the full category for anything not shown.
+  const cw = document.getElementById('treatConditions'); cw.innerHTML='';
+  t.conditions.forEach(catName=>{
+    const catData = categories[catName];
+    if(!catData) return;
+    const group = document.createElement('div');
+    group.className = 'chip-group';
+    const label = document.createElement('div');
+    label.className = 'chip-group-label';
+    label.textContent = catName;
+    group.appendChild(label);
+    const row = document.createElement('div');
+    row.className = 'chip-row';
+    catData.conditions.slice(0,4).forEach(cond=>{
+      const chip = document.createElement('span');
+      chip.className = 'chip'; chip.textContent = cond.name;
+      chip.onclick = ()=>openConditionDeepLink(cond.name, catName);
+      row.appendChild(chip);
+    });
+    group.appendChild(row);
+    const viewAll = document.createElement('a');
+    viewAll.className = 'chip-group-viewall';
+    viewAll.textContent = `View all ${catName} conditions →`;
+    viewAll.onclick = ()=>openCondition(catName);
+    group.appendChild(viewAll);
+    cw.appendChild(group);
+  });
+  const cb = document.getElementById('treatCombines'); cb.innerHTML='';
+  if(t.combines.length){
+    t.combines.forEach(cn=>{
+      const c=document.createElement('span'); c.className='chip'; c.textContent=cn;
+      c.onclick = ()=>openTreatment(cn);
+      cb.appendChild(c);
+    });
+  } else {
+    cb.innerHTML = '<span class="badge-empty">None on file</span>';
+  }
+  go('treatment');
+}
+
+const teamGrid = document.getElementById('teamGrid');
+team.forEach(m=>{
+  const el = document.createElement('div');
+  el.className = 'team-card';
+  el.innerHTML = `<div class="team-photo"><span>PHOTO</span></div>
+    <div class="team-info"><h4>${m.name}</h4><div class="role">${m.role}</div><p>${m.treat}</p></div>`;
+  teamGrid.appendChild(el);
+});
+
+const allTreatGrid = document.getElementById('allTreatGrid');
+Object.entries(treatments).forEach(([name,t],idx)=>{
+  const div = document.createElement('div');
+  div.className = 'cond-card';
+  div.onclick = () => openTreatment(name);
+  div.innerHTML = `<div><div class="tag">N° ${pad2(idx+1)} · ${t.duration}</div><h4>${name}</h4><p>${truncate(t.summary,100)}</p></div><div class="arrow">View treatment →</div>`;
+  allTreatGrid.appendChild(div);
+});
+
+const pricingBody = document.querySelector('#pricingTable tbody');
+Object.entries(treatments).forEach(([name,t])=>{
+  const tr = document.createElement('tr');
+  tr.onclick = ()=>openTreatment(name);
+  tr.innerHTML = `<td>${name}</td><td style="color:var(--stone); font-size:13px;">${t.duration}</td><td class="price">${t.price}</td>`;
+  pricingBody.appendChild(tr);
+});
+
+function aboutTab(tab){
+  document.querySelectorAll('.about-tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===tab));
+  document.querySelectorAll('.about-panel').forEach(p=>p.classList.toggle('active', p.id === 'panel-'+tab));
+}
+
+// ---------------- ROUTER ----------------
+function go(page){
+  if(page === 'conditions') showPage('conditions');
+  else if(page === 'condition') showPage('condition');
+  else if(page === 'treatments') showPage('treatments');
+  else if(page === 'treatment') showPage('treatment');
+  else if(page === 'resources') showPage('resources');
+  else if(page === 'backpain-trial') showPage('backpain-trial');
+  else if(page === 'standalone') showPage('standalone');
+  else if(page === 'team') showPage('team');
+  else if(page === 'contact') showPage('contact');
+  else showPage('home');
+
+  document.querySelectorAll('#mainNav a').forEach(a=>a.classList.remove('active'));
+  const map = {home:null, conditions:'conditions', condition:'conditions', treatments:'treatments', treatment:'treatments', resources:'resources', 'backpain-trial':'conditions', standalone:'conditions', team:'team', contact:'contact'};
+  const navTarget = map[page];
+  if(navTarget){
+    document.querySelectorAll(`#mainNav a[data-page="${navTarget}"]`).forEach(a=>a.classList.add('active'));
+  }
+  window.scrollTo({top:0, behavior:'instant'});
+}
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+}
+openTreatment('Acupuncture');
+go('home');
+</script>
+</body>
+</html>

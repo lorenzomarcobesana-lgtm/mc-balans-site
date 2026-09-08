@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MC Balans</title>
+<style>
+:root{--paper:#F8F5EE;--white:#FFFFFF;--ink:#1C2B27;--jade:#3A5A50;--jade-dark:#26382F;--jade-tint:#E9EEE7;--amber:#B5793C;--amber-tint:#F1E3CC;--red:#A23B2C;--mist:#E1E7E0;--stone:#6B6A63;--line:rgba(28,43,39,0.14);--font-display:'Fraunces',serif;--font-body:'Inter',sans-serif;--font-mono:'IBM Plex Mono',monospace;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-body);background:var(--paper);color:var(--ink);line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto;padding:0 32px}
+header.site{position:sticky;top:0;z-index:50;background:rgba(248,245,238,0.95);border-bottom:1px solid var(--line)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:15px 32px;max-width:1180px;margin:0 auto;gap:24px}
+.logo{font-family:var(--font-display);font-size:22px;font-weight:600;cursor:pointer}.logo .dot{color:var(--red)}
+nav.main-nav{display:flex;gap:2px}nav.main-nav a{font-size:13.5px;color:var(--ink);opacity:.7;cursor:pointer;padding:8px 13px;border-radius:2px}nav.main-nav a:hover{opacity:1;background:var(--jade-tint)}
+.header-right{display:flex;align-items:center;gap:12px}
+.lang-select{display:flex;gap:4px}.lang-select button{background:transparent;border:1px solid var(--line);padding:4px 8px;font-size:12px;cursor:pointer;border-radius:4px}.lang-select button.active{background:var(--jade);color:#fff;border-color:var(--jade)}
+.ask-mini{display:flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--line);border-radius:2px;padding:9px 14px;min-width:200px;color:var(--stone);font-size:12.5px;position:relative}
+.ask-mini input{border:none;outline:none;background:transparent;font-size:12.5px;color:var(--ink);width:100%}
+.btn{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;padding:10px 18px;border-radius:2px;border:1px solid transparent;white-space:nowrap;cursor:pointer}
+.btn-primary{background:var(--jade);color:#fff}.btn-primary:hover{background:var(--jade-dark)}
+.hero{padding:56px 0 0}.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+.hero h1{font-family:var(--font-display);font-size:45px;line-height:1.1;margin-bottom:20px}.hero h1 em{font-style:italic;color:var(--jade);font-weight:500}
+.hero p.lede{font-size:16.5px;color:var(--stone);max-width:46ch;margin-bottom:26px}
+.ask-band{background:var(--jade);margin-top:60px;padding:26px 32px}.ask-band .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber-tint)}.ask-band h3{color:#fff;font-size:19px;margin:6px 0 0}
+.section{padding:64px 32px}.section-head{max-width:640px;margin-bottom:44px}.section-head h2{font-family:var(--font-display);font-size:31px;margin-top:10px}.section-head p{color:var(--stone);font-size:15px;margin-top:12px}
+.cred-section{background:var(--ink);color:var(--paper);padding:64px 32px}.cred-section h2{color:#fff;text-align:center;font-size:32px;margin-bottom:40px}.cred-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}.cred-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);padding:26px 22px;border-radius:2px}.cred-card .num{font-size:36px;color:var(--amber);margin-bottom:12px}.cred-card h3{color:#fff;font-size:18px;margin-bottom:8px}.cred-card p{color:rgba(255,255,255,.7);font-size:13.5px}
+.cond-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.cond-card{background:var(--white);border:1px solid var(--line);padding:26px;border-radius:2px;cursor:pointer;transition:transform .15s;min-height:172px;position:relative}.cond-card::before{content:'';position:absolute;top:0;left:22px;width:34px;height:8px;background:var(--amber-tint);border-radius:0 0 3px 3px}.cond-card:hover{transform:translateY(-2px)}.cond-card .tag{font-family:var(--font-mono);font-size:10.5px;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}.cond-card h4{font-size:19px;margin-bottom:8px}.cond-card p{font-size:13.3px;color:var(--stone)}.cond-card .arrow{margin-top:16px;font-size:13px;color:var(--jade);font-weight:600}
+.lin-section{background:var(--ink);color:var(--paper);padding:92px 0}.lin-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:56px;align-items:center}.lin-section h2{color:#fff;font-size:29px;margin:14px 0 18px}.lin-section p.body{color:rgba(250,248,243,.72);font-size:15px;max-width:56ch}
+.insurance-band{background:var(--amber-tint);padding:34px 0}
+.resource-card{background:var(--white);border:1px solid var(--line);border-radius:2px;padding:28px;display:flex;gap:26px;align-items:center}.resource-badge{font-family:var(--font-mono);font-size:10.5px;background:var(--jade-tint);color:var(--jade);padding:6px 12px;border-radius:100px;text-transform:uppercase}.resource-card h4{font-size:19px;margin:12px 0 8px}
+footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 0 26px}.footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:36px}.footer-grid h5{color:#fff;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}.footer-grid a,.footer-grid p{display:block;font-size:13.5px;color:rgba(250,248,243,.72);margin-bottom:10px;cursor:pointer}.footer-logo{font-family:var(--font-display);color:#fff;font-size:19px;margin-bottom:14px}.footer-bottom{border-top:1px solid rgba(250,248,243,.15);padding-top:20px;font-size:12px;color:rgba(250,248,243,.5)}
+.subhero{padding:44px 0 38px;border-bottom:1px solid var(--line)}.breadcrumb{font-family:var(--font-mono);font-size:12px;color:var(--stone);margin-bottom:16px}.breadcrumb a{color:var(--jade);cursor:pointer}.subhero h1{font-size:34px;margin-bottom:14px}
+.condition-content{max-width:800px;margin:0 auto;padding:40px 32px}.condition-content h2{font-size:24px;margin:32px 0 16px}.condition-content p{margin-bottom:16px}
+.loading{text-align:center;padding:40px;color:var(--stone);font-size:18px}.error{color:var(--red);text-align:center;padding:40px;font-size:18px}
+@media(max-width:900px){.cond-grid,.cred-grid{grid-template-columns:1fr 1fr}.lin-grid,.hero-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="site">
+<div class="header-inner">
+<div class="logo" onclick="navigateTo('/')">MC Balans<span class="dot">.</span></div>
+<nav class="main-nav">
+<a href="/" onclick="navigateTo('/')" data-i18n="home">Home</a>
+<a href="/conditions" onclick="navigateTo('/conditions')" data-i18n="conditions">Conditions</a>
+<a href="/treatments" onclick="navigateTo('/treatments')" data-i18n="treatments">Treatments</a>
+<a href="/about" onclick="navigateTo('/about')" data-i18n="about">About</a>
+<a href="/contact" onclick="navigateTo('/contact')" data-i18n="contact">Contact</a>
+</nav>
+<div class="header-right">
+<div class="lang-select">
+<button onclick="setLang('nl')" data-lang="nl">NL</button>
+<button onclick="setLang('en')" data-lang="en" class="active">EN</button>
+<button onclick="setLang('zh')" data-lang="zh">中文</button>
+</div>
+</div>
+</div>
+</header>
+
+<div id="app"></div>
+
+<footer class="site">
+<div class="wrap footer-grid">
+<div><div class="footer-logo">MC Balans</div><p data-i18n="footerTagline">Western & TCM, The Hague</p><p data-i18n="footerLedBy">Led by Dr. Wenzhi Lin</p></div>
+<div><h5 data-i18n="footerExplore">Explore</h5><a href="/conditions" onclick="navigateTo('/conditions')" data-i18n="footerConditions">What We Treat</a><a href="/treatments" onclick="navigateTo('/treatments')" data-i18n="footerTreatments">Treatments</a><a href="/about" onclick="navigateTo('/about')" data-i18n="footerTeam">About</a></div>
+<div><h5 data-i18n="footerContact">Contact</h5><a href="/contact" onclick="navigateTo('/contact')">070 388 8111</a><a href="/contact" onclick="navigateTo('/contact')">info@mcbalans.nl</a><p>Mon–Fri, 9:30–17:00</p></div>
+</div>
+<div class="footer-bottom">© 2026 MC Balans</div>
+</footer>
+
+<script>
+const API='/api';
+let currentLang='en';
+const app=document.getElementById('app');
+
+const i18n={
+en:{home:'Home',conditions:'Conditions',treatments:'Treatments',about:'About',contact:'Contact',footerTagline:'Western & TCM, The Hague',footerLedBy:'Led by Dr. Wenzhi Lin',footerExplore:'Explore',footerConditions:'What We Treat',footerTreatments:'Treatments',footerTeam:'About',footerContact:'Contact'},
+nl:{home:'Home',conditions:'Wat we behandelen',treatments:'Behandelingen',about:'Over ons',contact:'Contact',footerTagline:'Westerse & TCM, Den Haag',footerLedBy:'Geleid door Dr. Wenzhi Lin',footerExplore:'Ontdek',footerConditions:'Wat we behandelen',footerTreatments:'Behandelingen',footerTeam:'Over ons',footerContact:'Contact'},
+zh:{home:'首页',conditions:'治疗项目',treatments:'疗法',about:'关于我们',contact:'联系',footerTagline:'海牙中西医结合诊所',footerLedBy:'由林文智医生领导',footerExplore:'探索',footerConditions:'治疗项目',footerTreatments:'疗法',footerTeam:'关于我们',footerContact:'联系'}
+};
+
+function applyTranslations(){
+document.querySelectorAll('[data-i18n]').forEach(el=>{
+const key=el.getAttribute('data-i18n');
+if(i18n[currentLang]&&i18n[currentLang][key])el.textContent=i18n[currentLang][key];
+});
+document.querySelectorAll('.lang-select button').forEach(btn=>{
+btn.classList.toggle('active',btn.getAttribute('data-lang')===currentLang);
+});
+}
+
+function setLang(lang){
+currentLang=lang;
+applyTranslations();
+route();
+}
+
+function navigateTo(url){
+history.pushState({},'',url);
+route();
+}
+
+function route(){
+const path=location.pathname;
+if(path==='/')renderHome();
+else if(path==='/conditions')renderConditions();
+else if(path.startsWith('/conditions/'))renderCondition(path.split('/')[2]);
+else if(path==='/treatments')renderTreatments();
+else if(path.startsWith('/treatments/'))renderTreatment(path.split('/')[2]);
+else if(path==='/about')renderAbout();
+else if(path==='/contact')renderContact();
+else renderHome();
+}
+
+async function renderHome(){
+app.innerHTML='<div class="loading">Loading...</div>';
+try{
+const [condRes,treatRes]=await Promise.all([fetch(`${API}/conditions?lang=${currentLang}`),fetch(`${API}/treatments?lang=${currentLang}`)]);
+if(!condRes.ok||!treatRes.ok)throw new Error('Load failed');
+const conditions=await condRes.json();
+const treatments=await treatRes.json();
+let html='<section class="hero"><div class="wrap hero-grid"><div class="hero-copy"><h1>A <em>balanced</em> approach to the health of mind and body.</h1><p class="lede">Dr. Wenzhi Lin brings over 40 years of dual experience.</p><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div></div></section>';
+html+='<section class="section"><div class="section-head"><h2>What We Treat</h2></div><div class="cond-grid">';
+conditions.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${c.category_slug||''}</div><h4>${c.name||c.slug}</h4><p>${(c.summary||'').substring(0,110)}</p></div><div class="arrow">Explore →</div></div>`;});
+html+='</div></section>';
+html+='<section class="section"><div class="section-head"><h2>Our Treatments</h2></div><div class="cond-grid">';
+treatments.forEach(t=>{html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${t.name||t.slug}</h4><p>${(t.summary||'').substring(0,110)}</p></div><div class="arrow">View →</div></div>`;});
+html+='</div></section>';
+app.innerHTML=html;
+}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+}
+
+async function renderConditions(){
+app.innerHTML='<div class="loading">Loading...</div>';
+try{
+const res=await fetch(`${API}/conditions?lang=${currentLang}`);
+if(!res.ok)throw new Error('Load failed');
+const data=await res.json();
+let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / '+i18n[currentLang].conditions+'</div><h1>'+i18n[currentLang].conditions+'</h1></div><section class="section"><div class="cond-grid">';
+data.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${c.category_slug||''}</div><h4>${c.name||c.slug}</h4><p>${(c.summary||'').substring(0,110)}</p></div><div class="arrow">Explore →</div></div>`;});
+html+='</div></section>';app.innerHTML=html;
+}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+}
+
+async function renderCondition(slug){
+app.innerHTML='<div class="loading">Loading...</div>';
+try{
+const res=await fetch(`${API}/conditions/${slug}?lang=${currentLang}`);
+if(!res.ok)throw new Error('Condition not found');
+const data=await res.json();
+const c=data.condition;
+let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/conditions\')">'+i18n[currentLang].conditions+'</a> / '+(c.name||c.slug)+'</div><h1>'+(c.name||c.slug)+'</h1><p class="lede">'+(c.summary||'')+'</p></div><div class="condition-content">';
+if(c.recognition)html+='<h2>Recognition</h2><p>'+c.recognition.replace(/\n/g,'<br>')+'</p>';else html+='<h2>Recognition</h2><div class="placeholder-box">Content pending</div>';
+if(c.red_flags)html+='<h2>Red Flags</h2><p>'+c.red_flags.replace(/\n/g,'<br>')+'</p>';else html+='<h2>Red Flags</h2><div class="placeholder-box">Content pending</div>';
+if(c.understanding)html+='<h2>Understanding</h2><p>'+c.understanding.replace(/\n/g,'<br>')+'</p>';else html+='<h2>Understanding</h2><div class="placeholder-box">Content pending</div>';
+if(c.approach)html+='<h2>The MC Balans Approach</h2><p>'+c.approach.replace(/\n/g,'<br>')+'</p>';else html+='<h2>The MC Balans Approach</h2><div class="placeholder-box">Content pending</div>';
+if(c.assessment)html+='<h2>Assessment</h2><p>'+c.assessment.replace(/\n/g,'<br>')+'</p>';else html+='<h2>Assessment</h2><div class="placeholder-box">Content pending</div>';
+html+='</div>';
+if(data.treatments.length>0){html+='<section class="section"><div class="section-head"><h2>Treatments</h2></div><div class="cond-grid">';data.treatments.forEach(t=>{html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${t.name||t.slug}</h4><p>${(t.summary||'').substring(0,110)}</p></div><div class="arrow">View →</div></div>`;});html+='</div></section>';}
+html+='<div style="text-align:center;padding:40px;"><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div>';
+app.innerHTML=html;
+}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+}
+
+async function renderTreatments(){
+app.innerHTML='<div class="loading">Loading...</div>';
+try{
+const res=await fetch(`${API}/treatments?lang=${currentLang}`);
+if(!res.ok)throw new Error('Load failed');
+const data=await res.json();
+let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / '+i18n[currentLang].treatments+'</div><h1>'+i18n[currentLang].treatments+'</h1></div><section class="section"><div class="cond-grid">';
+data.forEach(t=>{html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${t.name||t.slug}</h4><p>${(t.summary||'').substring(0,110)}</p></div><div class="arrow">View →</div></div>`;});
+html+='</div></section>';app.innerHTML=html;
+}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+}
+
+async function renderTreatment(slug){
+app.innerHTML='<div class="loading">Loading...</div>';
+try{
+const res=await fetch(`${API}/treatments/${slug}?lang=${currentLang}`);
+if(!res.ok)throw new Error('Treatment not found');
+const data=await res.json();
+const t=data.treatment;
+let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/treatments\')">'+i18n[currentLang].treatments+'</a> / '+(t.name||t.slug)+'</div><h1>'+(t.name||t.slug)+'</h1><p class="lede">'+(t.summary||'')+'</p></div><div class="condition-content">';
+if(t.body)html+='<h2>Overview</h2><p>'+t.body.replace(/\n/g,'<br>')+'</p>';
+if(data.conditions.length>0){html+='<h2>Conditions Treated</h2><ul>';data.conditions.forEach(c=>{html+='<li><a style="color:var(--jade);cursor:pointer;" onclick="navigateTo(\'/conditions/'+c.slug+'\')">'+(c.name||c.slug)+'</a></li>';});html+='</ul>';}
+html+='</div><div style="text-align:center;padding:40px;"><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div>';
+app.innerHTML=html;
+}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+}
+
+function renderAbout(){
+app.innerHTML='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / '+i18n[currentLang].about+'</div><h1>'+i18n[currentLang].about+'</h1></div><div class="wrap section"><p>Dr. Wenzhi Lin, 40+ years, trained in both Western and Chinese medicine.</p></div>';
+}
+
+function renderContact(){
+app.innerHTML='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / '+i18n[currentLang].contact+'</div><h1>'+i18n[currentLang].contact+'</h1></div><div class="wrap section"><p>Phone: 070 388 8111</p><p>Email: info@mcbalans.nl</p><p>Mon-Fri, 9:30-17:00</p></div>';
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+applyTranslations();
+route();
+});
+</script>
+</body>
+</html>
