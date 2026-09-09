@@ -48,22 +48,22 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 .acc-item.open .acc-body{max-height:600px;}
 .acc-body-inner{padding:0 0 24px;display:flex;gap:44px;flex-wrap:wrap;}
 .acc-body-inner .cond-card{flex:1;min-width:260px;}
-/* Insurance band on homepage */
+/* Insurance band */
 .insurance-band{background:var(--amber-tint);padding:34px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
 .insurance-inner{display:flex;gap:20px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
 .insurance-inner p{font-size:14.3px;margin:0;color:var(--ink);max-width:700px;}
 .insurance-inner strong{font-weight:600;}
-/* Expandable condition detail sections */
-.detail-accordion{border-top:1px solid var(--line);}
-.detail-item{border-bottom:1px solid var(--line);}
-.detail-head{display:flex;justify-content:space-between;align-items:center;padding:18px 0;cursor:pointer;}
-.detail-head h3{font-size:19px;font-weight:500;}
-.detail-head .plus{font-family:var(--font-mono);font-size:18px;color:var(--jade);transition:transform .2s;}
-.detail-item.open .detail-head .plus{transform:rotate(45deg);}
-.detail-body{max-height:0;overflow:hidden;transition:max-height .25s ease;}
-.detail-item.open .detail-body{max-height:1200px;}
-.detail-body-inner{padding:0 0 24px;}
-@media(max-width:900px){.cond-grid,.cred-grid,.team-grid{grid-template-columns:1fr 1fr}.lin-grid,.hero-grid{grid-template-columns:1fr}}
+/* Expandable boxes (literal, not accordion) */
+.exp-box{border:1px solid var(--line);border-radius:4px;margin-bottom:16px;background:var(--white);overflow:hidden;}
+.exp-box-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;cursor:pointer;background:var(--jade-tint);}
+.exp-box-head h3{font-size:18px;font-weight:500;color:var(--ink);}
+.exp-box-head .plus{font-family:var(--font-mono);font-size:20px;color:var(--jade);transition:transform .2s;}
+.exp-box.open .exp-box-head .plus{transform:rotate(45deg);}
+.exp-box-body{max-height:0;overflow:hidden;transition:max-height .3s ease;padding:0 20px;}
+.exp-box.open .exp-box-body{max-height:1200px;padding:20px;}
+.exp-box-body-inner p{color:var(--stone);}
+.exp-box-body-inner .cond-grid{grid-template-columns:repeat(2,1fr);}
+@media(max-width:900px){.cond-grid,.cred-grid,.team-grid{grid-template-columns:1fr 1fr}.lin-grid,.hero-grid{grid-template-columns:1fr}.exp-box-body-inner .cond-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -102,8 +102,16 @@ const API='/api';
 let currentLang='en';
 const app=document.getElementById('app');
 
-function fmt(slug){if(!slug)return '';return slug.split('-').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');}
-function truncate(str,len){if(!str||str.length<=len)return str||'';const cut=str.slice(0,len);const last=cut.lastIndexOf(' ');return (last>0?cut.slice(0,last):cut).trim()+'…';}
+function fmt(slug){
+  if(!slug) return '';
+  return slug.split('-').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+}
+function truncate(str,len){
+  if(!str||str.length<=len)return str||'';
+  const cut=str.slice(0,len);
+  const last=cut.lastIndexOf(' ');
+  return (last>0?cut.slice(0,last):cut).trim()+'…';
+}
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
 function nl2br(html){return esc(html).replace(/\n/g,'<br>');}
 
@@ -113,198 +121,252 @@ nl:{conditions:'Wat we behandelen',treatments:'Behandelingen',resources:'Bronnen
 zh:{conditions:'治疗项目',treatments:'疗法',resources:'资源',about:'关于我们',contact:'联系'}
 };
 
-function setLang(l){currentLang=l;document.querySelectorAll('.lang-select button').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()));route();}
+function setLang(l){
+  currentLang=l;
+  document.querySelectorAll('.lang-select button').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()));
+  route();
+}
 function navigateTo(url){history.pushState({},'',url);route();}
 function route(){
-const p=location.pathname;
-if(p==='/')renderHome();
-else if(p==='/conditions')renderConditions();
-else if(p.startsWith('/conditions/'))renderCondition(p.split('/')[2]);
-else if(p==='/treatments')renderTreatments();
-else if(p.startsWith('/treatments/'))renderTreatment(p.split('/')[2]);
-else if(p==='/resources')renderResources();
-else if(p==='/about')renderAbout();
-else if(p==='/contact')renderContact();
-else renderHome();
+  const p=location.pathname;
+  if(p==='/')renderHome();
+  else if(p==='/conditions')renderConditions();
+  else if(p.startsWith('/conditions/'))renderCondition(p.split('/')[2]);
+  else if(p==='/treatments')renderTreatments();
+  else if(p.startsWith('/treatments/'))renderTreatment(p.split('/')[2]);
+  else if(p==='/resources')renderResources();
+  else if(p==='/about')renderAbout();
+  else if(p==='/contact')renderContact();
+  else renderHome();
 }
 
 async function renderHome(){
-app.innerHTML='<div class="loading">Loading...</div>';
-try{
-const [condRes,catRes]=await Promise.all([fetch(API+'/conditions?lang='+currentLang),fetch(API+'/categories?lang='+currentLang)]);
-if(!condRes.ok||!catRes.ok)throw new Error('Load failed');
-const conditions=await condRes.json();const categories=await catRes.json();
-let html='<section class="hero"><div class="wrap hero-grid"><div class="hero-copy"><h1>A <em>balanced</em> approach to the health of mind and body.</h1><p class="lede">Dr. Wenzhi Lin brings over 40 years of dual experience.</p><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div><div class="hero-portrait"><div class="portrait-frame" style="aspect-ratio:4/5;background:linear-gradient(155deg,#DCE3D9,#C7D2C1);border-radius:2px;display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--font-mono);font-size:12px;color:var(--jade-dark);opacity:.5;">PHOTO<br>PLACEHOLDER</span></div></div></div></section>';
-html+='<section class="section"><div class="section-head"><h2>Why do patients trust Dr. Lin?</h2></div><div class="cred-grid"><div class="cred-card"><div class="num">01</div><h3>Credible</h3><p>A practising, licensed medical doctor in the Netherlands.</p></div><div class="cred-card"><div class="num">02</div><h3>Experienced</h3><p>40+ years of sustained practice across Chinese and Western medicine.</p></div><div class="cred-card"><div class="num">03</div><h3>Respected</h3><p>Monthly Medisch Dossier column, NPO documentary, Knight of Orange-Nassau (2012).</p></div><div class="cred-card"><div class="num">04</div><h3>Successful</h3><p>Reviews supporting treatment effectiveness.</p></div></div></section>';
-// Insurance band
-html+='<div class="insurance-band"><div class="wrap insurance-inner"><p><strong>Insurance:</strong> Consultations may be covered under standard health insurance. TCM treatments may be covered under supplementary insurance (aanvullende verzekering). We can help you check.</p></div></div>';
-// Conditions grouped by category
-html+='<section class="section" style="background:var(--jade-tint);"><div class="wrap"><div class="section-head"><h2>What We Treat</h2></div>';
-categories.forEach(cat=>{
-const catConditions=conditions.filter(c=>c.category_slug===cat.slug);
-if(catConditions.length>0){
-html+='<div class="category-group"><h3>'+esc(cat.name||fmt(cat.slug))+'</h3><div class="cond-grid">';
-catConditions.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${esc(cat.name||fmt(cat.slug))}</div><h4>${esc(c.name||fmt(c.slug))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;});
-html+='</div></div>';
-}
-});
-html+='</div></section>';
-app.innerHTML=html;
-}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+  app.innerHTML='<div class="loading">Loading...</div>';
+  try{
+    const [condRes,catRes]=await Promise.all([
+      fetch(API+'/conditions?lang='+currentLang),
+      fetch(API+'/categories?lang='+currentLang)
+    ]);
+    if(!condRes.ok||!catRes.ok)throw new Error('Load failed');
+    const conditions=await condRes.json();
+    const categories=await catRes.json();
+
+    let html='<section class="hero"><div class="wrap hero-grid"><div class="hero-copy"><h1>A <em>balanced</em> approach to the health of mind and body.</h1><p class="lede">Dr. Wenzhi Lin brings over 40 years of dual experience.</p><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div><div class="hero-portrait"><div class="portrait-frame" style="aspect-ratio:4/5;background:linear-gradient(155deg,#DCE3D9,#C7D2C1);border-radius:2px;display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--font-mono);font-size:12px;color:var(--jade-dark);opacity:.5;">PHOTO<br>PLACEHOLDER</span></div></div></div></section>';
+
+    // Credibility section - fixed background
+    html+='<section class="cred-section"><div class="wrap"><h2>Why do patients trust Dr. Lin?</h2><div class="cred-grid">';
+    const creds=[
+      {num:'01',title:'Credible',text:'A practising, licensed medical doctor in the Netherlands.'},
+      {num:'02',title:'Experienced',text:'40+ years of sustained practice across Chinese and Western medicine.'},
+      {num:'03',title:'Respected',text:'Monthly Medisch Dossier column, NPO documentary, Knight of Orange-Nassau (2012).'},
+      {num:'04',title:'Successful',text:'Reviews supporting treatment effectiveness.'}
+    ];
+    creds.forEach(c=>{
+      html+='<div class="cred-card"><div class="num">'+c.num+'</div><h3>'+c.title+'</h3><p>'+c.text+'</p></div>';
+    });
+    html+='</div></div></section>';
+
+    // Insurance band
+    html+='<div class="insurance-band"><div class="wrap insurance-inner"><p><strong>Insurance:</strong> Consultations may be covered under standard health insurance. TCM treatments may be covered under supplementary insurance (aanvullende verzekering). We can help you check.</p></div></div>';
+
+    // Conditions grouped by category
+    html+='<section class="section" style="background:var(--jade-tint);"><div class="wrap"><div class="section-head"><h2>What We Treat</h2></div>';
+    categories.forEach(cat=>{
+      const catConditions=conditions.filter(c=>c.category_slug===cat.slug);
+      if(catConditions.length>0){
+        html+='<div class="category-group"><h3>'+esc(fmt(cat.name||cat.slug))+'</h3><div class="cond-grid">';
+        catConditions.forEach(c=>{
+          html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${esc(fmt(cat.name||cat.slug))}</div><h4>${esc(fmt(c.name||c.slug))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;
+        });
+        html+='</div></div>';
+      }
+    });
+    html+='</div></section>';
+
+    app.innerHTML=html;
+  }catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
 }
 
 async function renderConditions(){
-app.innerHTML='<div class="loading">Loading...</div>';
-try{
-const [condRes,catRes]=await Promise.all([fetch(API+'/conditions?lang='+currentLang),fetch(API+'/categories?lang='+currentLang)]);
-if(!condRes.ok||!catRes.ok)throw new Error('Load failed');
-const conditions=await condRes.json();const categories=await catRes.json();
-let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / '+i18n[currentLang].conditions+'</div><h1>'+i18n[currentLang].conditions+'</h1></div><section class="section"><div class="wrap">';
-categories.forEach(cat=>{
-const catConditions=conditions.filter(c=>c.category_slug===cat.slug);
-if(catConditions.length>0){
-html+='<div class="accordion"><div class="acc-item"><div class="acc-head" onclick="this.parentElement.classList.toggle(\'open\')"><h4>'+esc(cat.name||fmt(cat.slug))+'</h4><span class="plus">+</span></div><div class="acc-body"><div class="acc-body-inner" style="flex-direction:column; gap:16px;">';
-catConditions.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${esc(cat.name||fmt(cat.slug))}</div><h4>${esc(c.name||fmt(c.slug))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;});
-html+='</div></div></div></div>';
-}
-});
-html+='</div></section>';app.innerHTML=html;
-}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+  app.innerHTML='<div class="loading">Loading...</div>';
+  try{
+    const [condRes,catRes]=await Promise.all([
+      fetch(API+'/conditions?lang='+currentLang),
+      fetch(API+'/categories?lang='+currentLang)
+    ]);
+    if(!condRes.ok||!catRes.ok)throw new Error('Load failed');
+    const conditions=await condRes.json();
+    const categories=await catRes.json();
+
+    let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / '+i18n[currentLang].conditions+'</div><h1>'+i18n[currentLang].conditions+'</h1></div><section class="section"><div class="wrap">';
+
+    categories.forEach(cat=>{
+      const catConditions=conditions.filter(c=>c.category_slug===cat.slug);
+      if(catConditions.length>0){
+        html+='<div class="accordion"><div class="acc-item"><div class="acc-head" onclick="this.parentElement.classList.toggle(\'open\')"><h4>'+esc(fmt(cat.name||cat.slug))+'</h4><span class="plus">+</span></div><div class="acc-body"><div class="acc-body-inner" style="flex-direction:column; gap:16px;">';
+        catConditions.forEach(c=>{
+          html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${esc(fmt(cat.name||cat.slug))}</div><h4>${esc(fmt(c.name||c.slug))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;
+        });
+        html+='</div></div></div></div>';
+      }
+    });
+
+    html+='</div></section>';
+    app.innerHTML=html;
+  }catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
 }
 
 async function renderCondition(slug){
-app.innerHTML='<div class="loading">Loading...</div>';
-try{
-const res=await fetch(API+'/conditions/'+slug+'?lang='+currentLang);
-if(!res.ok)throw new Error('Condition not found');
-const data=await res.json();
-const c=data.condition;const nome=c.name||fmt(slug);
-let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/conditions\')">'+i18n[currentLang].conditions+'</a> / '+esc(nome)+'</div><h1>'+esc(nome)+'</h1>'+(c.summary?'<p class="lede">'+esc(c.summary)+'</p>':'')+'<div class="stamp-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Licensed MD</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">40+ Years</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Orange-Nassau</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Medisch Dossier</span></div></div><div class="condition-content">';
+  app.innerHTML='<div class="loading">Loading...</div>';
+  try{
+    const res=await fetch(API+'/conditions/'+slug+'?lang='+currentLang);
+    if(!res.ok)throw new Error('Condition not found');
+    const data=await res.json();
+    const c=data.condition;
+    const nome=esc(fmt(c.name||c.slug));
 
-// Build expandable detail accordions
-html+='<div class="detail-accordion">';
+    let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/conditions\')">'+i18n[currentLang].conditions+'</a> / '+nome+'</div><h1>'+nome+'</h1>'+(c.summary?'<p class="lede">'+esc(c.summary)+'</p>':'')+'<div class="stamp-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Licensed MD</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">40+ Years</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Orange-Nassau</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Medisch Dossier</span></div></div><div class="condition-content">';
 
-// Recognition
-html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Recognition</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.recognition?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.recognition)+'</div>':'<div class="placeholder-box">Content pending – Recognition</div>')+'</div></div></div>';
+    // Recogntion
+    html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Recognition</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.recognition?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.recognition)+'</div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
 
-// Red Flags
-html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Red Flags</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.red_flags?'<div style="background:var(--amber-tint);border-left:4px solid var(--red);padding:24px;border-radius:4px;">'+nl2br(c.red_flags)+'</div>':'<div class="placeholder-box">Content pending – Red Flags</div>')+'</div></div></div>';
+    // Red Flags
+    html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Red Flags</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.red_flags?'<div style="background:var(--amber-tint);border-left:4px solid var(--red);padding:24px;border-radius:4px;">'+nl2br(c.red_flags)+'</div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
 
-// Understanding
-html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Understanding</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.understanding?'<p>'+nl2br(c.understanding)+'</p>':'<div class="placeholder-box">Content pending – Understanding</div>')+'</div></div></div>';
+    // Understanding
+    html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Understanding</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.understanding?'<p>'+nl2br(c.understanding)+'</p>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
 
-// Approach
-html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>MC Balans Approach</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.approach?'<div style="background:var(--jade-tint);padding:24px;border-radius:4px;">'+nl2br(c.approach)+'</div>':'<div class="placeholder-box">Content pending – Approach</div>')+'</div></div></div>';
+    // Approach
+    html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>MC Balans Approach</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.approach?'<div style="background:var(--jade-tint);padding:24px;border-radius:4px;">'+nl2br(c.approach)+'</div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
 
-// Assessment
-html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Assessment</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.assessment?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.assessment)+'</div>':'<div class="placeholder-box">Content pending – Assessment</div>')+'</div></div></div>';
+    // Assessment
+    html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Assessment</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.assessment?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.assessment)+'</div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
 
-// Treatments
-if(data.treatments&&data.treatments.length>0){
-html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Treatments</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner"><div class="cond-grid">';
-data.treatments.forEach(t=>{
-html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(t.name)}</h4><p>${esc(truncate(t.summary||'',100))}</p>${t.duration?'<div style="margin-top:4px;color:var(--stone);"><strong>Duration:</strong> '+esc(t.duration)+'</div>':''}</div><div class="arrow">View →</div></div>`;
-});
-html+='</div></div></div></div>';
-}
+    // Treatments (always visible - no box)
+    if(data.treatments&&data.treatments.length>0){
+      html+='<h2>Treatments</h2><div class="cond-grid">';
+      data.treatments.forEach(t=>{
+        html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(fmt(t.name||t.slug))}</h4><p>${esc(truncate(t.summary||'',100))}</p>${t.duration?'<div style="margin-top:4px;color:var(--stone);"><strong>Duration:</strong> '+esc(t.duration)+'</div>':''}</div><div class="arrow">View →</div></div>`;
+      });
+      html+='</div>';
+    }
 
-// Pricing
-if(data.pricing&&data.pricing.length>0){
-html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Pricing</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner"><div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">';
-data.pricing.forEach(p=>{
-html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);"><span>'+esc(p.tier_label||'')+'</span><strong>'+esc(p.currency||'€')+esc(p.amount)+'</strong></div>';
-});
-html+='</div></div></div></div>';
-}
+    // Pricing (always visible)
+    if(data.pricing&&data.pricing.length>0){
+      html+='<h2>Pricing</h2><div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">';
+      data.pricing.forEach(p=>{
+        html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);"><span>'+esc(p.tier_label||'')+'</span><strong>'+esc(p.currency||'€')+esc(p.amount)+'</strong></div>';
+      });
+      html+='</div>';
+    }
 
-// Practitioners (Trust)
-html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Who will treat me?</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">';
-if(data.practitioners&&data.practitioners.length>0){
-html+='<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">';
-data.practitioners.forEach(p=>{
-const name = p.email ? p.email.split('@')[0] : p.id;
-const roles = Array.isArray(p.roles)?p.roles.join(', '):(p.roles||'');
-const cred = p.credentials||'';
-html+='<h3>'+esc(name)+'</h3>';
-if(roles) html+='<p>'+esc(roles)+'</p>';
-if(cred) html+='<p>'+esc(cred)+'</p>';
-if(p.experience_years) html+='<p>'+esc(p.experience_years)+' years experience</p>';
-html+='<a style="color:var(--jade);cursor:pointer;" onclick="navigateTo(\'/about\')">Full profile →</a><br><br>';
-});
-html+='</div>';
-}else{
-html+='<div class="placeholder-box">Content pending – Practitioners</div>';
-}
-html+='</div></div></div>';
+    // Practitioners (always visible - not hidden)
+    html+='<h2>Who will treat me?</h2>';
+    if(data.practitioners&&data.practitioners.length>0){
+      html+='<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">';
+      data.practitioners.forEach(p=>{
+        const name = p.email ? p.email.split('@')[0] : p.id;
+        const roles = Array.isArray(p.roles)?p.roles.join(', '):(p.roles||'');
+        const cred = p.credentials||'';
+        html+='<h3>'+esc(name)+'</h3>';
+        if(roles) html+='<p>'+esc(roles)+'</p>';
+        if(cred) html+='<p>'+esc(cred)+'</p>';
+        if(p.experience_years) html+='<p>'+esc(p.experience_years)+' years experience</p>';
+        html+='<a style="color:var(--jade);cursor:pointer;" onclick="navigateTo(\'/about\')">Full profile →</a><br><br>';
+      });
+      html+='</div>';
+    }else{
+      html+='<div class="placeholder-box">Content pending</div>';
+    }
 
-// Expectations
-html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Expectations</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.expectations?'<p>'+nl2br(c.expectations)+'</p>':'<div class="placeholder-box">Content pending – Expectations</div>')+'</div></div></div>';
+    // Expectations (expandable box)
+    html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Expectations</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.expectations?'<p>'+nl2br(c.expectations)+'</p>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
 
-// Insurance (Practical Info)
-html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Practical Information</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.insurance?'<div style="background:var(--jade-tint);padding:24px;border-radius:4px;"><h3>Insurance</h3><p>'+nl2br(c.insurance)+'</p></div>':'<div class="placeholder-box">Content pending – Insurance</div>')+'</div></div></div>';
+    // Insurance (expandable box)
+    html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Practical Information</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.insurance?'<div style="background:var(--jade-tint);padding:24px;border-radius:4px;"><p>'+nl2br(c.insurance)+'</p></div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
 
-// FAQ
-if(data.faqs&&data.faqs.length>0){
-html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>FAQ</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">';
-data.faqs.forEach(f=>{
-html+='<div class="faq-item"><div class="q">'+esc(f.question)+'</div><div class="a">'+esc(f.answer)+'</div></div>';
-});
-html+='</div></div></div>';
-}
+    // FAQ (expandable box)
+    if(data.faqs&&data.faqs.length>0){
+      html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>FAQ</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">';
+      data.faqs.forEach(f=>{
+        html+='<div class="faq-item"><div class="q">'+esc(f.question)+'</div><div class="a">'+esc(f.answer)+'</div></div>';
+      });
+      html+='</div></div></div>';
+    }
 
-// CTA
-html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Book an appointment</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner"><div style="text-align:center;padding:20px;"><h2>'+(c.cta?esc(c.cta):'Ready to find out what is behind your symptoms?')+'</h2><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div></div></div></div>';
+    // CTA (always visible, not hidden)
+    html+='<div style="text-align:center;padding:40px;margin-top:20px;"><h2>'+(c.cta?esc(c.cta):'Ready to find out what is behind your symptoms?')+'</h2><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div>';
 
-html+='</div>'; // close detail-accordion
-html+='</div>'; // close condition-content
-app.innerHTML=html;
-}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+    html+='</div>';
+    app.innerHTML=html;
+  }catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
 }
 
 async function renderTreatments(){
-app.innerHTML='<div class="loading">Loading...</div>';
-try{
-const res=await fetch(API+'/treatments?lang='+currentLang);
-if(!res.ok)throw new Error('Load failed');
-const data=await res.json();
-let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / '+i18n[currentLang].treatments+'</div><h1>'+i18n[currentLang].treatments+'</h1></div><section class="section"><div class="cond-grid">';
-data.forEach(t=>{html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(t.name||fmt(t.slug))}</h4><p>${esc(truncate(t.summary||'',110))}</p></div><div class="arrow">View →</div></div>`;});
-html+='</div></section>';app.innerHTML=html;
-}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+  app.innerHTML='<div class="loading">Loading...</div>';
+  try{
+    const res=await fetch(API+'/treatments?lang='+currentLang);
+    if(!res.ok)throw new Error('Load failed');
+    const data=await res.json();
+    let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / '+i18n[currentLang].treatments+'</div><h1>'+i18n[currentLang].treatments+'</h1></div><section class="section"><div class="cond-grid">';
+    data.forEach(t=>{html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(fmt(t.name||t.slug))}</h4><p>${esc(truncate(t.summary||'',110))}</p></div><div class="arrow">View →</div></div>`;});
+    html+='</div></section>';
+    app.innerHTML=html;
+  }catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
 }
 
 async function renderTreatment(slug){
-app.innerHTML='<div class="loading">Loading...</div>';
-try{
-const res=await fetch(API+'/treatments/'+slug+'?lang='+currentLang);
-if(!res.ok)throw new Error('Treatment not found');
-const data=await res.json();
-const t=data.treatment;const nome=t.name||fmt(slug);
-let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/treatments\')">'+i18n[currentLang].treatments+'</a> / '+esc(nome)+'</div><h1>'+esc(nome)+'</h1><p class="lede">'+(t.summary||'')+'</p></div><div class="condition-content">';
-if(t.body)html+='<h2>Overview</h2><p>'+nl2br(t.body)+'</p>';
-if(data.conditions.length>0){html+='<h2>Conditions Treated</h2><ul>';data.conditions.forEach(c=>{html+='<li><a style="color:var(--jade);cursor:pointer;" onclick="navigateTo(\'/conditions/'+c.slug+'\')">'+(c.name||fmt(c.slug))+'</a></li>';});html+='</ul>';}
-html+='</div><div style="text-align:center;padding:40px;"><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div>';
-app.innerHTML=html;
-}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+  app.innerHTML='<div class="loading">Loading...</div>';
+  try{
+    const res=await fetch(API+'/treatments/'+slug+'?lang='+currentLang);
+    if(!res.ok)throw new Error('Treatment not found');
+    const data=await res.json();
+    const t=data.treatment;
+    const nome=esc(fmt(t.name||t.slug));
+    let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/treatments\')">'+i18n[currentLang].treatments+'</a> / '+nome+'</div><h1>'+nome+'</h1><p class="lede">'+(t.summary||'')+'</p></div><div class="condition-content">';
+    if(t.body)html+='<h2>Overview</h2><p>'+nl2br(t.body)+'</p>';
+    if(data.conditions.length>0){html+='<h2>Conditions Treated</h2><ul>';data.conditions.forEach(c=>{html+='<li><a style="color:var(--jade);cursor:pointer;" onclick="navigateTo(\'/conditions/'+c.slug+'\')">'+esc(fmt(c.name||c.slug))+'</a></li>';});html+='</ul>';}
+    html+='</div><div style="text-align:center;padding:40px;"><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div>';
+    app.innerHTML=html;
+  }catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
 }
 
 async function renderAbout(){
-app.innerHTML='<div class="loading">Loading...</div>';
-try{
-const [teamRes,priceRes]=await Promise.all([fetch(API+'/practitioners'),fetch(API+'/pricing')]);
-if(!teamRes.ok)throw new Error('Failed');
-const team=await teamRes.json();const prices=priceRes.ok?await priceRes.json():[];
-let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / About</div><h1>About MC Balans</h1><p class="lede">Meet the team, see the clinic, check pricing, or read about our approach.</p><div class="about-tabs"><div class="about-tab active" onclick="aboutTab(\'ourteam\')">Our Team</div><div class="about-tab" onclick="aboutTab(\'ourclinic\')">Our Clinic</div><div class="about-tab" onclick="aboutTab(\'pricing\')">Pricing</div><div class="about-tab" onclick="aboutTab(\'philosophy\')">Philosophy</div></div></div><section class="section"><div class="wrap">';
-html+='<div class="about-panel active" id="panel-ourteam"><div class="section-head"><h2>Our Team</h2></div><div class="team-grid">';team.forEach(m=>{const name=m.email?m.email.split('@')[0]:m.id;const roles=Array.isArray(m.roles)?m.roles.join(', '):(m.roles||'');html+=`<div class="team-card"><div class="team-photo"><span>PHOTO</span></div><div class="team-info"><h4>${esc(name)}</h4><div class="role">${esc(roles)}</div><p>${esc(m.email||'')}</p></div></div>`;});html+='</div></div>';
-html+='<div class="about-panel" id="panel-ourclinic"><div class="section-head"><h2>Our Clinic</h2></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;"><div class="placeholder-box">Clinic photo 1</div><div class="placeholder-box">Clinic photo 2</div></div><p style="margin-top:24px;color:var(--stone);">Our clinic is located in The Hague. We offer a calm, professional environment for your care.</p></div>';
-html+='<div class="about-panel" id="panel-pricing"><div class="section-head"><h2>Pricing</h2></div><table class="pricing-table"><thead><tr><th>Treatment</th><th>Label</th><th class="price">Price</th></tr></thead><tbody>';prices.forEach(p=>{html+=`<tr onclick="navigateTo('/${p.entity_type}s/${p.entity_slug}')"><td>${esc(p.entity_slug?fmt(p.entity_slug):'')}</td><td>${esc(p.tier_label||'')}</td><td class="price">${esc(p.currency||'€')}${p.amount}</td></tr>`;});html+='</tbody></table></div>';
-html+='<div class="about-panel" id="panel-philosophy"><div class="section-head"><h2>Our Philosophy</h2></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;"><div class="placeholder-box">Vision</div><div class="placeholder-box">Mission</div></div></div>';
-html+='</div></section>';app.innerHTML=html;
-}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+  app.innerHTML='<div class="loading">Loading...</div>';
+  try{
+    const [teamRes,priceRes]=await Promise.all([fetch(API+'/practitioners'),fetch(API+'/pricing')]);
+    if(!teamRes.ok)throw new Error('Failed');
+    const team=await teamRes.json();
+    const prices=priceRes.ok?await priceRes.json():[];
+    let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / About</div><h1>About MC Balans</h1><p class="lede">Meet the team, see the clinic, check pricing, or read about our approach.</p><div class="about-tabs"><div class="about-tab active" onclick="aboutTab(\'ourteam\')">Our Team</div><div class="about-tab" onclick="aboutTab(\'ourclinic\')">Our Clinic</div><div class="about-tab" onclick="aboutTab(\'pricing\')">Pricing</div><div class="about-tab" onclick="aboutTab(\'philosophy\')">Philosophy</div></div></div><section class="section"><div class="wrap">';
+    html+='<div class="about-panel active" id="panel-ourteam"><div class="section-head"><h2>Our Team</h2></div><div class="team-grid">';
+    team.forEach(m=>{
+      const name=m.email?m.email.split('@')[0]:m.id;
+      const roles=Array.isArray(m.roles)?m.roles.join(', '):(m.roles||'');
+      html+=`<div class="team-card"><div class="team-photo"><span>PHOTO</span></div><div class="team-info"><h4>${esc(name)}</h4><div class="role">${esc(roles)}</div><p>${esc(m.email||'')}</p></div></div>`;
+    });
+    html+='</div></div>';
+    html+='<div class="about-panel" id="panel-ourclinic"><div class="section-head"><h2>Our Clinic</h2></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;"><div class="placeholder-box">Clinic photo 1</div><div class="placeholder-box">Clinic photo 2</div></div><p style="margin-top:24px;color:var(--stone);">Our clinic is located in The Hague. We offer a calm, professional environment for your care.</p></div>';
+    html+='<div class="about-panel" id="panel-pricing"><div class="section-head"><h2>Pricing</h2></div><table class="pricing-table"><thead><tr><th>Treatment</th><th>Label</th><th class="price">Price</th></tr></thead><tbody>';
+    prices.forEach(p=>{html+=`<tr onclick="navigateTo('/${p.entity_type}s/${p.entity_slug}')"><td>${esc(fmt(p.entity_slug||''))}</td><td>${esc(p.tier_label||'')}</td><td class="price">${esc(p.currency||'€')}${p.amount}</td></tr>`;});
+    html+='</tbody></table></div>';
+    html+='<div class="about-panel" id="panel-philosophy"><div class="section-head"><h2>Our Philosophy</h2></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;"><div class="placeholder-box">Vision</div><div class="placeholder-box">Mission</div></div></div>';
+    html+='</div></section>';
+    app.innerHTML=html;
+  }catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
 }
-function aboutTab(tab){document.querySelectorAll('.about-tab').forEach(t=>t.classList.toggle('active',t.textContent.toLowerCase().replace(' ','')===tab));document.querySelectorAll('.about-panel').forEach(p=>p.classList.remove('active'));const panel=document.getElementById('panel-'+tab);if(panel)panel.classList.add('active');}
-function renderResources(){app.innerHTML='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Resources</div><h1>Resources</h1><p class="lede">Dr. Lin\'s monthly Medisch Dossier column, published natively.</p></div><section class="section"><div class="wrap"><div class="resource-card" style="margin-bottom:16px;"><div class="rc-text"><span class="resource-badge">Journal</span><h4>Acupuncture for knee injury</h4><p>Written by Dr. Lin · cross-linked to Pain → Joints Pain and Acupuncture.</p></div><div class="rc-meta">21.07.2026 · Dr. Lin</div><button class="btn btn-outline">Read →</button></div><div class="placeholder-box">Further Medisch Dossier articles — content pending</div></div></section>';}
-function renderContact(){app.innerHTML='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Contact</div><h1>Book an appointment</h1></div><div class="wrap section"><p>Phone: 070 388 8111</p><p>Email: info@mcbalans.nl</p><p>Mon-Fri, 9:30-17:00</p></div>';}
+function aboutTab(tab){
+  document.querySelectorAll('.about-tab').forEach(t=>t.classList.toggle('active',t.textContent.toLowerCase().replace(' ','')===tab));
+  document.querySelectorAll('.about-panel').forEach(p=>p.classList.remove('active'));
+  const panel=document.getElementById('panel-'+tab);
+  if(panel)panel.classList.add('active');
+}
+function renderResources(){
+  app.innerHTML='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Resources</div><h1>Resources</h1><p class="lede">Dr. Lin\'s monthly Medisch Dossier column, published natively.</p></div><section class="section"><div class="wrap"><div class="resource-card" style="margin-bottom:16px;"><div class="rc-text"><span class="resource-badge">Journal</span><h4>Acupuncture for knee injury</h4><p>Written by Dr. Lin · cross-linked to Pain → Joints Pain and Acupuncture.</p></div><div class="rc-meta">21.07.2026 · Dr. Lin</div><button class="btn btn-outline">Read →</button></div><div class="placeholder-box">Further Medisch Dossier articles — content pending</div></div></section>';
+}
+function renderContact(){
+  app.innerHTML='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Contact</div><h1>Book an appointment</h1></div><div class="wrap section"><p>Phone: 070 388 8111</p><p>Email: info@mcbalans.nl</p><p>Mon-Fri, 9:30-17:00</p></div>';
+}
 
 document.addEventListener('DOMContentLoaded',()=>{route();});
 </script>
