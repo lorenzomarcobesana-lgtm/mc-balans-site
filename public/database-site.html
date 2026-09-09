@@ -48,6 +48,21 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 .acc-item.open .acc-body{max-height:600px;}
 .acc-body-inner{padding:0 0 24px;display:flex;gap:44px;flex-wrap:wrap;}
 .acc-body-inner .cond-card{flex:1;min-width:260px;}
+/* Insurance band on homepage */
+.insurance-band{background:var(--amber-tint);padding:34px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+.insurance-inner{display:flex;gap:20px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
+.insurance-inner p{font-size:14.3px;margin:0;color:var(--ink);max-width:700px;}
+.insurance-inner strong{font-weight:600;}
+/* Expandable condition detail sections */
+.detail-accordion{border-top:1px solid var(--line);}
+.detail-item{border-bottom:1px solid var(--line);}
+.detail-head{display:flex;justify-content:space-between;align-items:center;padding:18px 0;cursor:pointer;}
+.detail-head h3{font-size:19px;font-weight:500;}
+.detail-head .plus{font-family:var(--font-mono);font-size:18px;color:var(--jade);transition:transform .2s;}
+.detail-item.open .detail-head .plus{transform:rotate(45deg);}
+.detail-body{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+.detail-item.open .detail-body{max-height:1200px;}
+.detail-body-inner{padding:0 0 24px;}
 @media(max-width:900px){.cond-grid,.cred-grid,.team-grid{grid-template-columns:1fr 1fr}.lin-grid,.hero-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -57,7 +72,7 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 <div class="logo" onclick="navigateTo('/')">MC Balans<span class="dot">.</span></div>
 <nav class="main-nav">
 <a href="/" onclick="navigateTo('/')">Home</a>
-<a href="/conditions" onclick="navigateTo('/conditions')">Conditions</a>
+<a href="/conditions" onclick="navigateTo('/conditions')">What We Treat</a>
 <a href="/treatments" onclick="navigateTo('/treatments')">Treatments</a>
 <a href="/resources" onclick="navigateTo('/resources')">Resources</a>
 <a href="/about" onclick="navigateTo('/about')">About</a>
@@ -77,7 +92,7 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 <footer class="site">
 <div class="wrap footer-grid">
 <div><div class="footer-logo">MC Balans</div><p>Western & TCM, The Hague</p><p>Led by Dr. Wenzhi Lin</p></div>
-<div><h5>Explore</h5><a href="/conditions" onclick="navigateTo('/conditions')">Conditions</a><a href="/treatments" onclick="navigateTo('/treatments')">Treatments</a><a href="/resources" onclick="navigateTo('/resources')">Resources</a><a href="/about" onclick="navigateTo('/about')">About</a></div>
+<div><h5>Explore</h5><a href="/conditions" onclick="navigateTo('/conditions')">What We Treat</a><a href="/treatments" onclick="navigateTo('/treatments')">Treatments</a><a href="/resources" onclick="navigateTo('/resources')">Resources</a><a href="/about" onclick="navigateTo('/about')">About</a></div>
 <div><h5>Contact</h5><a href="/contact" onclick="navigateTo('/contact')">070 388 8111</a><a href="/contact" onclick="navigateTo('/contact')">info@mcbalans.nl</a><p>Mon–Fri, 9:30–17:00</p></div>
 </div>
 <div class="footer-bottom">© 2026 MC Balans</div>
@@ -93,7 +108,7 @@ function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function nl2br(html){return esc(html).replace(/\n/g,'<br>');}
 
 const i18n={
-en:{conditions:'Conditions',treatments:'Treatments',resources:'Resources',about:'About',contact:'Contact'},
+en:{conditions:'What We Treat',treatments:'Treatments',resources:'Resources',about:'About',contact:'Contact'},
 nl:{conditions:'Wat we behandelen',treatments:'Behandelingen',resources:'Bronnen',about:'Over ons',contact:'Contact'},
 zh:{conditions:'治疗项目',treatments:'疗法',resources:'资源',about:'关于我们',contact:'联系'}
 };
@@ -116,23 +131,23 @@ else renderHome();
 async function renderHome(){
 app.innerHTML='<div class="loading">Loading...</div>';
 try{
-const [condRes,treatRes,catRes]=await Promise.all([fetch(API+'/conditions?lang='+currentLang),fetch(API+'/treatments?lang='+currentLang),fetch(API+'/categories?lang='+currentLang)]);
-if(!condRes.ok||!treatRes.ok||!catRes.ok)throw new Error('Load failed');
-const conditions=await condRes.json();const treatments=await treatRes.json();const categories=await catRes.json();
+const [condRes,catRes]=await Promise.all([fetch(API+'/conditions?lang='+currentLang),fetch(API+'/categories?lang='+currentLang)]);
+if(!condRes.ok||!catRes.ok)throw new Error('Load failed');
+const conditions=await condRes.json();const categories=await catRes.json();
 let html='<section class="hero"><div class="wrap hero-grid"><div class="hero-copy"><h1>A <em>balanced</em> approach to the health of mind and body.</h1><p class="lede">Dr. Wenzhi Lin brings over 40 years of dual experience.</p><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div><div class="hero-portrait"><div class="portrait-frame" style="aspect-ratio:4/5;background:linear-gradient(155deg,#DCE3D9,#C7D2C1);border-radius:2px;display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--font-mono);font-size:12px;color:var(--jade-dark);opacity:.5;">PHOTO<br>PLACEHOLDER</span></div></div></div></section>';
 html+='<section class="section"><div class="section-head"><h2>Why do patients trust Dr. Lin?</h2></div><div class="cred-grid"><div class="cred-card"><div class="num">01</div><h3>Credible</h3><p>A practising, licensed medical doctor in the Netherlands.</p></div><div class="cred-card"><div class="num">02</div><h3>Experienced</h3><p>40+ years of sustained practice across Chinese and Western medicine.</p></div><div class="cred-card"><div class="num">03</div><h3>Respected</h3><p>Monthly Medisch Dossier column, NPO documentary, Knight of Orange-Nassau (2012).</p></div><div class="cred-card"><div class="num">04</div><h3>Successful</h3><p>Reviews supporting treatment effectiveness.</p></div></div></section>';
+// Insurance band
+html+='<div class="insurance-band"><div class="wrap insurance-inner"><p><strong>Insurance:</strong> Consultations may be covered under standard health insurance. TCM treatments may be covered under supplementary insurance (aanvullende verzekering). We can help you check.</p></div></div>';
+// Conditions grouped by category
 html+='<section class="section" style="background:var(--jade-tint);"><div class="wrap"><div class="section-head"><h2>What We Treat</h2></div>';
 categories.forEach(cat=>{
 const catConditions=conditions.filter(c=>c.category_slug===cat.slug);
 if(catConditions.length>0){
 html+='<div class="category-group"><h3>'+esc(cat.name||fmt(cat.slug))+'</h3><div class="cond-grid">';
-catConditions.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${cat.name||''}</div><h4>${esc(c.name||fmt(c.slug))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;});
+catConditions.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${esc(cat.name||fmt(cat.slug))}</div><h4>${esc(c.name||fmt(c.slug))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;});
 html+='</div></div>';
 }
 });
-html+='</div></section>';
-html+='<section class="section"><div class="section-head"><h2>Our Treatments</h2></div><div class="cond-grid">';
-treatments.forEach(t=>{html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(t.name||fmt(t.slug))}</h4><p>${esc(truncate(t.summary||'',110))}</p></div><div class="arrow">View →</div></div>`;});
 html+='</div></section>';
 app.innerHTML=html;
 }catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
@@ -149,7 +164,7 @@ categories.forEach(cat=>{
 const catConditions=conditions.filter(c=>c.category_slug===cat.slug);
 if(catConditions.length>0){
 html+='<div class="accordion"><div class="acc-item"><div class="acc-head" onclick="this.parentElement.classList.toggle(\'open\')"><h4>'+esc(cat.name||fmt(cat.slug))+'</h4><span class="plus">+</span></div><div class="acc-body"><div class="acc-body-inner" style="flex-direction:column; gap:16px;">';
-catConditions.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${cat.name||''}</div><h4>${esc(c.name||fmt(c.slug))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;});
+catConditions.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${esc(cat.name||fmt(cat.slug))}</div><h4>${esc(c.name||fmt(c.slug))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;});
 html+='</div></div></div></div>';
 }
 });
@@ -166,46 +181,44 @@ const data=await res.json();
 const c=data.condition;const nome=c.name||fmt(slug);
 let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/conditions\')">'+i18n[currentLang].conditions+'</a> / '+esc(nome)+'</div><h1>'+esc(nome)+'</h1>'+(c.summary?'<p class="lede">'+esc(c.summary)+'</p>':'')+'<div class="stamp-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Licensed MD</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">40+ Years</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Orange-Nassau</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Medisch Dossier</span></div></div><div class="condition-content">';
 
+// Build expandable detail accordions
+html+='<div class="detail-accordion">';
+
 // Recognition
-html+='<h2>Common symptoms of '+esc(nome)+'</h2>';
-html+=c.recognition?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.recognition)+'</div>':'<div class="placeholder-box">Content pending – Recognition</div>';
+html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Recognition</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.recognition?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.recognition)+'</div>':'<div class="placeholder-box">Content pending – Recognition</div>')+'</div></div></div>';
 
 // Red Flags
-html+='<h2>Common red flags – when to get checked</h2>';
-html+=c.red_flags?'<div style="background:var(--amber-tint);border-left:4px solid var(--red);padding:24px;border-radius:4px;">'+nl2br(c.red_flags)+'</div>':'<div class="placeholder-box">Content pending – Red Flags</div>';
+html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Red Flags</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.red_flags?'<div style="background:var(--amber-tint);border-left:4px solid var(--red);padding:24px;border-radius:4px;">'+nl2br(c.red_flags)+'</div>':'<div class="placeholder-box">Content pending – Red Flags</div>')+'</div></div></div>';
 
 // Understanding
-html+='<h2>Why does this happen, and why does it stick around?</h2>';
-html+=c.understanding?'<p>'+nl2br(c.understanding)+'</p>':'<div class="placeholder-box">Content pending – Understanding</div>';
+html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Understanding</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.understanding?'<p>'+nl2br(c.understanding)+'</p>':'<div class="placeholder-box">Content pending – Understanding</div>')+'</div></div></div>';
 
 // Approach
-html+='<h2>The MC Balans Approach</h2>';
-html+=c.approach?'<div style="background:var(--jade-tint);padding:24px;border-radius:4px;">'+nl2br(c.approach)+'</div>':'<div class="placeholder-box">Content pending – Approach</div>';
+html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>MC Balans Approach</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.approach?'<div style="background:var(--jade-tint);padding:24px;border-radius:4px;">'+nl2br(c.approach)+'</div>':'<div class="placeholder-box">Content pending – Approach</div>')+'</div></div></div>';
 
 // Assessment
-html+='<h2>How will I actually be examined?</h2>';
-html+=c.assessment?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.assessment)+'</div>':'<div class="placeholder-box">Content pending – Assessment</div>';
+html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Assessment</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.assessment?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.assessment)+'</div>':'<div class="placeholder-box">Content pending – Assessment</div>')+'</div></div></div>';
 
 // Treatments
 if(data.treatments&&data.treatments.length>0){
-html+='<h2>What might be recommended and when?</h2><div class="cond-grid">';
+html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Treatments</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner"><div class="cond-grid">';
 data.treatments.forEach(t=>{
 html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(t.name)}</h4><p>${esc(truncate(t.summary||'',100))}</p>${t.duration?'<div style="margin-top:4px;color:var(--stone);"><strong>Duration:</strong> '+esc(t.duration)+'</div>':''}</div><div class="arrow">View →</div></div>`;
 });
-html+='</div>';
+html+='</div></div></div></div>';
 }
 
 // Pricing
 if(data.pricing&&data.pricing.length>0){
-html+='<h2>Pricing</h2><div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">';
+html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Pricing</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner"><div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">';
 data.pricing.forEach(p=>{
 html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);"><span>'+esc(p.tier_label||'')+'</span><strong>'+esc(p.currency||'€')+esc(p.amount)+'</strong></div>';
 });
-html+='</div>';
+html+='</div></div></div></div>';
 }
 
 // Practitioners (Trust)
-html+='<h2>Who will actually treat me?</h2>';
+html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Who will treat me?</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">';
 if(data.practitioners&&data.practitioners.length>0){
 html+='<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">';
 data.practitioners.forEach(p=>{
@@ -222,29 +235,28 @@ html+='</div>';
 }else{
 html+='<div class="placeholder-box">Content pending – Practitioners</div>';
 }
+html+='</div></div></div>';
 
 // Expectations
-html+='<h2>What can I realistically expect?</h2>';
-html+=c.expectations?'<p>'+nl2br(c.expectations)+'</p>':'<div class="placeholder-box">Content pending – Expectations</div>';
+html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Expectations</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.expectations?'<p>'+nl2br(c.expectations)+'</p>':'<div class="placeholder-box">Content pending – Expectations</div>')+'</div></div></div>';
 
-// Practical Info (Insurance)
-html+='<h2>Practical Information</h2>';
-if(c.insurance){
-html+='<div style="background:var(--jade-tint);padding:24px;border-radius:4px;"><h3>Insurance</h3><p>'+nl2br(c.insurance)+'</p></div>';
-}
+// Insurance (Practical Info)
+html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Practical Information</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">'+(c.insurance?'<div style="background:var(--jade-tint);padding:24px;border-radius:4px;"><h3>Insurance</h3><p>'+nl2br(c.insurance)+'</p></div>':'<div class="placeholder-box">Content pending – Insurance</div>')+'</div></div></div>';
 
 // FAQ
 if(data.faqs&&data.faqs.length>0){
-html+='<h2>FAQ</h2>';
+html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>FAQ</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner">';
 data.faqs.forEach(f=>{
 html+='<div class="faq-item"><div class="q">'+esc(f.question)+'</div><div class="a">'+esc(f.answer)+'</div></div>';
 });
+html+='</div></div></div>';
 }
 
 // CTA
-html+='<div style="text-align:center;padding:40px;"><h2>'+(c.cta?esc(c.cta):'Ready to find out what is behind your symptoms?')+'</h2><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div>';
+html+='<div class="detail-item"><div class="detail-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Book an appointment</h3><span class="plus">+</span></div><div class="detail-body"><div class="detail-body-inner"><div style="text-align:center;padding:20px;"><h2>'+(c.cta?esc(c.cta):'Ready to find out what is behind your symptoms?')+'</h2><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div></div></div></div>';
 
-html+='</div>';
+html+='</div>'; // close detail-accordion
+html+='</div>'; // close condition-content
 app.innerHTML=html;
 }catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
 }
