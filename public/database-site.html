@@ -30,7 +30,12 @@ nav.main-nav{display:flex;gap:2px}nav.main-nav a{font-size:13.5px;color:var(--in
 .resource-card{background:var(--white);border:1px solid var(--line);border-radius:2px;padding:28px;display:flex;gap:26px;align-items:center}.resource-badge{font-family:var(--font-mono);font-size:10.5px;background:var(--jade-tint);color:var(--jade);padding:6px 12px;border-radius:100px;text-transform:uppercase}
 footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 0 26px}.footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:36px}.footer-grid h5{color:#fff;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}.footer-grid a,.footer-grid p{display:block;font-size:13.5px;color:rgba(250,248,243,.72);margin-bottom:10px;cursor:pointer}.footer-bottom{border-top:1px solid rgba(250,248,243,.15);padding-top:20px;font-size:12px;color:rgba(250,248,243,.5)}
 .subhero{padding:44px 0 38px;border-bottom:1px solid var(--line)}.breadcrumb{font-family:var(--font-mono);font-size:12px;color:var(--stone);margin-bottom:16px}.breadcrumb a{color:var(--jade);cursor:pointer}.subhero h1{font-size:34px;margin-bottom:14px}.subhero p.lede{color:var(--stone);font-size:15px;max-width:70ch}
-.condition-content{max-width:800px;margin:0 auto;padding:40px 32px}.condition-content h2{font-size:24px;margin:32px 0 16px}.condition-content p{margin-bottom:16px}
+/* Condition detail layout */
+.condition-layout{display:grid;grid-template-columns:1fr 280px;gap:32px;padding-top:40px;max-width:1180px;margin:0 auto;}
+.condition-main{max-width:800px;}
+.condition-sidebar{position:sticky;top:88px;align-self:start;}
+@media(max-width:900px){.condition-layout{grid-template-columns:1fr;}.condition-sidebar{position:static;}}
+.condition-content h2{font-size:24px;margin:32px 0 16px}.condition-content p{margin-bottom:16px}
 .faq-item{border-top:1px solid var(--line);padding:15px 0}.faq-item .q{font-weight:600;margin-bottom:5px}.faq-item .a{color:var(--stone);font-size:14px}
 .placeholder-box{background:var(--mist);border:1px dashed var(--line);border-radius:2px;padding:40px;text-align:center;font-family:var(--font-mono);font-size:12px;color:var(--stone)}
 .about-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:24px}.about-tab{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.05em;padding:11px 18px 9px;background:var(--mist);color:var(--stone);cursor:pointer;border-radius:4px 4px 0 0;border:1px solid var(--line);border-bottom:none}.about-tab.active{background:var(--white);color:var(--ink);font-weight:600}.about-panel{display:none;border-top:1px solid var(--line);padding-top:44px}.about-panel.active{display:block}
@@ -53,7 +58,7 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 .insurance-inner{display:flex;gap:20px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
 .insurance-inner p{font-size:14.3px;margin:0;color:var(--ink);max-width:700px;}
 .insurance-inner strong{font-weight:600;}
-/* Expandable boxes (literal, not accordion) */
+/* Expandable boxes */
 .exp-box{border:1px solid var(--line);border-radius:4px;margin-bottom:16px;background:var(--white);overflow:hidden;}
 .exp-box-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;cursor:pointer;background:var(--jade-tint);}
 .exp-box-head h3{font-size:18px;font-weight:500;color:var(--ink);}
@@ -63,6 +68,12 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 .exp-box.open .exp-box-body{max-height:1200px;padding:20px;}
 .exp-box-body-inner p{color:var(--stone);}
 .exp-box-body-inner .cond-grid{grid-template-columns:repeat(2,1fr);}
+/* Sidebar CTA styles */
+.cta-card{background:var(--white);border:1px solid var(--line);border-radius:4px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.cta-card h3{font-size:20px;margin-bottom:12px;color:var(--jade-dark);}
+.cta-card p{font-size:14px;color:var(--stone);margin-bottom:16px;}
+.cta-card .btn{width:100%;justify-content:center;margin-bottom:10px;}
+.cta-card .phone{display:block;text-align:center;font-family:var(--font-mono);font-size:15px;color:var(--jade);margin-bottom:8px;}
 @media(max-width:900px){.cond-grid,.cred-grid,.team-grid{grid-template-columns:1fr 1fr}.lin-grid,.hero-grid{grid-template-columns:1fr}.exp-box-body-inner .cond-grid{grid-template-columns:1fr;}}
 </style>
 </head>
@@ -225,7 +236,11 @@ async function renderCondition(slug){
     const c=data.condition;
     const nome=esc(fmt(c.name||c.slug));
 
-    let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/conditions\')">'+i18n[currentLang].conditions+'</a> / '+nome+'</div><h1>'+nome+'</h1>'+(c.summary?'<p class="lede">'+esc(c.summary)+'</p>':'')+'<div class="stamp-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Licensed MD</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">40+ Years</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Orange-Nassau</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Medisch Dossier</span></div></div><div class="condition-content">';
+    let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/conditions\')">'+i18n[currentLang].conditions+'</a> / '+nome+'</div><h1>'+nome+'</h1>'+(c.summary?'<p class="lede">'+esc(c.summary)+'</p>':'')+'<div class="stamp-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Licensed MD</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">40+ Years</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Orange-Nassau</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Medisch Dossier</span></div></div>';
+
+    html+='<div class="condition-layout">';
+    // Main content
+    html+='<div class="condition-main">';
 
     // Recogntion
     html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Recognition</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.recognition?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.recognition)+'</div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
@@ -251,13 +266,9 @@ async function renderCondition(slug){
       html+='</div>';
     }
 
-    // Pricing (always visible)
-    if(data.pricing&&data.pricing.length>0){
-      html+='<h2>Pricing</h2><div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">';
-      data.pricing.forEach(p=>{
-        html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);"><span>'+esc(p.tier_label||'')+'</span><strong>'+esc(p.currency||'€')+esc(p.amount)+'</strong></div>';
-      });
-      html+='</div>';
+    // Pricing from condition.pricing column
+    if(c.pricing){
+      html+='<h2>Pricing</h2><div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.pricing)+'</div>';
     }
 
     // Practitioners (always visible - not hidden)
@@ -294,10 +305,13 @@ async function renderCondition(slug){
       html+='</div></div></div>';
     }
 
-    // CTA (always visible, not hidden)
-    html+='<div style="text-align:center;padding:40px;margin-top:20px;"><h2>'+(c.cta?esc(c.cta):'Ready to find out what is behind your symptoms?')+'</h2><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div>';
+    html+='</div>'; // close condition-main
 
-    html+='</div>';
+    // Sidebar with prominent CTA
+    html+='<div class="condition-sidebar"><div class="cta-card"><h3>Book an appointment</h3><p>Ready to take the next step? Call us or book online.</p><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book now</button><a class="phone" href="tel:+31703888111">070 388 8111</a><p style="font-size:12px;color:var(--stone);">Mon–Fri, 9:30–17:00</p></div></div>';
+
+    html+='</div>'; // close condition-layout
+
     app.innerHTML=html;
   }catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
 }
@@ -323,10 +337,10 @@ async function renderTreatment(slug){
     const data=await res.json();
     const t=data.treatment;
     const nome=esc(fmt(t.name||t.slug));
-    let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/treatments\')">'+i18n[currentLang].treatments+'</a> / '+nome+'</div><h1>'+nome+'</h1><p class="lede">'+(t.summary||'')+'</p></div><div class="condition-content">';
+    let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/treatments\')">'+i18n[currentLang].treatments+'</a> / '+nome+'</div><h1>'+nome+'</h1><p class="lede">'+(t.summary||'')+'</p></div><div class="condition-layout"><div class="condition-main">';
     if(t.body)html+='<h2>Overview</h2><p>'+nl2br(t.body)+'</p>';
     if(data.conditions.length>0){html+='<h2>Conditions Treated</h2><ul>';data.conditions.forEach(c=>{html+='<li><a style="color:var(--jade);cursor:pointer;" onclick="navigateTo(\'/conditions/'+c.slug+'\')">'+esc(fmt(c.name||c.slug))+'</a></li>';});html+='</ul>';}
-    html+='</div><div style="text-align:center;padding:40px;"><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div>';
+    html+='</div><div class="condition-sidebar"><div class="cta-card"><h3>Book an appointment</h3><p>Ready to start? Call us or book online.</p><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book now</button><a class="phone" href="tel:+31703888111">070 388 8111</a><p style="font-size:12px;color:var(--stone);">Mon–Fri, 9:30–17:00</p></div></div></div>';
     app.innerHTML=html;
   }catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
 }
