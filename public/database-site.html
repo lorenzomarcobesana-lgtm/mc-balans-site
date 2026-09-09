@@ -38,7 +38,6 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 .pricing-table{width:100%;border-collapse:collapse}.pricing-table th{text-align:left;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--stone);padding:10px 14px;border-bottom:1px solid var(--ink)}.pricing-table th.price{text-align:right}.pricing-table td{padding:14px;border-bottom:1px solid var(--line);font-size:14px}.pricing-table td.price{font-family:var(--font-mono);text-align:right}
 .loading{text-align:center;padding:40px;color:var(--stone);font-size:18px}.error{color:var(--red);text-align:center;padding:40px;font-size:18px}
 .category-group{margin-bottom:40px}.category-group h3{font-family:var(--font-display);font-size:24px;margin-bottom:16px;color:var(--jade-dark)}.category-group .cond-grid{margin-top:0}
-/* Accordion styles */
 .accordion{border-top:1px solid var(--line);}
 .acc-item{border-bottom:1px solid var(--line);}
 .acc-head{display:flex;justify-content:space-between;align-items:center;padding:21px 0;cursor:pointer;}
@@ -200,7 +199,7 @@ html+='</div>';
 if(data.pricing&&data.pricing.length>0){
 html+='<h2>Pricing</h2><div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">';
 data.pricing.forEach(p=>{
-html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);"><span>'+esc(p.tier_label)+'</span><strong>€'+esc(p.amount)+'</strong></div>';
+html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);"><span>'+esc(p.tier_label||'')+'</span><strong>'+esc(p.currency||'€')+esc(p.amount)+'</strong></div>';
 });
 html+='</div>';
 }
@@ -210,9 +209,13 @@ html+='<h2>Who will actually treat me?</h2>';
 if(data.practitioners&&data.practitioners.length>0){
 html+='<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">';
 data.practitioners.forEach(p=>{
-html+='<h3>'+esc(p.name)+'</h3>';
-if(p.role)html+='<p>'+esc(p.role)+'</p>';
-if(p.experience)html+='<p>'+esc(p.experience)+'</p>';
+const name = p.email ? p.email.split('@')[0] : p.id;
+const roles = Array.isArray(p.roles)?p.roles.join(', '):(p.roles||'');
+const cred = p.credentials||'';
+html+='<h3>'+esc(name)+'</h3>';
+if(roles) html+='<p>'+esc(roles)+'</p>';
+if(cred) html+='<p>'+esc(cred)+'</p>';
+if(p.experience_years) html+='<p>'+esc(p.experience_years)+' years experience</p>';
 html+='<a style="color:var(--jade);cursor:pointer;" onclick="navigateTo(\'/about\')">Full profile →</a><br><br>';
 });
 html+='</div>';
@@ -280,9 +283,9 @@ const [teamRes,priceRes]=await Promise.all([fetch(API+'/practitioners'),fetch(AP
 if(!teamRes.ok)throw new Error('Failed');
 const team=await teamRes.json();const prices=priceRes.ok?await priceRes.json():[];
 let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / About</div><h1>About MC Balans</h1><p class="lede">Meet the team, see the clinic, check pricing, or read about our approach.</p><div class="about-tabs"><div class="about-tab active" onclick="aboutTab(\'ourteam\')">Our Team</div><div class="about-tab" onclick="aboutTab(\'ourclinic\')">Our Clinic</div><div class="about-tab" onclick="aboutTab(\'pricing\')">Pricing</div><div class="about-tab" onclick="aboutTab(\'philosophy\')">Philosophy</div></div></div><section class="section"><div class="wrap">';
-html+='<div class="about-panel active" id="panel-ourteam"><div class="section-head"><h2>Our Team</h2></div><div class="team-grid">';team.forEach(m=>{const roles=Array.isArray(m.roles)?m.roles.join(', '):(m.roles||'');html+=`<div class="team-card"><div class="team-photo"><span>PHOTO</span></div><div class="team-info"><h4>${esc(m.name?m.name:fmt(m.id))}</h4><div class="role">${esc(roles)}</div><p>${esc(m.email||'')}</p></div></div>`;});html+='</div></div>';
+html+='<div class="about-panel active" id="panel-ourteam"><div class="section-head"><h2>Our Team</h2></div><div class="team-grid">';team.forEach(m=>{const name=m.email?m.email.split('@')[0]:m.id;const roles=Array.isArray(m.roles)?m.roles.join(', '):(m.roles||'');html+=`<div class="team-card"><div class="team-photo"><span>PHOTO</span></div><div class="team-info"><h4>${esc(name)}</h4><div class="role">${esc(roles)}</div><p>${esc(m.email||'')}</p></div></div>`;});html+='</div></div>';
 html+='<div class="about-panel" id="panel-ourclinic"><div class="section-head"><h2>Our Clinic</h2></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;"><div class="placeholder-box">Clinic photo 1</div><div class="placeholder-box">Clinic photo 2</div></div><p style="margin-top:24px;color:var(--stone);">Our clinic is located in The Hague. We offer a calm, professional environment for your care.</p></div>';
-html+='<div class="about-panel" id="panel-pricing"><div class="section-head"><h2>Pricing</h2></div><table class="pricing-table"><thead><tr><th>Treatment</th><th>Label</th><th class="price">Price</th></tr></thead><tbody>';prices.forEach(p=>{html+=`<tr onclick="navigateTo('/${p.entity_type}s/${p.entity_slug}')"><td>${esc(p.entity_slug?fmt(p.entity_slug):'')}</td><td>${esc(p.tier_label||'')}</td><td class="price">€${p.amount}</td></tr>`;});html+='</tbody></table></div>';
+html+='<div class="about-panel" id="panel-pricing"><div class="section-head"><h2>Pricing</h2></div><table class="pricing-table"><thead><tr><th>Treatment</th><th>Label</th><th class="price">Price</th></tr></thead><tbody>';prices.forEach(p=>{html+=`<tr onclick="navigateTo('/${p.entity_type}s/${p.entity_slug}')"><td>${esc(p.entity_slug?fmt(p.entity_slug):'')}</td><td>${esc(p.tier_label||'')}</td><td class="price">${esc(p.currency||'€')}${p.amount}</td></tr>`;});html+='</tbody></table></div>';
 html+='<div class="about-panel" id="panel-philosophy"><div class="section-head"><h2>Our Philosophy</h2></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;"><div class="placeholder-box">Vision</div><div class="placeholder-box">Mission</div></div></div>';
 html+='</div></section>';app.innerHTML=html;
 }catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}

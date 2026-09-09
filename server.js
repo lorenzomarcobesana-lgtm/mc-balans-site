@@ -89,7 +89,7 @@ app.get('/api/conditions/:slug', async (req, res) => {
     }
     const condition = conditionResult.rows[0];
 
-    // Treatments
+    // Treatments linked to this condition
     const treatments = await pool.query(`
       SELECT tr.slug,
              COALESCE(tt_name.value, tr.slug) AS name,
@@ -104,7 +104,7 @@ app.get('/api/conditions/:slug', async (req, res) => {
       ORDER BY ct.display_order
     `, [slug, lang]);
 
-    // Pricing
+    // Pricing from price_tiers for these treatments
     const pricing = await pool.query(`
       SELECT pt.tier_label, pt.amount, pt.currency, t.slug AS treatment_slug
       FROM price_tiers pt
@@ -114,9 +114,9 @@ app.get('/api/conditions/:slug', async (req, res) => {
       WHERE c.slug = $1 AND pt.show_on_pricing_page = true
     `, [slug]);
 
-    // Practitioners
+    // Practitioners who treat any treatment for this condition
     const practitioners = await pool.query(`
-      SELECT DISTINCT p.id, p.name, p.role, p.experience
+      SELECT DISTINCT p.id, p.email, p.roles, p.credentials, p.languages_spoken, p.photo_url, p.quote, p.experience_years
       FROM practitioners p
       JOIN practitioner_treatments pt ON pt.practitioner_id = p.id
       JOIN condition_treatments ct ON ct.treatment_id = pt.treatment_id
@@ -124,7 +124,7 @@ app.get('/api/conditions/:slug', async (req, res) => {
       WHERE c.slug = $1
     `, [slug]);
 
-    // FAQs
+    // FAQs linked to this condition
     const faqs = await pool.query(`
       SELECT f.slug,
              COALESCE(tq.value, '') AS question,
@@ -211,7 +211,7 @@ app.get('/api/treatments/:slug', async (req, res) => {
 app.get('/api/practitioners', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT id, name, role, experience, email, is_active
+      SELECT id, email, roles, credentials, languages_spoken, photo_url, quote, experience_years, is_active
       FROM practitioners
       WHERE is_active = true
       ORDER BY id
