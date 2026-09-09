@@ -41,7 +41,6 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 .accordion{border-top:1px solid var(--line);}.acc-item{border-bottom:1px solid var(--line);}.acc-head{display:flex;justify-content:space-between;align-items:center;padding:21px 0;cursor:pointer;}.acc-head h4{font-size:17px;font-weight:500;}.acc-head .plus{font-family:var(--font-mono);font-size:18px;color:var(--jade);transition:transform .2s;}.acc-item.open .acc-head .plus{transform:rotate(45deg);}.acc-body{max-height:0;overflow:hidden;transition:max-height .3s ease;}.acc-item.open .acc-body{max-height:2000px;}.acc-body-inner{padding:0 0 24px;display:flex;gap:16px;flex-wrap:wrap;}.acc-body-inner .cond-card{flex:1;min-width:260px;}
 .insurance-band{background:var(--amber-tint);padding:34px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}.insurance-inner{display:flex;gap:20px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}.insurance-inner p{font-size:14.3px;margin:0;color:var(--ink);max-width:700px;}.insurance-inner strong{font-weight:600;}
 .exp-box{border:1px solid var(--line);border-radius:4px;margin-bottom:16px;background:var(--white);overflow:hidden;}.exp-box-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;cursor:pointer;background:var(--jade-tint);}.exp-box-head h3{font-size:18px;font-weight:500;color:var(--ink);}.exp-box-head .plus{font-family:var(--font-mono);font-size:20px;color:var(--jade);transition:transform .2s;}.exp-box.open .exp-box-head .plus{transform:rotate(45deg);}.exp-box-body{max-height:0;overflow:hidden;transition:max-height .3s ease;padding:0 20px;}.exp-box.open .exp-box-body{max-height:1500px;padding:20px;}.exp-box-body-inner p{color:var(--stone);}.exp-box-body-inner .cond-grid{grid-template-columns:repeat(2,1fr);}
-/* Treatment detail layout */
 .treat-layout{display:grid;grid-template-columns:1.5fr .9fr;gap:56px;padding-top:48px;}
 @media (max-width:900px){.treat-layout{grid-template-columns:1fr;}}
 .treat-body h3{font-size:19px;margin:34px 0 12px;}
@@ -83,7 +82,7 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 </div>
 </div>
 </header>
-<div id="app"></div>
+<div id="app"><div class="loading">Loading...</div></div>
 <footer class="site">
 <div class="wrap footer-grid">
 <div><div class="footer-logo">MC Balans</div><p>Western & TCM, The Hague</p><p>Led by Dr. Wenzhi Lin</p></div>
@@ -111,6 +110,7 @@ zh:{conditions:'治疗项目',treatments:'疗法',resources:'资源',about:'关�
 function setLang(l){currentLang=l;document.querySelectorAll('.lang-select button').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()));route();}
 function navigateTo(url){history.pushState({},'',url);route();}
 function route(){
+try{
 const p=location.pathname;
 if(p==='/')renderHome();
 else if(p==='/conditions')renderConditions();
@@ -121,11 +121,12 @@ else if(p==='/resources')renderResources();
 else if(p==='/about')renderAbout();
 else if(p==='/contact')renderContact();
 else renderHome();
+}catch(e){app.innerHTML='<div class="error">Routing error: '+e.message+'</div>';}
 }
 
 async function renderHome(){
-app.innerHTML='<div class="loading">Loading...</div>';
 try{
+app.innerHTML='<div class="loading">Loading...</div>';
 const [condRes,catRes]=await Promise.all([fetch(API+'/conditions?lang='+currentLang),fetch(API+'/categories?lang='+currentLang)]);
 if(!condRes.ok||!catRes.ok)throw new Error('Load failed');
 const conditions=await condRes.json();const categories=await catRes.json();
@@ -151,12 +152,12 @@ html+='</div></div>';
 });
 html+='</div></section>';
 app.innerHTML=html;
-}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+}catch(e){app.innerHTML='<div class="error">Home error: '+e.message+'</div>';}
 }
 
 async function renderConditions(){
-app.innerHTML='<div class="loading">Loading...</div>';
 try{
+app.innerHTML='<div class="loading">Loading...</div>';
 const [condRes,catRes]=await Promise.all([fetch(API+'/conditions?lang='+currentLang),fetch(API+'/categories?lang='+currentLang)]);
 if(!condRes.ok||!catRes.ok)throw new Error('Load failed');
 const conditions=await condRes.json();const categories=await catRes.json();
@@ -170,12 +171,12 @@ html+='</div></div></div></div>';
 }
 });
 html+='</div></section>';app.innerHTML=html;
-}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+}catch(e){app.innerHTML='<div class="error">Conditions error: '+e.message+'</div>';}
 }
 
 async function renderCondition(slug){
-app.innerHTML='<div class="loading">Loading...</div>';
 try{
+app.innerHTML='<div class="loading">Loading...</div>';
 const res=await fetch(API+'/conditions/'+slug+'?lang='+currentLang);
 if(!res.ok)throw new Error('Condition not found');
 const data=await res.json();
@@ -185,8 +186,8 @@ let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigate
 html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Recognition</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.recognition?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.recognition)+'</div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
 html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Red Flags</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.red_flags?'<div style="background:var(--amber-tint);border-left:4px solid var(--red);padding:24px;border-radius:4px;">'+nl2br(c.red_flags)+'</div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
 html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Understanding</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.understanding?'<p>'+nl2br(c.understanding)+'</p>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
-html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>MC Balans' Approach</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.approach?'<div style="background:var(--jade-tint);padding:24px;border-radius:4px;">'+c.approach+'</div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
-html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>MC Balans' Assessment</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.assessment?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+c.assessment+'</div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
+html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>MC Balans Approach</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.approach?'<div style="background:var(--jade-tint);padding:24px;border-radius:4px;">'+c.approach+'</div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
+html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>MC Balans Assessment</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.assessment?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+c.assessment+'</div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
 
 if(data.treatments&&data.treatments.length>0){
 html+='<h2>Treatments</h2><div class="cond-grid">';
@@ -209,24 +210,24 @@ html+='</div></div></div>';
 }
 html+='</div><div class="condition-sidebar" style="position:sticky;top:88px;align-self:start;"><div class="cta-card" style="background:var(--white);border:1px solid var(--line);border-radius:4px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.05);"><h3 style="font-size:20px;margin-bottom:12px;color:var(--jade-dark);">Book an appointment</h3><p style="font-size:14px;color:var(--stone);margin-bottom:16px;">Ready to take the next step? Call us or book online.</p><button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;" onclick="navigateTo(\'/contact\')">Book now</button><a class="phone" style="display:block;text-align:center;font-family:var(--font-mono);font-size:15px;color:var(--jade);margin-bottom:8px;" href="tel:+31703888111">070 388 8111</a><p style="font-size:12px;color:var(--stone);">Mon–Fri, 9:30–17:00</p></div></div></div>';
 app.innerHTML=html;
-}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+}catch(e){app.innerHTML='<div class="error">Condition error: '+e.message+'</div>';}
 }
 
 async function renderTreatments(){
-app.innerHTML='<div class="loading">Loading...</div>';
 try{
+app.innerHTML='<div class="loading">Loading...</div>';
 const res=await fetch(API+'/treatments?lang='+currentLang);
 if(!res.ok)throw new Error('Load failed');
 const data=await res.json();
 let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / '+i18n[currentLang].treatments+'</div><h1>'+i18n[currentLang].treatments+'</h1></div><section class="section"><div class="cond-grid">';
 data.forEach(t=>{html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(fmt(t.name||t.slug))}</h4><p>${esc(truncate(t.summary||'',110))}</p></div><div class="arrow">View →</div></div>`;});
 html+='</div></section>';app.innerHTML=html;
-}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+}catch(e){app.innerHTML='<div class="error">Treatments error: '+e.message+'</div>';}
 }
 
 async function renderTreatment(slug){
-app.innerHTML='<div class="loading">Loading...</div>';
 try{
+app.innerHTML='<div class="loading">Loading...</div>';
 const res=await fetch(API+'/treatments/'+slug+'?lang='+currentLang);
 if(!res.ok)throw new Error('Treatment not found');
 const data=await res.json();
@@ -276,12 +277,12 @@ html+='</div></div>';
 html+='<a class="btn btn-primary" style="width:100%;justify-content:center;" onclick="navigateTo(\'/contact\')">Book an appointment</a>';
 html+='</div></div>';
 app.innerHTML=html;
-}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+}catch(e){app.innerHTML='<div class="error">Treatment error: '+e.message+'</div>';}
 }
 
 async function renderAbout(){
-app.innerHTML='<div class="loading">Loading...</div>';
 try{
+app.innerHTML='<div class="loading">Loading...</div>';
 const [teamRes,priceRes]=await Promise.all([fetch(API+'/practitioners'),fetch(API+'/pricing')]);
 if(!teamRes.ok)throw new Error('Failed');
 const team=await teamRes.json();const prices=priceRes.ok?await priceRes.json():[];
@@ -291,7 +292,7 @@ html+='<div class="about-panel" id="panel-ourclinic"><div class="section-head"><
 html+='<div class="about-panel" id="panel-pricing"><div class="section-head"><h2>Pricing</h2></div><table class="pricing-table"><thead><tr><th>Treatment</th><th>Label</th><th class="price">Price</th></tr></thead><tbody>';prices.forEach(p=>{html+=`<tr onclick="navigateTo('/${p.entity_type}s/${p.entity_slug}')"><td>${esc(fmt(p.entity_slug||''))}</td><td>${esc(p.tier_label||'')}</td><td class="price">${esc(p.currency||'€')}${p.amount}</td></tr>`;});html+='</tbody></table></div>';
 html+='<div class="about-panel" id="panel-philosophy"><div class="section-head"><h2>Our Philosophy</h2></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;"><div class="placeholder-box">Vision</div><div class="placeholder-box">Mission</div></div></div>';
 html+='</div></section>';app.innerHTML=html;
-}catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
+}catch(e){app.innerHTML='<div class="error">About error: '+e.message+'</div>';}
 }
 function aboutTab(tab){document.querySelectorAll('.about-tab').forEach(t=>t.classList.toggle('active',t.textContent.toLowerCase().replace(' ','')===tab));document.querySelectorAll('.about-panel').forEach(p=>p.classList.remove('active'));const panel=document.getElementById('panel-'+tab);if(panel)panel.classList.add('active');}
 function renderResources(){app.innerHTML='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Resources</div><h1>Resources</h1><p class="lede">Dr. Lin\'s monthly Medisch Dossier column, published natively.</p></div><section class="section"><div class="wrap"><div class="resource-card" style="margin-bottom:16px;"><div class="rc-text"><span class="resource-badge">Journal</span><h4>Acupuncture for knee injury</h4><p>Written by Dr. Lin · cross-linked to Pain → Joints Pain and Acupuncture.</p></div><div class="rc-meta">21.07.2026 · Dr. Lin</div><button class="btn btn-outline">Read →</button></div><div class="placeholder-box">Further Medisch Dossier articles — content pending</div></div></section>';}
