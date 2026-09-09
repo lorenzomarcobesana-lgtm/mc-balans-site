@@ -38,6 +38,17 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 .pricing-table{width:100%;border-collapse:collapse}.pricing-table th{text-align:left;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--stone);padding:10px 14px;border-bottom:1px solid var(--ink)}.pricing-table th.price{text-align:right}.pricing-table td{padding:14px;border-bottom:1px solid var(--line);font-size:14px}.pricing-table td.price{font-family:var(--font-mono);text-align:right}
 .loading{text-align:center;padding:40px;color:var(--stone);font-size:18px}.error{color:var(--red);text-align:center;padding:40px;font-size:18px}
 .category-group{margin-bottom:40px}.category-group h3{font-family:var(--font-display);font-size:24px;margin-bottom:16px;color:var(--jade-dark)}.category-group .cond-grid{margin-top:0}
+/* Accordion styles */
+.accordion{border-top:1px solid var(--line);}
+.acc-item{border-bottom:1px solid var(--line);}
+.acc-head{display:flex;justify-content:space-between;align-items:center;padding:21px 0;cursor:pointer;}
+.acc-head h4{font-size:17px;font-weight:500;}
+.acc-head .plus{font-family:var(--font-mono);font-size:18px;color:var(--jade);transition:transform .2s;}
+.acc-item.open .acc-head .plus{transform:rotate(45deg);}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .25s ease;}
+.acc-item.open .acc-body{max-height:600px;}
+.acc-body-inner{padding:0 0 24px;display:flex;gap:44px;flex-wrap:wrap;}
+.acc-body-inner .cond-card{flex:1;min-width:260px;}
 @media(max-width:900px){.cond-grid,.cred-grid,.team-grid{grid-template-columns:1fr 1fr}.lin-grid,.hero-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -80,6 +91,7 @@ const app=document.getElementById('app');
 function fmt(slug){if(!slug)return '';return slug.split('-').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');}
 function truncate(str,len){if(!str||str.length<=len)return str||'';const cut=str.slice(0,len);const last=cut.lastIndexOf(' ');return (last>0?cut.slice(0,last):cut).trim()+'…';}
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
+function nl2br(html){return esc(html).replace(/\n/g,'<br>');}
 
 const i18n={
 en:{conditions:'Conditions',treatments:'Treatments',resources:'Resources',about:'About',contact:'Contact'},
@@ -87,7 +99,7 @@ nl:{conditions:'Wat we behandelen',treatments:'Behandelingen',resources:'Bronnen
 zh:{conditions:'治疗项目',treatments:'疗法',resources:'资源',about:'关于我们',contact:'联系'}
 };
 
-function setLang(l){currentLang=l;applyTranslations();route();}
+function setLang(l){currentLang=l;document.querySelectorAll('.lang-select button').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()));route();}
 function navigateTo(url){history.pushState({},'',url);route();}
 function route(){
 const p=location.pathname;
@@ -137,9 +149,9 @@ let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigate
 categories.forEach(cat=>{
 const catConditions=conditions.filter(c=>c.category_slug===cat.slug);
 if(catConditions.length>0){
-html+='<div class="category-group"><h3>'+esc(cat.name||fmt(cat.slug))+'</h3><div class="cond-grid">';
+html+='<div class="accordion"><div class="acc-item"><div class="acc-head" onclick="this.parentElement.classList.toggle(\'open\')"><h4>'+esc(cat.name||fmt(cat.slug))+'</h4><span class="plus">+</span></div><div class="acc-body"><div class="acc-body-inner" style="flex-direction:column; gap:16px;">';
 catConditions.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${cat.name||''}</div><h4>${esc(c.name||fmt(c.slug))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;});
-html+='</div></div>';
+html+='</div></div></div></div>';
 }
 });
 html+='</div></section>';app.innerHTML=html;
@@ -152,32 +164,84 @@ try{
 const res=await fetch(API+'/conditions/'+slug+'?lang='+currentLang);
 if(!res.ok)throw new Error('Condition not found');
 const data=await res.json();
-const c=data.condition;const nome=c.name||fmt(c.slug);
-let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/conditions\')">'+i18n[currentLang].conditions+'</a> / '+nome+'</div><h1>'+nome+'</h1><p class="lede">'+(c.summary||'')+'</p><div class="stamp-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Licensed MD</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">40+ Years</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Orange-Nassau</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Medisch Dossier</span></div></div><div class="condition-content">';
-if(c.recognition)html+='<h2>Recognition</h2><div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+c.recognition.replace(/\n/g,'<br>')+'</div>';else html+='<h2>Recognition</h2><div class="placeholder-box">Content pending</div>';
-if(c.red_flags)html+='<h2>Red Flags</h2><div style="background:var(--amber-tint);border-left:4px solid var(--red);padding:24px;border-radius:4px;">'+c.red_flags.replace(/\n/g,'<br>')+'</div>';else html+='<h2>Red Flags</h2><div class="placeholder-box">Content pending</div>';
-if(c.understanding)html+='<h2>Understanding</h2><p>'+c.understanding.replace(/\n/g,'<br>')+'</p>';else html+='<h2>Understanding</h2><div class="placeholder-box">Content pending</div>';
-if(c.approach)html+='<h2>The MC Balans Approach</h2><div style="background:var(--jade-tint);padding:24px;border-radius:4px;">'+c.approach.replace(/\n/g,'<br>')+'</div>';else html+='<h2>The MC Balans Approach</h2><div class="placeholder-box">Content pending</div>';
-if(c.assessment)html+='<h2>Assessment</h2><p>'+c.assessment.replace(/\n/g,'<br>')+'</p>';else html+='<h2>Assessment</h2><div class="placeholder-box">Content pending</div>';
-html+='</div>';
-// Treatments section (with practitioners and pricing)
-if(data.treatments.length>0){
-html+='<section class="section"><div class="wrap"><div class="section-head"><h2>Treatments</h2></div><div class="cond-grid">';
+const c=data.condition;const nome=c.name||fmt(slug);
+let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/conditions\')">'+i18n[currentLang].conditions+'</a> / '+esc(nome)+'</div><h1>'+esc(nome)+'</h1>'+(c.summary?'<p class="lede">'+esc(c.summary)+'</p>':'')+'<div class="stamp-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Licensed MD</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">40+ Years</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Orange-Nassau</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Medisch Dossier</span></div></div><div class="condition-content">';
+
+// Recognition
+html+='<h2>Common symptoms of '+esc(nome)+'</h2>';
+html+=c.recognition?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.recognition)+'</div>':'<div class="placeholder-box">Content pending – Recognition</div>';
+
+// Red Flags
+html+='<h2>Common red flags – when to get checked</h2>';
+html+=c.red_flags?'<div style="background:var(--amber-tint);border-left:4px solid var(--red);padding:24px;border-radius:4px;">'+nl2br(c.red_flags)+'</div>':'<div class="placeholder-box">Content pending – Red Flags</div>';
+
+// Understanding
+html+='<h2>Why does this happen, and why does it stick around?</h2>';
+html+=c.understanding?'<p>'+nl2br(c.understanding)+'</p>':'<div class="placeholder-box">Content pending – Understanding</div>';
+
+// Approach
+html+='<h2>The MC Balans Approach</h2>';
+html+=c.approach?'<div style="background:var(--jade-tint);padding:24px;border-radius:4px;">'+nl2br(c.approach)+'</div>':'<div class="placeholder-box">Content pending – Approach</div>';
+
+// Assessment
+html+='<h2>How will I actually be examined?</h2>';
+html+=c.assessment?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.assessment)+'</div>':'<div class="placeholder-box">Content pending – Assessment</div>';
+
+// Treatments
+if(data.treatments&&data.treatments.length>0){
+html+='<h2>What might be recommended and when?</h2><div class="cond-grid">';
 data.treatments.forEach(t=>{
-html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(t.name||fmt(t.slug))}</h4><p>${esc(truncate(t.summary||'',100))}</p>`;
-if(t.practitioners&&t.practitioners.length>0){html+='<div style="margin-top:8px;"><strong>Practitioners:</strong> '+t.practitioners.map(p=>p.email).join(', ')+'</div>';}
-if(t.pricing&&t.pricing.length>0){html+='<div style="margin-top:4px;color:var(--jade);"><strong>From:</strong> €'+Math.min(...t.pricing.map(p=>parseFloat(p.amount)))+'</div>';}
-html+='</div><div class="arrow">View →</div></div>';
+html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(t.name)}</h4><p>${esc(truncate(t.summary||'',100))}</p>${t.duration?'<div style="margin-top:4px;color:var(--stone);"><strong>Duration:</strong> '+esc(t.duration)+'</div>':''}</div><div class="arrow">View →</div></div>`;
 });
-html+='</div></div></section>';
+html+='</div>';
 }
-// FAQ section
-if(data.faqs.length>0){
-html+='<section class="section"><div class="wrap"><h2>FAQ</h2>';
-data.faqs.forEach(f=>{html+='<div class="faq-item"><div class="q">'+esc(f.question)+'</div><div class="a">'+esc(f.answer)+'</div></div>';});
-html+='</div></section>';
+
+// Pricing
+if(data.pricing&&data.pricing.length>0){
+html+='<h2>Pricing</h2><div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">';
+data.pricing.forEach(p=>{
+html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);"><span>'+esc(p.tier_label)+'</span><strong>€'+esc(p.amount)+'</strong></div>';
+});
+html+='</div>';
 }
-html+='<div style="text-align:center;padding:40px;"><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div>';
+
+// Practitioners (Trust)
+html+='<h2>Who will actually treat me?</h2>';
+if(data.practitioners&&data.practitioners.length>0){
+html+='<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">';
+data.practitioners.forEach(p=>{
+html+='<h3>'+esc(p.name)+'</h3>';
+if(p.role)html+='<p>'+esc(p.role)+'</p>';
+if(p.experience)html+='<p>'+esc(p.experience)+'</p>';
+html+='<a style="color:var(--jade);cursor:pointer;" onclick="navigateTo(\'/about\')">Full profile →</a><br><br>';
+});
+html+='</div>';
+}else{
+html+='<div class="placeholder-box">Content pending – Practitioners</div>';
+}
+
+// Expectations
+html+='<h2>What can I realistically expect?</h2>';
+html+=c.expectations?'<p>'+nl2br(c.expectations)+'</p>':'<div class="placeholder-box">Content pending – Expectations</div>';
+
+// Practical Info (Insurance)
+html+='<h2>Practical Information</h2>';
+if(c.insurance){
+html+='<div style="background:var(--jade-tint);padding:24px;border-radius:4px;"><h3>Insurance</h3><p>'+nl2br(c.insurance)+'</p></div>';
+}
+
+// FAQ
+if(data.faqs&&data.faqs.length>0){
+html+='<h2>FAQ</h2>';
+data.faqs.forEach(f=>{
+html+='<div class="faq-item"><div class="q">'+esc(f.question)+'</div><div class="a">'+esc(f.answer)+'</div></div>';
+});
+}
+
+// CTA
+html+='<div style="text-align:center;padding:40px;"><h2>'+(c.cta?esc(c.cta):'Ready to find out what is behind your symptoms?')+'</h2><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div>';
+
+html+='</div>';
 app.innerHTML=html;
 }catch(e){app.innerHTML='<div class="error">'+e.message+'</div>'}
 }
@@ -200,9 +264,9 @@ try{
 const res=await fetch(API+'/treatments/'+slug+'?lang='+currentLang);
 if(!res.ok)throw new Error('Treatment not found');
 const data=await res.json();
-const t=data.treatment;const nome=t.name||fmt(t.slug);
-let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/treatments\')">'+i18n[currentLang].treatments+'</a> / '+nome+'</div><h1>'+nome+'</h1><p class="lede">'+(t.summary||'')+'</p></div><div class="condition-content">';
-if(t.body)html+='<h2>Overview</h2><p>'+t.body.replace(/\n/g,'<br>')+'</p>';
+const t=data.treatment;const nome=t.name||fmt(slug);
+let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/treatments\')">'+i18n[currentLang].treatments+'</a> / '+esc(nome)+'</div><h1>'+esc(nome)+'</h1><p class="lede">'+(t.summary||'')+'</p></div><div class="condition-content">';
+if(t.body)html+='<h2>Overview</h2><p>'+nl2br(t.body)+'</p>';
 if(data.conditions.length>0){html+='<h2>Conditions Treated</h2><ul>';data.conditions.forEach(c=>{html+='<li><a style="color:var(--jade);cursor:pointer;" onclick="navigateTo(\'/conditions/'+c.slug+'\')">'+(c.name||fmt(c.slug))+'</a></li>';});html+='</ul>';}
 html+='</div><div style="text-align:center;padding:40px;"><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div>';
 app.innerHTML=html;
