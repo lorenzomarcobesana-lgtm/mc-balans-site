@@ -2,7 +2,7 @@ const express = require('express');
 const { Pool } = require('pg');
 
 const app = express();
-const port = process.env.PORT || 3000;  // Render uses PORT env var
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
@@ -16,7 +16,7 @@ app.get('/api/categories', async (req, res) => {
   const lang = req.query.lang || 'en';
   try {
     const result = await pool.query(`
-      SELECT c.slug, COALESCE(t.value, c.slug) AS name
+      SELECT c.slug, COALESCE(t.value, initcap(replace(c.slug, '-', ' '))) AS name
       FROM categories c
       LEFT JOIN translations t ON t.category_id = c.id AND t.field_name = 'name' AND t.locale = $1
       WHERE c.status = 'published'
@@ -37,7 +37,7 @@ app.get('/api/conditions', async (req, res) => {
       SELECT c.id, c.slug, c.summary, c.recognition, c.red_flags, c.understanding, c.approach, c.assessment,
              c.expectations, c.insurance, c.pricing, c.cta,
              cat.slug AS category_slug,
-             COALESCE(t.value, c.slug) AS name
+             COALESCE(t.value, initcap(replace(c.slug, '-', ' '))) AS name
       FROM conditions c
       JOIN categories cat ON cat.id = c.category_id
       LEFT JOIN translations t ON t.condition_id = c.id AND t.field_name = 'name' AND t.locale = $1
@@ -58,7 +58,7 @@ app.get('/api/conditions/:slug', async (req, res) => {
   try {
     const conditionResult = await pool.query(`
       SELECT c.*,
-             COALESCE(t_name.value, c.slug) AS name,
+             COALESCE(t_name.value, initcap(replace(c.slug, '-', ' '))) AS name,
              COALESCE(t_summary.value, c.summary) AS summary,
              COALESCE(t_recognition.value, c.recognition) AS recognition,
              COALESCE(t_redflags.value, c.red_flags) AS red_flags,
@@ -91,7 +91,7 @@ app.get('/api/conditions/:slug', async (req, res) => {
 
     const treatments = await pool.query(`
       SELECT tr.slug,
-             COALESCE(tt_name.value, tr.slug) AS name,
+             COALESCE(tt_name.value, initcap(replace(tr.slug, '-', ' '))) AS name,
              COALESCE(tt_summary.value, '') AS summary,
              tr.duration
       FROM conditions c
@@ -102,15 +102,6 @@ app.get('/api/conditions/:slug', async (req, res) => {
       WHERE c.slug = $1
       ORDER BY ct.display_order
     `, [slug, lang]);
-
-    const pricing = await pool.query(`
-      SELECT pt.tier_label, pt.amount, pt.currency, t.slug AS treatment_slug
-      FROM price_tiers pt
-      JOIN treatments t ON t.id = pt.treatment_id
-      JOIN condition_treatments ct ON ct.treatment_id = t.id
-      JOIN conditions c ON c.id = ct.condition_id
-      WHERE c.slug = $1 AND pt.show_on_pricing_page = true
-    `, [slug]);
 
     const practitioners = await pool.query(`
       SELECT DISTINCT p.id, p.email, p.roles, p.credentials, p.languages_spoken, p.photo_url, p.quote, p.experience_years
@@ -137,7 +128,6 @@ app.get('/api/conditions/:slug', async (req, res) => {
     res.json({
       condition,
       treatments: treatments.rows,
-      pricing: pricing.rows,
       practitioners: practitioners.rows,
       faqs: faqs.rows
     });
@@ -153,7 +143,7 @@ app.get('/api/treatments', async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT t.slug, t.duration,
-             COALESCE(tt_name.value, t.slug) AS name,
+             COALESCE(tt_name.value, initcap(replace(t.slug, '-', ' '))) AS name,
              COALESCE(tt_summary.value, '') AS summary
       FROM treatments t
       LEFT JOIN translations tt_name    ON tt_name.treatment_id = t.id AND tt_name.field_name = 'name' AND tt_name.locale = $1
@@ -168,27 +158,37 @@ app.get('/api/treatments', async (req, res) => {
   }
 });
 
-// ---------- TREATMENT DETAIL ----------
+// ---------- TREATMENT DETAIL (expanded) ----------
 app.get('/api/treatments/:slug', async (req, res) => {
   const { slug } = req.params;
   const lang = req.query.lang || 'en';
   try {
     const treatmentResult = await pool.query(`
       SELECT t.*,
-             COALESCE(tt_name.value, t.slug) AS name,
-             COALESCE(tt_summary.value, '') AS summary
+             COALESCE(tt_name.value, initcap(replace(t.slug, '-', ' '))) AS name,
+             COALESCE(tt_summary.value, '') AS summary,
+             COALESCE(tt_body.value, '') AS body,
+             COALESCE(tt_intake.value, '') AS intake,
+             COALESCE(tt_aftercare.value, '') AS aftercare,
+             COALESCE(tt_insurance.value, '') AS insurance
       FROM treatments t
-      LEFT JOIN translations tt_name    ON tt_name.treatment_id = t.id AND tt_name.field_name = 'name' AND tt_name.locale = $2
-      LEFT JOIN translations tt_summary ON tt_summary.treatment_id = t.id AND tt_summary.field_name = 'summary' AND tt_summary.locale = $2
+      LEFT JOIN translations tt_name       ON tt_name.treatment_id = t.id AND tt_name.field_name = 'name' AND tt_name.locale = $2
+      LEFT JOIN translations tt_summary    ON tt_summary.treatment_id = t.id AND tt_summary.field_name = 'summary' AND tt_summary.locale = $2
+      LEFT JOIN translations tt_body       ON tt_body.treatment_id = t.id AND tt_body.field_name = 'body' AND tt_body.locale = $2
+      LEFT JOIN translations tt_intake     ON tt_intake.treatment_id = t.id AND tt_intake.field_name = 'intake' AND tt_intake.locale = $2
+      LEFT JOIN translations tt_aftercare  ON tt_aftercare.treatment_id = t.id AND tt_aftercare.field_name = 'aftercare' AND tt_aftercare.locale = $2
+      LEFT JOIN translations tt_insurance  ON tt_insurance.treatment_id = t.id AND tt_insurance.field_name = 'insurance' AND tt_insurance.locale = $2
       WHERE t.slug = $1 AND t.status = 'published'
     `, [slug, lang]);
+
     if (treatmentResult.rows.length === 0) {
       return res.status(404).json({ error: 'Treatment not found' });
     }
     const treatment = treatmentResult.rows[0];
 
+    // Conditions treated
     const conditions = await pool.query(`
-      SELECT c.slug, COALESCE(tc.value, c.slug) AS name
+      SELECT c.slug, COALESCE(tc.value, initcap(replace(c.slug, '-', ' '))) AS name
       FROM treatments t
       JOIN condition_treatments ct ON ct.treatment_id = t.id
       JOIN conditions c ON c.id = ct.condition_id
@@ -196,7 +196,62 @@ app.get('/api/treatments/:slug', async (req, res) => {
       WHERE t.slug = $1
     `, [slug, lang]);
 
-    res.json({ treatment, conditions: conditions.rows });
+    // Combines with
+    const combines = await pool.query(`
+      SELECT t2.slug, COALESCE(tt2.value, initcap(replace(t2.slug, '-', ' '))) AS name
+      FROM treatment_combines_with tcw
+      JOIN treatments t2 ON t2.id = tcw.treatment_id_b
+      JOIN treatments t1 ON t1.id = tcw.treatment_id_a
+      LEFT JOIN translations tt2 ON tt2.treatment_id = t2.id AND tt2.field_name = 'name' AND tt2.locale = $2
+      WHERE t1.slug = $1
+      UNION ALL
+      SELECT t1.slug, COALESCE(tt1.value, initcap(replace(t1.slug, '-', ' '))) AS name
+      FROM treatment_combines_with tcw
+      JOIN treatments t1 ON t1.id = tcw.treatment_id_a
+      JOIN treatments t2 ON t2.id = tcw.treatment_id_b
+      LEFT JOIN translations tt1 ON tt1.treatment_id = t1.id AND tt1.field_name = 'name' AND tt1.locale = $2
+      WHERE t2.slug = $1
+    `, [slug, lang]);
+
+    // Practitioners
+    const practitioners = await pool.query(`
+      SELECT DISTINCT p.id, p.email, p.roles, p.credentials, p.languages_spoken, p.photo_url, p.quote, p.experience_years
+      FROM practitioners p
+      JOIN practitioner_treatments pt ON pt.practitioner_id = p.id
+      JOIN treatments t ON t.id = pt.treatment_id
+      WHERE t.slug = $1
+    `, [slug]);
+
+    // Pricing from price_tiers
+    const pricing = await pool.query(`
+      SELECT pt.tier_label, pt.amount, pt.currency
+      FROM price_tiers pt
+      JOIN treatments t ON t.id = pt.treatment_id
+      WHERE t.slug = $1 AND pt.show_on_pricing_page = true
+    `, [slug]);
+
+    // FAQs (optional)
+    const faqs = await pool.query(`
+      SELECT f.slug,
+             COALESCE(tq.value, '') AS question,
+             COALESCE(ta.value, '') AS answer
+      FROM treatments t
+      JOIN treatment_faqs tf ON tf.treatment_id = t.id
+      JOIN faqs f ON f.id = tf.faq_id
+      LEFT JOIN translations tq ON tq.faq_id = f.id AND tq.field_name = 'question' AND tq.locale = $2
+      LEFT JOIN translations ta ON ta.faq_id = f.id AND ta.field_name = 'answer' AND ta.locale = $2
+      WHERE t.slug = $1
+      ORDER BY tf.display_order
+    `, [slug, lang]);
+
+    res.json({
+      treatment,
+      conditions: conditions.rows,
+      combines: combines.rows,
+      practitioners: practitioners.rows,
+      pricing: pricing.rows,
+      faqs: faqs.rows
+    });
   } catch (error) {
     console.error('Error /api/treatments/:slug:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -241,8 +296,7 @@ app.get('/api/pricing', async (req, res) => {
   }
 });
 
-// ---------- SERVE FRONTEND (SPA) ----------
-// This must be LAST – catches all non-API routes and serves the frontend
+// SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(__dirname + '/public/database-site.html');
 });
