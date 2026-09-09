@@ -2,7 +2,7 @@ const express = require('express');
 const { Pool } = require('pg');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;  // Render uses PORT env var
 
 app.use(express.json());
 
@@ -89,7 +89,6 @@ app.get('/api/conditions/:slug', async (req, res) => {
     }
     const condition = conditionResult.rows[0];
 
-    // Treatments linked to this condition
     const treatments = await pool.query(`
       SELECT tr.slug,
              COALESCE(tt_name.value, tr.slug) AS name,
@@ -104,7 +103,6 @@ app.get('/api/conditions/:slug', async (req, res) => {
       ORDER BY ct.display_order
     `, [slug, lang]);
 
-    // Pricing from price_tiers for these treatments
     const pricing = await pool.query(`
       SELECT pt.tier_label, pt.amount, pt.currency, t.slug AS treatment_slug
       FROM price_tiers pt
@@ -114,7 +112,6 @@ app.get('/api/conditions/:slug', async (req, res) => {
       WHERE c.slug = $1 AND pt.show_on_pricing_page = true
     `, [slug]);
 
-    // Practitioners who treat any treatment for this condition
     const practitioners = await pool.query(`
       SELECT DISTINCT p.id, p.email, p.roles, p.credentials, p.languages_spoken, p.photo_url, p.quote, p.experience_years
       FROM practitioners p
@@ -124,7 +121,6 @@ app.get('/api/conditions/:slug', async (req, res) => {
       WHERE c.slug = $1
     `, [slug]);
 
-    // FAQs linked to this condition
     const faqs = await pool.query(`
       SELECT f.slug,
              COALESCE(tq.value, '') AS question,
@@ -245,11 +241,12 @@ app.get('/api/pricing', async (req, res) => {
   }
 });
 
-// Serve frontend
-app.get('/', (req, res) => {
+// ---------- SERVE FRONTEND (SPA) ----------
+// This must be LAST – catches all non-API routes and serves the frontend
+app.get('*', (req, res) => {
   res.sendFile(__dirname + '/public/database-site.html');
 });
 
 app.listen(port, () => {
-  console.log(`MC Balans website running on http://localhost:${port}`);
+  console.log(`MC Balans website running on port ${port}`);
 });
