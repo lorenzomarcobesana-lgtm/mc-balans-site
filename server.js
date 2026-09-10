@@ -92,7 +92,7 @@ app.get('/api/conditions/:slug', async (req, res) => {
     `, [slug, lang]);
 
     const practitioners = await pool.query(`
-      SELECT DISTINCT p.id, p.email, p.roles, p.credentials, p.languages_spoken, p.photo_url, p.quote, p.experience_years
+      SELECT DISTINCT p.id, p.email, p.roles, p.display_role, p.credentials, p.languages_spoken, p.photo_url, p.quote, p.experience_years
       FROM practitioners p
       JOIN practitioner_treatments pt ON pt.practitioner_id = p.id
       JOIN condition_treatments ct ON ct.treatment_id = pt.treatment_id
@@ -181,7 +181,7 @@ app.get('/api/treatments/:slug', async (req, res) => {
     `, [slug, lang]);
 
     const practitioners = await pool.query(`
-      SELECT DISTINCT p.id, p.email, p.roles, p.credentials, p.languages_spoken, p.photo_url, p.quote, p.experience_years
+      SELECT DISTINCT p.id, p.email, p.roles, p.display_role, p.credentials, p.languages_spoken, p.photo_url, p.quote, p.experience_years
       FROM practitioners p
       JOIN practitioner_treatments pt ON pt.practitioner_id = p.id
       JOIN treatments t ON t.id = pt.treatment_id
@@ -211,7 +211,7 @@ app.get('/api/treatments/:slug', async (req, res) => {
 
 app.get('/api/practitioners', async (req, res) => {
   try {
-    const result = await pool.query(`SELECT id, email, roles, credentials, languages_spoken, photo_url, quote, experience_years, is_active FROM practitioners WHERE is_active = true ORDER BY id`);
+    const result = await pool.query(`SELECT id, email, roles, display_role, credentials, languages_spoken, photo_url, quote, experience_years, is_active FROM practitioners WHERE is_active = true ORDER BY id`);
     res.json(result.rows);
   } catch (error) { console.error(error); res.status(500).json({ error: 'Internal server error' }); }
 });
