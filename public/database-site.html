@@ -97,6 +97,7 @@ let currentLang='en';
 const app=document.getElementById('app');
 
 function fmt(slug){if(!slug)return '';return slug.split('-').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');}
+function nameOf(obj){return (obj && obj.name) ? obj.name : fmt(obj ? obj.slug : '');}
 function truncate(str,len){if(!str||str.length<=len)return str||'';const cut=str.slice(0,len);const last=cut.lastIndexOf(' ');return (last>0?cut.slice(0,last):cut).trim()+'…';}
 function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');}
 function nl2br(html){return esc(html).replace(/\n/g,'<br>');}
@@ -145,8 +146,8 @@ html+='<section class="section" style="background:var(--jade-tint);"><div class=
 categories.forEach(cat=>{
 const catConditions=conditions.filter(c=>c.category_slug===cat.slug);
 if(catConditions.length>0){
-html+='<div class="category-group"><h3>'+esc(fmt(cat.name||cat.slug))+'</h3><div class="cond-grid">';
-catConditions.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${esc(fmt(cat.name||cat.slug))}</div><h4>${esc(fmt(c.name||c.slug))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;});
+html+='<div class="category-group"><h3>'+esc(nameOf(cat))+'</h3><div class="cond-grid">';
+catConditions.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${esc(nameOf(cat))}</div><h4>${esc(nameOf(c))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;});
 html+='</div></div>';
 }
 });
@@ -165,8 +166,8 @@ let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigate
 categories.forEach(cat=>{
 const catConditions=conditions.filter(c=>c.category_slug===cat.slug);
 if(catConditions.length>0){
-html+='<div class="accordion"><div class="acc-item"><div class="acc-head" onclick="this.parentElement.classList.toggle(\'open\')"><h4>'+esc(fmt(cat.name||cat.slug))+'</h4><span class="plus">+</span></div><div class="acc-body"><div class="acc-body-inner" style="flex-direction:column; gap:16px;">';
-catConditions.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${esc(fmt(cat.name||cat.slug))}</div><h4>${esc(fmt(c.name||c.slug))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;});
+html+='<div class="accordion"><div class="acc-item"><div class="acc-head" onclick="this.parentElement.classList.toggle(\'open\')"><h4>'+esc(nameOf(cat))+'</h4><span class="plus">+</span></div><div class="acc-body"><div class="acc-body-inner" style="flex-direction:column; gap:16px;">';
+catConditions.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${esc(nameOf(cat))}</div><h4>${esc(nameOf(c))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;});
 html+='</div></div></div></div>';
 }
 });
@@ -180,7 +181,7 @@ app.innerHTML='<div class="loading">Loading...</div>';
 const res=await fetch(API+'/conditions/'+slug+'?lang='+currentLang);
 if(!res.ok)throw new Error('Condition not found');
 const data=await res.json();
-const c=data.condition;const nome=esc(fmt(c.name||c.slug));
+const c=data.condition;const nome=esc(nameOf(c));
 let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/conditions\')">'+i18n[currentLang].conditions+'</a> / '+nome+'</div><h1>'+nome+'</h1>'+(c.summary?'<p class="lede">'+esc(c.summary)+'</p>':'')+'<div class="stamp-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Licensed MD</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">40+ Years</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Orange-Nassau</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Medisch Dossier</span></div></div><div class="condition-layout" style="display:grid;grid-template-columns:1fr 280px;gap:32px;padding-top:40px;max-width:1180px;margin:0 auto;"><div class="condition-main" style="max-width:800px;">';
 
 html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Recognition</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.recognition?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.recognition)+'</div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
@@ -191,7 +192,7 @@ html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElemen
 
 if(data.treatments&&data.treatments.length>0){
 html+='<h2>Treatments</h2><div class="cond-grid">';
-data.treatments.forEach(t=>{html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(fmt(t.name||t.slug))}</h4><p>${esc(truncate(t.summary||'',100))}</p>${t.duration?'<div style="margin-top:4px;color:var(--stone);"><strong>Duration:</strong> '+esc(t.duration)+'</div>':''}</div><div class="arrow">View →</div></div>`;});
+data.treatments.forEach(t=>{html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(nameOf(t))}</h4><p>${esc(truncate(t.summary||'',100))}</p>${t.duration?'<div style="margin-top:4px;color:var(--stone);"><strong>Duration:</strong> '+esc(t.duration)+'</div>':''}</div><div class="arrow">View →</div></div>`;});
 html+='</div>';
 }
 if(c.pricing)html+='<h2>Pricing</h2><div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+nl2br(c.pricing)+'</div>';
@@ -220,7 +221,7 @@ const res=await fetch(API+'/treatments?lang='+currentLang);
 if(!res.ok)throw new Error('Load failed');
 const data=await res.json();
 let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / '+i18n[currentLang].treatments+'</div><h1>'+i18n[currentLang].treatments+'</h1></div><section class="section"><div class="cond-grid">';
-data.forEach(t=>{html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(fmt(t.name||t.slug))}</h4><p>${esc(truncate(t.summary||'',110))}</p></div><div class="arrow">View →</div></div>`;});
+data.forEach(t=>{html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(nameOf(t))}</h4><p>${esc(truncate(t.summary||'',110))}</p></div><div class="arrow">View →</div></div>`;});
 html+='</div></section>';app.innerHTML=html;
 }catch(e){app.innerHTML='<div class="error">Treatments error: '+e.message+'</div>';}
 }
@@ -231,7 +232,7 @@ app.innerHTML='<div class="loading">Loading...</div>';
 const res=await fetch(API+'/treatments/'+slug+'?lang='+currentLang);
 if(!res.ok)throw new Error('Treatment not found');
 const data=await res.json();
-const t=data.treatment;const nome=esc(fmt(t.name||t.slug));
+const t=data.treatment;const nome=esc(nameOf(t));
 let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/treatments\')">'+i18n[currentLang].treatments+'</a> / '+nome+'</div><h1>'+nome+'</h1><p class="lede">'+(t.summary||'')+'</p><div class="stamp-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Licensed MD</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">40+ Years</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Orange-Nassau</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Medisch Dossier</span></div></div><div class="wrap treat-layout"><div class="treat-body">';
 
 if(t.intake) html+='<h3>Intake</h3><p>'+nl2br(t.intake)+'</p>';
@@ -240,7 +241,7 @@ if(t.aftercare) html+='<h3>Aftercare</h3><p>'+nl2br(t.aftercare)+'</p>';
 
 if(data.combines&&data.combines.length>0){
 html+='<h3>Combines well with</h3><div class="chip-row">';
-data.combines.forEach(c=>{html+=`<span class="chip" onclick="navigateTo('/treatments/${c.slug}')">${esc(fmt(c.name||c.slug))}</span>`;});
+data.combines.forEach(c=>{html+=`<span class="chip" onclick="navigateTo('/treatments/${c.slug}')">${esc(nameOf(c))}</span>`;});
 html+='</div>';
 }
 
@@ -270,7 +271,7 @@ html+='</div></div>';
 
 html+='<div class="info-card"><div style="font-size:12px;color:var(--stone);margin-bottom:10px;">Treats these conditions</div><div class="chip-groups">';
 if(data.conditions&&data.conditions.length>0){
-data.conditions.forEach(c=>{html+=`<span class="chip" onclick="navigateTo('/conditions/${c.slug}')">${esc(fmt(c.name||c.slug))}</span>`;});
+data.conditions.forEach(c=>{html+=`<span class="chip" onclick="navigateTo('/conditions/${c.slug}')">${esc(nameOf(c))}</span>`;});
 }else{html+='<span class="chip">Pending</span>';}
 html+='</div></div>';
 
