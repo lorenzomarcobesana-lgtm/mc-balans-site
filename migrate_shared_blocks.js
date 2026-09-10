@@ -4,21 +4,23 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-const APPROACH_ID = 'BLK-APPROACH';   // 12 chars
-const ASSESS_ID   = 'BLK-ASSESS';     // 10 chars
+const APPROACH_ID = 'BLK-APPROACH';
+const ASSESS_ID   = 'BLK-ASSESS';
 
 async function main() {
-  // 1. Get current text from any condition (they're all the same)
+  // Get current text from any condition
   const c = await pool.query(`SELECT approach, assessment FROM conditions WHERE approach IS NOT NULL LIMIT 1`);
   if (c.rowCount === 0) { console.error('No conditions with approach text'); process.exit(1); }
   const { approach, assessment } = c.rows[0];
+  console.log('Source approach length:', (approach||'').length);
+  console.log('Source assessment length:', (assessment||'').length);
 
-  // 2. Create shared blocks
+  // Create shared blocks
   await pool.query(`INSERT INTO shared_content_blocks (id, block_type) VALUES ($1, 'condition_approach') ON CONFLICT (id) DO NOTHING`, [APPROACH_ID]);
   await pool.query(`INSERT INTO shared_content_blocks (id, block_type) VALUES ($1, 'condition_assessment') ON CONFLICT (id) DO NOTHING`, [ASSESS_ID]);
   console.log('✅ Shared blocks created');
 
-  // 3. Insert/update translations
+  // Insert/update translations
   for (const [blockId, text] of [[APPROACH_ID, approach], [ASSESS_ID, assessment]]) {
     const ex = await pool.query(`SELECT id FROM translations WHERE shared_block_id = $1 AND locale = 'en'`, [blockId]);
     if (ex.rowCount > 0) {
@@ -29,12 +31,12 @@ async function main() {
   }
   console.log('✅ Translations saved');
 
-  // 4. Add FK columns to conditions
+  // Add FK columns
   await pool.query(`ALTER TABLE conditions ADD COLUMN IF NOT EXISTS approach_block_id VARCHAR(12) REFERENCES shared_content_blocks(id)`);
   await pool.query(`ALTER TABLE conditions ADD COLUMN IF NOT EXISTS assessment_block_id VARCHAR(12) REFERENCES shared_content_blocks(id)`);
   console.log('✅ Columns added');
 
-  // 5. Link every condition to the shared blocks
+  // Link conditions
   const upd = await pool.query(`UPDATE conditions SET approach_block_id = $1, assessment_block_id = $2 RETURNING id`, [APPROACH_ID, ASSESS_ID]);
   console.log(`✅ ${upd.rowCount} conditions linked`);
 
