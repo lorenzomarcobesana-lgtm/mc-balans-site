@@ -13,6 +13,8 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(248,245,238,0.95);b
 .header-inner{display:flex;align-items:center;justify-content:space-between;padding:15px 32px;max-width:1180px;margin:0 auto;gap:24px}
 .logo{font-family:var(--font-display);font-size:22px;font-weight:600;cursor:pointer}.logo .dot{color:var(--red)}
 nav.main-nav{display:flex;gap:2px}nav.main-nav a{font-size:13.5px;color:var(--ink);opacity:.7;cursor:pointer;padding:8px 13px;border-radius:2px}nav.main-nav a:hover{opacity:1;background:var(--jade-tint)}
+nav.main-nav a.nav-cta{background:var(--jade);color:#fff;opacity:1;font-weight:600;padding:9px 16px;border-radius:2px;margin-left:8px}
+nav.main-nav a.nav-cta:hover{background:var(--jade-dark);color:#fff}
 .header-right{display:flex;align-items:center;gap:12px}
 .lang-select{display:flex;gap:4px}.lang-select button{background:transparent;border:1px solid var(--line);padding:4px 8px;font-size:12px;cursor:pointer;border-radius:4px}.lang-select button.active{background:var(--jade);color:#fff;border-color:var(--jade)}
 .ask-mini{display:flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--line);border-radius:2px;padding:9px 14px;min-width:200px;color:var(--stone);font-size:12.5px;position:relative}
@@ -69,13 +71,13 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 <div class="header-inner">
 <div class="logo" onclick="navigateTo('/')">MC Balans<span class="dot">.</span></div>
 <nav class="main-nav">
-<a href="/" onclick="navigateTo('/')">Home</a>
-<a href="/conditions" onclick="navigateTo('/conditions')">What We Treat</a>
-<a href="/treatments" onclick="navigateTo('/treatments')">Treatments</a>
-<a href="/resources" onclick="navigateTo('/resources')">Resources</a>
-<a href="/about" onclick="navigateTo('/about')">About</a>
-<a href="/contact" onclick="navigateTo('/contact')">Contact</a>
-<a href="/treatments/online-tongue-diagnosis" onclick="navigateTo('/treatments/online-tongue-diagnosis')">Online Diagnosis</a>
+<a href="/" onclick="navigateTo('/')" data-i18n="home">Home</a>
+<a href="/conditions" onclick="navigateTo('/conditions')" data-i18n="conditions">What We Treat</a>
+<a href="/treatments" onclick="navigateTo('/treatments')" data-i18n="treatments">Treatments</a>
+<a href="/resources" onclick="navigateTo('/resources')" data-i18n="resources">Resources</a>
+<a href="/about" onclick="navigateTo('/about')" data-i18n="about">About</a>
+<a href="/contact" onclick="navigateTo('/contact')" data-i18n="contact">Contact</a>
+<a class="nav-cta" href="/treatments/online-tongue-diagnosis" onclick="navigateTo('/treatments/online-tongue-diagnosis')" data-i18n="onlineDiagnosis">Online Diagnosis</a>
 </nav>
 <div class="header-right">
 <div class="lang-select">
@@ -108,12 +110,13 @@ function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 function nl2br(html){return esc(html).replace(/\n/g,'<br>');}
 
 const i18n={
-en:{conditions:'What We Treat',treatments:'Treatments',resources:'Resources',about:'About',contact:'Contact'},
-nl:{conditions:'Wat we behandelen',treatments:'Behandelingen',resources:'Bronnen',about:'Over ons',contact:'Contact'},
-zh:{conditions:'治疗项目',treatments:'疗法',resources:'资源',about:'关于我们',contact:'联系'}
+en:{home:'Home',conditions:'What We Treat',treatments:'Treatments',resources:'Resources',about:'About',contact:'Contact',onlineDiagnosis:'Online Diagnosis'},
+nl:{home:'Home',conditions:'Wat we behandelen',treatments:'Behandelingen',resources:'Bronnen',about:'Over ons',contact:'Contact',onlineDiagnosis:'Online diagnose'},
+zh:{home:'首页',conditions:'治疗项目',treatments:'疗法',resources:'资源',about:'关于我们',contact:'联系',onlineDiagnosis:'在线诊断'}
 };
 
-function setLang(l){currentLang=l;document.querySelectorAll('.lang-select button').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()));route();}
+function setLang(l){currentLang=l;document.querySelectorAll('.lang-select button').forEach(b=>b.classList.toggle('active',b.textContent===l.toUpperCase()));applyNavTranslations();route();}
+function applyNavTranslations(){document.querySelectorAll('nav.main-nav a[data-i18n]').forEach(a=>{const k=a.getAttribute('data-i18n');if(i18n[currentLang]&&i18n[currentLang][k]){a.textContent=i18n[currentLang][k];}});}
 function navigateTo(url){history.pushState({},'',url);route();}
 function route(){
 try{
@@ -304,7 +307,7 @@ function aboutTab(tab){document.querySelectorAll('.about-tab').forEach(t=>t.clas
 function renderResources(){app.innerHTML='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Resources</div><h1>Resources</h1><p class="lede">Dr. Lin\'s monthly Medisch Dossier column, published natively.</p></div><section class="section"><div class="wrap"><div class="resource-card" style="margin-bottom:16px;"><div class="rc-text"><span class="resource-badge">Journal</span><h4>Acupuncture for knee injury</h4><p>Written by Dr. Lin · cross-linked to Pain → Joints Pain and Acupuncture.</p></div><div class="rc-meta">21.07.2026 · Dr. Lin</div><button class="btn btn-outline">Read →</button></div><div class="placeholder-box">Further Medisch Dossier articles — content pending</div></div></section>';}
 function renderContact(){app.innerHTML='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Contact</div><h1>Book an appointment</h1></div><div class="wrap section"><p>Phone: 070 388 8111</p><p>Email: info@mcbalans.nl</p><p>Mon-Fri, 9:30-17:00</p></div>';}
 
-document.addEventListener('DOMContentLoaded',()=>{route();});
+document.addEventListener('DOMContentLoaded',()=>{applyNavTranslations();route();});
 </script>
 </body>
 </html>
