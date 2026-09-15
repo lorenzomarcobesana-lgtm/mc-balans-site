@@ -45,7 +45,11 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 @media (max-width:900px){.treat-layout{grid-template-columns:1fr;}}
 .treat-body h3{font-size:19px;margin:34px 0 12px;}
 .treat-body h3:first-child{margin-top:0;}
-.treat-body p{color:var(--stone);font-size:14.7px;margin:0;}
+.treat-body p{color:var(--stone);font-size:14.7px;margin:0 0 14px;}
+.treat-html{color:var(--stone);font-size:14.7px;}
+.treat-html p{margin:0 0 14px;}
+.treat-html a{color:var(--jade);font-weight:600;text-decoration:underline;}
+.treat-html strong{color:var(--ink);}
 .treat-side{position:sticky;top:88px;align-self:start;}
 .info-card{background:var(--white);border:1px solid var(--line);padding:24px;border-radius:2px;margin-bottom:18px;}
 .info-card .row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px;gap:12px;}
@@ -235,9 +239,9 @@ const data=await res.json();
 const t=data.treatment;const nome=esc(nameOf(t));
 let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / <a onclick="navigateTo(\'/treatments\')">'+i18n[currentLang].treatments+'</a> / '+nome+'</div><h1>'+nome+'</h1><p class="lede">'+(t.summary||'')+'</p><div class="stamp-strip" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;"><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Licensed MD</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">40+ Years Experience</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Orange-Nassau Knighthood</span><span style="font-size:11px;background:var(--jade-tint);color:var(--jade);padding:5px 10px;border-radius:100px;">Medisch Dossier Columnist</span></div></div><div class="wrap treat-layout"><div class="treat-body">';
 
-if(t.intake) html+='<h3>Intake</h3><p>'+nl2br(t.intake)+'</p>';
-if(t.body) html+='<h3>The treatment</h3><p>'+nl2br(t.body)+'</p>';
-if(t.aftercare) html+='<h3>Aftercare</h3><p>'+nl2br(t.aftercare)+'</p>';
+if(t.intake) html+='<h3>Intake</h3><div class="treat-html">'+t.intake+'</div>';
+if(t.body) html+='<div class="treat-html">'+t.body+'</div>';
+if(t.aftercare) html+='<h3>Aftercare</h3><div class="treat-html">'+t.aftercare+'</div>';
 
 if(data.combines&&data.combines.length>0){
 html+='<h3>Combines well with</h3><div class="chip-row">';
