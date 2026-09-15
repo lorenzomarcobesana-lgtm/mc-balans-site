@@ -185,7 +185,7 @@ contentPending:'\u5185\u5bb9\u5f85\u5b8c\u5584',loading:'\u52a0\u8f7d\u4e2d...',
 footerTagline:'\u4e2d\u897f\u533b\u7ed3\u5408\uff0c\u6d77\u7259',footerLed:'\u7531\u6797\u6587\u5fd7\u533b\u751f\u5e26\u9886',
 hours:'\u5468\u4e00\u81f3\u5468\u4e94 9:30-17:00',copyright:'\u00a9 2026 MC Balans'}
 };
-function t(k){return (i18n[currentLang]&&i18n[currentLang][k])||i18n.en[k]||k;}
+function T(k){return (i18n[currentLang]&&i18n[currentLang][k])||i18n.en[k]||k;}
 function tr(html){
 if(currentLang==='en')return html;
 const m=[
@@ -256,7 +256,7 @@ else renderHome();
 
 async function renderHome(){
 try{
-app.innerHTML='<div class="loading">'+t('loading')+'</div>';
+app.innerHTML='<div class="loading">'+T('loading')+'</div>';
 const [condRes,catRes]=await Promise.all([fetch(API+'/conditions?lang='+currentLang),fetch(API+'/categories?lang='+currentLang)]);
 if(!condRes.ok||!catRes.ok)throw new Error('Load failed');
 const conditions=await condRes.json();const categories=await catRes.json();
@@ -287,7 +287,7 @@ app.innerHTML=tr(html);
 
 async function renderConditions(){
 try{
-app.innerHTML='<div class="loading">'+t('loading')+'</div>';
+app.innerHTML='<div class="loading">'+T('loading')+'</div>';
 const [condRes,catRes]=await Promise.all([fetch(API+'/conditions?lang='+currentLang),fetch(API+'/categories?lang='+currentLang)]);
 if(!condRes.ok||!catRes.ok)throw new Error('Load failed');
 const conditions=await condRes.json();const categories=await catRes.json();
@@ -306,7 +306,7 @@ html+='</div></section>';app.innerHTML=tr(html);
 
 async function renderCondition(slug){
 try{
-app.innerHTML='<div class="loading">'+t('loading')+'</div>';
+app.innerHTML='<div class="loading">'+T('loading')+'</div>';
 const res=await fetch(API+'/conditions/'+slug+'?lang='+currentLang);
 if(!res.ok)throw new Error('Condition not found');
 const data=await res.json();
@@ -345,7 +345,7 @@ app.innerHTML=tr(html);
 
 async function renderTreatments(){
 try{
-app.innerHTML='<div class="loading">'+t('loading')+'</div>';
+app.innerHTML='<div class="loading">'+T('loading')+'</div>';
 const res=await fetch(API+'/treatments?lang='+currentLang);
 if(!res.ok)throw new Error('Load failed');
 const data=await res.json();
@@ -363,7 +363,7 @@ html+='</div></section>';app.innerHTML=tr(html);
 
 async function renderTreatment(slug){
 try{
-app.innerHTML='<div class="loading">'+t('loading')+'</div>';
+app.innerHTML='<div class="loading">'+T('loading')+'</div>';
 const res=await fetch(API+'/treatments/'+slug+'?lang='+currentLang);
 if(!res.ok)throw new Error('Treatment not found');
 const data=await res.json();
@@ -418,7 +418,7 @@ app.innerHTML=tr(html);
 
 async function renderAbout(){
 try{
-app.innerHTML='<div class="loading">'+t('loading')+'</div>';
+app.innerHTML='<div class="loading">'+T('loading')+'</div>';
 const [teamRes,priceRes]=await Promise.all([fetch(API+'/practitioners'),fetch(API+'/pricing')]);
 if(!teamRes.ok)throw new Error('Failed');
 const team=await teamRes.json();const prices=priceRes.ok?await priceRes.json():[];
