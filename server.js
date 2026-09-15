@@ -367,7 +367,7 @@ app.get('/api/treatments', async (req, res) => {
     const result = await pool.query(`
       SELECT t.slug, t.duration,
              COALESCE(tt_name.value, t.name, t.slug) AS name,
-             COALESCE(tt_summary.value, '') AS summary
+             COALESCE(tt_summary.value, t.summary) AS summary
       FROM treatments t
       LEFT JOIN translations tt_name    ON tt_name.treatment_id = t.id AND tt_name.field_name = 'name' AND tt_name.locale = $1
       LEFT JOIN translations tt_summary ON tt_summary.treatment_id = t.id AND tt_summary.field_name = 'summary' AND tt_summary.locale = $1
@@ -385,11 +385,12 @@ app.get('/api/treatments/:slug', async (req, res) => {
     const treatmentResult = await pool.query(`
       SELECT t.*,
              COALESCE(tt_name.value, t.name, t.slug) AS name,
-             COALESCE(tt_summary.value, '') AS summary,
-             COALESCE(tt_body.value, '') AS body,
-             COALESCE(tt_intake.value, '') AS intake,
-             COALESCE(tt_aftercare.value, '') AS aftercare,
-             COALESCE(tt_insurance.value, '') AS insurance
+             COALESCE(tt_summary.value, t.summary) AS summary,
+             COALESCE(tt_body.value, t.body) AS body,
+             COALESCE(tt_intake.value, t.intake, (SELECT value FROM shared_content_blocks WHERE id = t.intake_text_block_id)) AS intake,
+             COALESCE(tt_aftercare.value, t.aftercare) AS aftercare,
+             COALESCE(tt_insurance.value, t.insurance, (SELECT value FROM shared_content_blocks WHERE id = t.insurance_coverage_block_id)) AS insurance,
+             (SELECT value FROM shared_content_blocks WHERE id = t.treatment_selection_approach_id) AS treatment_selection_approach
       FROM treatments t
       LEFT JOIN translations tt_name       ON tt_name.treatment_id = t.id AND tt_name.field_name = 'name' AND tt_name.locale = $2
       LEFT JOIN translations tt_summary    ON tt_summary.treatment_id = t.id AND tt_summary.field_name = 'summary' AND tt_summary.locale = $2
@@ -621,11 +622,12 @@ app.get('/treatments/:slug', async (req, res) => {
     const tr = await pool.query(`
       SELECT t.*,
              COALESCE(t.name, t.slug) AS name,
-             COALESCE((SELECT value FROM translations WHERE treatment_id = t.id AND field_name = 'summary' AND locale = 'en' LIMIT 1), '') AS summary,
-             COALESCE((SELECT value FROM translations WHERE treatment_id = t.id AND field_name = 'body' AND locale = 'en' LIMIT 1), '') AS body,
-             COALESCE((SELECT value FROM translations WHERE treatment_id = t.id AND field_name = 'intake' AND locale = 'en' LIMIT 1), '') AS intake,
-             COALESCE((SELECT value FROM translations WHERE treatment_id = t.id AND field_name = 'aftercare' AND locale = 'en' LIMIT 1), '') AS aftercare,
-             COALESCE((SELECT value FROM translations WHERE treatment_id = t.id AND field_name = 'insurance' AND locale = 'en' LIMIT 1), '') AS insurance
+             t.summary,
+             t.body,
+             COALESCE(t.intake, (SELECT value FROM shared_content_blocks WHERE id = t.intake_text_block_id)) AS intake,
+             t.aftercare,
+             COALESCE(t.insurance, (SELECT value FROM shared_content_blocks WHERE id = t.insurance_coverage_block_id)) AS insurance,
+             (SELECT value FROM shared_content_blocks WHERE id = t.treatment_selection_approach_id) AS treatment_selection_approach
       FROM treatments t WHERE t.slug = $1 AND t.status = 'published'
     `, [slug]);
     if (tr.rowCount === 0) {
