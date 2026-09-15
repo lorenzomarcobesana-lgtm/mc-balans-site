@@ -98,8 +98,8 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 <footer class="site">
 <div class="wrap footer-grid">
 <div><div class="footer-logo">MC Balans</div><p data-i18n="footerTagline">Western & TCM, The Hague</p><p data-i18n="footerLed">Led by Dr. Wenzhi Lin</p></div>
-<div><h5>Explore</h5><a href="/conditions" onclick="navigateTo('/conditions')">What We Treat</a><a href="/treatments" onclick="navigateTo('/treatments')">Treatments</a><a href="/resources" onclick="navigateTo('/resources')">Resources</a><a href="/about" onclick="navigateTo('/about')">About</a></div>
-<div><h5>Contact</h5><a href="/contact" onclick="navigateTo('/contact')">070 388 8111</a><a href="/contact" onclick="navigateTo('/contact')">info@mcbalans.nl</a><p data-i18n="hours">Mon–Fri, 9:30–17:00</p></div>
+<div><h5 data-i18n="footerExplore">Explore</h5><a href="/conditions" onclick="navigateTo('/conditions')" data-i18n="conditions">What We Treat</a><a href="/treatments" onclick="navigateTo('/treatments')" data-i18n="treatments">Treatments</a><a href="/resources" onclick="navigateTo('/resources')" data-i18n="resources">Resources</a><a href="/about" onclick="navigateTo('/about')" data-i18n="about">About</a></div>
+<div><h5 data-i18n="footerContact">Contact</h5><a href="/contact" onclick="navigateTo('/contact')">070 388 8111</a><a href="/contact" onclick="navigateTo('/contact')">info@mcbalans.nl</a><p data-i18n="hours">Mon–Fri, 9:30–17:00</p></div>
 </div>
 <div class="footer-bottom">© 2026 MC Balans</div>
 </footer>
@@ -431,10 +431,153 @@ html+='</div></section>';app.innerHTML=tr(html);
 }catch(e){app.innerHTML='<div class="error">About error: '+e.message+'</div>';}
 }
 function aboutTab(tab){document.querySelectorAll('.about-tab').forEach(t=>t.classList.toggle('active',t.textContent.toLowerCase().replace(' ','')===tab));document.querySelectorAll('.about-panel').forEach(p=>p.classList.remove('active'));const panel=document.getElementById('panel-'+tab);if(panel)panel.classList.add('active');}
-function renderResources(){app.innerHTML='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Resources</div><h1>Resources</h1><p class="lede">Dr. Lin\'s monthly Medisch Dossier column, published natively.</p></div><section class="section"><div class="wrap"><div class="resource-card" style="margin-bottom:16px;"><div class="rc-text"><span class="resource-badge">Journal</span><h4>Acupuncture for knee injury</h4><p>Written by Dr. Lin · cross-linked to Pain → Joints Pain and Acupuncture.</p></div><div class="rc-meta">21.07.2026 · Dr. Lin</div><button class="btn btn-outline">Read →</button></div><div class="placeholder-box">Further Medisch Dossier articles — content pending</div></div></section>';}
-function renderContact(){app.innerHTML='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Contact</div><h1>Book an appointment</h1></div><div class="wrap section"><p>Phone: 070 388 8111</p><p>Email: info@mcbalans.nl</p><p>Mon-Fri, 9:30-17:00</p></div>';}
+function renderResources(){app.innerHTML=tr('<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Resources</div><h1>Resources</h1><p class="lede">Dr. Lin\'s monthly Medisch Dossier column, published natively.</p></div><section class="section"><div class="wrap"><div class="resource-card" style="margin-bottom:16px;"><div class="rc-text"><span class="resource-badge">Journal</span><h4>Acupuncture for knee injury</h4><p>Written by Dr. Lin · cross-linked to Pain → Joints Pain and Acupuncture.</p></div><div class="rc-meta">21.07.2026 · Dr. Lin</div><button class="btn btn-outline">Read →</button></div><div class="placeholder-box">Further Medisch Dossier articles — content pending</div></div></section>');}
+function renderContact(){app.innerHTML=tr('<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Contact</div><h1>Book an appointment</h1></div><div class="wrap section"><p>Phone: 070 388 8111</p><p>Email: info@mcbalans.nl</p><p>Mon-Fri, 9:30-17:00</p></div>');}
 
 document.addEventListener('DOMContentLoaded',()=>{applyNavTranslations();route();});
+/* === UI translation override === */
+const uiTr = {
+nl: {
+  "A <em>balanced</em> approach to the health of mind and body.": "Een <em>gebalanceerde</em> benadering van de gezondheid van geest en lichaam.",
+  "Dr. Wenzhi Lin brings over 40 years of dual experience.": "Dr. Wenzhi Lin brengt meer dan 40 jaar dubbele ervaring met zich mee.",
+  "Book an appointment": "Maak een afspraak",
+  "Book now": "Boek nu",
+  ">Recognition<": ">Herkennen<",
+  ">Red Flags<": ">Rode vlaggen<",
+  ">Understanding<": ">Begrijpen<",
+  ">MC Balans Approach<": ">MC Balans benadering<",
+  ">MC Balans Assessment<": ">MC Balans beoordeling<",
+  ">Expectations<": ">Verwachtingen<",
+  ">Practical Information<": ">Praktische informatie<",
+  ">FAQ<": ">Veelgestelde vragen<",
+  ">Who will treat me?<": ">Wie behandelt mij?<",
+  ">Treatments<": ">Behandelingen<",
+  ">Pricing<": ">Tarieven<",
+  ">Intake<": ">Intake<",
+  ">The treatment<": ">De behandeling<",
+  ">Aftercare<": ">Nazorg<",
+  ">Combines well with<": ">Combineert goed met<",
+  ">Frequently asked<": ">Veelgestelde vragen<",
+  ">Price<": ">Prijs<",
+  ">Duration<": ">Duur<",
+  ">Insurance<": ">Verzekering<",
+  ">Practitioners<": ">Behandelaars<",
+  ">Treats these conditions<": ">Behandelt deze klachten<",
+  ">Content pending<": ">Inhoud in behandeling<",
+  ">Why do patients trust Dr. Lin?<": ">Waarom vertrouwen pati\u00ebnten Dr. Lin?<",
+  ">Credible<": ">Geloofwaardig<",
+  ">Experienced<": ">Ervaren<",
+  ">Respected<": ">Gerespecteerd<",
+  ">Successful<": ">Succesvol<",
+  "A practising, licensed medical doctor in the Netherlands.": "Een praktiserend, bevoegd arts in Nederland.",
+  "40+ years of sustained practice across Chinese and Western medicine.": "Meer dan 40 jaar ervaring in zowel Chinese als Westerse geneeskunde.",
+  "Monthly Medisch Dossier column, NPO documentary, Knight of Orange-Nassau (2012).": "Maandelijkse column in Medisch Dossier, NPO-documentaire, Ridder in de Orde van Oranje-Nassau (2012).",
+  "Reviews supporting treatment effectiveness.": "Beoordelingen die de effectiviteit van de behandelingen ondersteunen.",
+  "Insurance:": "Verzekering:",
+  "Consultations may be covered under standard health insurance. TCM treatments may be covered under supplementary insurance (aanvullende verzekering). We can help you check.": "Consultaties kunnen worden gedekt door de basisverzekering. TCM-behandelingen kunnen worden gedekt door een aanvullende verzekering. Wij helpen u graag dit te controleren.",
+  ">Explore \u2192<": ">Verken \u2192<",
+  ">View \u2192<": ">Bekijk \u2192<",
+  ">Start \u2192<": ">Start \u2192<",
+  ">Explore<": ">Ontdek<",
+  "Western & TCM, The Hague": "Westers & TCM, Den Haag",
+  "Led by Dr. Wenzhi Lin": "Onder leiding van Dr. Wenzhi Lin",
+  "Mon\u2013Fri, 9:30\u201317:00": "Ma-Vr, 9:30-17:00",
+  "About MC Balans": "Over MC Balans",
+  "Meet the team, see the clinic, check pricing, or read about our approach.": "Ontmoet het team, bekijk de kliniek, controleer tarieven of lees over onze aanpak.",
+  ">Our Team<": ">Ons team<",
+  ">Our Clinic<": ">Onze kliniek<",
+  ">Philosophy<": ">Filosofie<",
+  "The space, in The Hague": "De ruimte, in Den Haag",
+  "What each treatment costs": "Wat elke behandeling kost",
+  "Vision & Mission": "Visie en missie",
+  "Our Philosophy": "Onze filosofie",
+  "Most patients book by phone \u2014 call directly, or send a message and expect a reply by email.": "De meeste pati\u00ebnten boeken telefonisch \u2014 bel direct, of stuur een bericht en ontvang een antwoord per e-mail.",
+  ">Phone<": ">Telefoon<",
+  ">Email<": ">E-mail<",
+  ">Hours<": ">Openingstijden<",
+  ">Name<": ">Naam<",
+  ">Send message<": ">Bericht verzenden<",
+  "Dr. Lin's monthly Medisch Dossier column, published natively.": "De maandelijkse Medisch Dossier-column van Dr. Lin, native gepubliceerd.",
+  ">Acupuncture for knee injury<": ">Acupunctuur bij knieblessure<",
+  ">Read \u2192<": ">Lees \u2192<",
+  ">Resources<": ">Bronnen<",
+  ">Contact<": ">Contact<",
+},
+zh: {
+  "A <em>balanced</em> approach to the health of mind and body.": "\u8eab\u5fc3\u5065\u5eb7\u7684<em>\u5e73\u8861</em>\u4e4b\u9053\u3002",
+  "Dr. Wenzhi Lin brings over 40 years of dual experience.": "\u6797\u6587\u5fd7\u533b\u751f\u62e5\u6709\u8d85\u8fc740\u5e74\u7684\u4e2d\u897f\u533b\u53cc\u91cd\u7ecf\u9a8c\u3002",
+  "Book an appointment": "\u9884\u7ea6",
+  "Book now": "\u7acb\u5373\u9884\u7ea6",
+  ">Recognition<": ">\u8bc6\u522b<",
+  ">Red Flags<": ">\u8b66\u793a\u4fe1\u53f7<",
+  ">Understanding<": ">\u7406\u89e3<",
+  ">MC Balans Approach<": ">MC Balans \u65b9\u6cd5<",
+  ">MC Balans Assessment<": ">MC Balans \u8bc4\u4f30<",
+  ">Expectations<": ">\u671f\u671b<",
+  ">Practical Information<": ">\u5b9e\u7528\u4fe1\u606f<",
+  ">FAQ<": ">\u5e38\u89c1\u95ee\u9898<",
+  ">Who will treat me?<": ">\u8c01\u6765\u6cbb\u7597\u6211\uff1f<",
+  ">Treatments<": ">\u7597\u6cd5<",
+  ">Pricing<": ">\u4ef7\u683c<",
+  ">Intake<": ">\u63a5\u8bca<",
+  ">The treatment<": ">\u6cbb\u7597<",
+  ">Aftercare<": ">\u540e\u7eed\u62a4\u7406<",
+  ">Combines well with<": ">\u53ef\u4e0e\u4ee5\u4e0b\u7597\u6cd5\u914d\u5408<",
+  ">Frequently asked<": ">\u5e38\u89c1\u95ee\u9898<",
+  ">Price<": ">\u4ef7\u683c<",
+  ">Duration<": ">\u65f6\u957f<",
+  ">Insurance<": ">\u4fdd\u9669<",
+  ">Practitioners<": ">\u6cbb\u7597\u5e08<",
+  ">Treats these conditions<": ">\u6cbb\u7597\u7684\u75c5\u75c7<",
+  ">Content pending<": ">\u5185\u5bb9\u5f85\u5b8c\u5584<",
+  ">Why do patients trust Dr. Lin?<": ">\u60a3\u8005\u4e3a\u4f55\u4fe1\u4efb\u6797\u533b\u751f\uff1f<",
+  ">Credible<": ">\u53ef\u4fe1<",
+  ">Experienced<": ">\u7ecf\u9a8c\u4e30\u5bcc<",
+  ">Respected<": ">\u53d7\u4eba\u5c0a\u656c<",
+  ">Successful<": ">\u6210\u6548\u663e\u8457<",
+  "A practising, licensed medical doctor in the Netherlands.": "\u5728\u8377\u5170\u6267\u4e1a\u4e14\u6301\u6709\u6267\u7167\u7684\u533b\u751f\u3002",
+  "40+ years of sustained practice across Chinese and Western medicine.": "\u5728\u4e2d\u897f\u533b\u9886\u57df\u62e5\u670940\u4f59\u5e74\u7684\u6301\u7eed\u5b9e\u8df5\u7ecf\u9a8c\u3002",
+  "Monthly Medisch Dossier column, NPO documentary, Knight of Orange-Nassau (2012).": "Medisch Dossier \u6708\u5ea6\u4e13\u680f\u4f5c\u8005\uff0cNPO\u7eaa\u5f55\u7247\uff0c\u5965\u5170\u6cbb-\u62ff\u9a9a\u9a91\u58eb\u52cb\u7ae0\uff082012\uff09\u3002",
+  "Reviews supporting treatment effectiveness.": "\u652f\u6301\u6cbb\u7597\u6709\u6548\u6027\u7684\u60a3\u8005\u8bc4\u4ef7\u3002",
+  "Insurance:": "\u4fdd\u9669\uff1a",
+  "Consultations may be covered under standard health insurance. TCM treatments may be covered under supplementary insurance (aanvullende verzekering). We can help you check.": "\u54a8\u8be2\u53ef\u80fd\u7531\u57fa\u672c\u533b\u7597\u4fdd\u9669\u627f\u4fdd\u3002\u4e2d\u533b\u6cbb\u7597\u53ef\u80fd\u7531\u8865\u5145\u4fdd\u9669\u627f\u4fdd\u3002\u6211\u4eec\u53ef\u534f\u52a9\u60a8\u786e\u8ba4\u3002",
+  ">Explore \u2192<": ">\u4e86\u89e3 \u2192<",
+  ">View \u2192<": ">\u67e5\u770b \u2192<",
+  ">Start \u2192<": ">\u5f00\u59cb \u2192<",
+  ">Explore<": ">\u63a2\u7d22<",
+  "Western & TCM, The Hague": "\u4e2d\u897f\u533b\u7ed3\u5408\uff0c\u6d77\u7259",
+  "Led by Dr. Wenzhi Lin": "\u7531\u6797\u6587\u5fd7\u533b\u751f\u5e26\u9886",
+  "Mon\u2013Fri, 9:30\u201317:00": "\u5468\u4e00\u81f3\u5468\u4e94 9:30-17:00",
+  "About MC Balans": "\u5173\u4e8e MC Balans",
+  "Meet the team, see the clinic, check pricing, or read about our approach.": "\u8ba4\u8bc6\u56e2\u961f\uff0c\u67e5\u770b\u8bca\u6240\uff0c\u4e86\u89e3\u4ef7\u683c\uff0c\u6216\u9605\u8bfb\u6211\u4eec\u7684\u65b9\u6cd5\u3002",
+  ">Our Team<": ">\u6211\u4eec\u7684\u56e2\u961f<",
+  ">Our Clinic<": ">\u6211\u4eec\u7684\u8bca\u6240<",
+  ">Philosophy<": ">\u7406\u5ff5<",
+  "The space, in The Hague": "\u6d77\u7259\u7684\u7a7a\u95f4",
+  "What each treatment costs": "\u6bcf\u6b21\u6cbb\u7597\u7684\u8d39\u7528",
+  "Vision & Mission": "\u613f\u666f\u4e0e\u4f7f\u547d",
+  "Our Philosophy": "\u6211\u4eec\u7684\u7406\u5ff5",
+  "Most patients book by phone \u2014 call directly, or send a message and expect a reply by email.": "\u5927\u591a\u6570\u60a3\u8005\u901a\u8fc7\u7535\u8bdd\u9884\u7ea6\u2014\u2014\u76f4\u63a5\u81f4\u7535\uff0c\u6216\u53d1\u9001\u6d88\u606f\uff0c\u6211\u4eec\u4f1a\u901a\u8fc7\u7535\u5b50\u90ae\u4ef6\u56de\u590d\u3002",
+  ">Phone<": ">\u7535\u8bdd<",
+  ">Email<": ">\u7535\u5b50\u90ae\u4ef6<",
+  ">Hours<": ">\u8425\u4e1a\u65f6\u95f4<",
+  ">Name<": ">\u59d3\u540d<",
+  ">Send message<": ">\u53d1\u9001\u6d88\u606f<",
+  "Dr. Lin's monthly Medisch Dossier column, published natively.": "\u6797\u533b\u751f\u5728 Medisch Dossier \u7684\u6708\u5ea6\u4e13\u680f\u3002",
+  ">Acupuncture for knee injury<": ">\u9488\u7078\u6cbb\u7597\u819d\u5173\u8282\u635f\u4f24<",
+  ">Read \u2192<": ">\u9605\u8bfb \u2192<",
+  ">Resources<": ">\u8d44\u6e90<",
+  ">Contact<": ">\u8054\u7cfb<",
+}
+};
+function tr(html){
+  if(typeof currentLang === 'undefined') return html;
+  if(currentLang === 'en') return html;
+  if(!uiTr || !uiTr[currentLang]) return html;
+  var m = uiTr[currentLang];
+  Object.keys(m).forEach(function(k){ html = html.split(k).join(m[k]); });
+  return html;
+}
 </script>
 </body>
 </html>
