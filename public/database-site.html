@@ -28,6 +28,11 @@ nav.main-nav a.nav-cta:hover{background:var(--jade-dark);color:#fff}
 .section{padding:64px 32px}.section-head{max-width:640px;margin-bottom:44px}.section-head h2{font-family:var(--font-display);font-size:31px;margin-top:10px}.section-head p{color:var(--stone);font-size:15px;margin-top:12px}
 .cred-section{background:var(--ink);color:var(--paper);padding:64px 32px}.cred-section h2{color:#fff;text-align:center;font-size:32px;margin-bottom:40px}.cred-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}.cred-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);padding:26px 22px;border-radius:2px}.cred-card .num{font-size:36px;color:var(--amber);margin-bottom:12px}.cred-card h3{color:#fff;font-size:18px;margin-bottom:8px}.cred-card p{color:rgba(255,255,255,.7);font-size:13.5px}
 .cond-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.cond-card{background:var(--white);border:1px solid var(--line);padding:22px;border-radius:2px;cursor:pointer;transition:transform .15s;min-height:140px;position:relative}.cond-card::before{content:'';position:absolute;top:0;left:22px;width:34px;height:8px;background:var(--amber-tint);border-radius:0 0 3px 3px}.cond-card:hover{transform:translateY(-2px)}.cond-card .tag{font-family:var(--font-mono);font-size:10.5px;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}.cond-card h4{font-size:17px;margin-bottom:6px}.cond-card p{font-size:12.8px;color:var(--stone)}.cond-card .arrow{margin-top:12px;font-size:12.5px;color:var(--jade);font-weight:600}
+.cond-card-featured{background:linear-gradient(155deg,#EFF5F0,#E2EBE3);border:2px solid var(--jade);}
+.cond-card-featured::before{background:var(--jade);}
+.cond-card-featured .tag{color:var(--jade-dark);font-weight:600;}
+.cond-card-featured .arrow{color:var(--jade-dark);}
+.featured-badge{position:absolute;top:14px;right:14px;background:var(--jade);color:#fff;font-family:var(--font-mono);font-size:9.5px;padding:3px 9px;border-radius:100px;letter-spacing:.08em;font-weight:600;}
 .lin-section{background:var(--ink);color:var(--paper);padding:92px 0}.lin-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:56px;align-items:center}.lin-section h2{color:#fff;font-size:29px;margin:14px 0 18px}.lin-section p.body{color:rgba(250,248,243,.72);font-size:15px;max-width:56ch}
 .resource-card{background:var(--white);border:1px solid var(--line);border-radius:2px;padding:28px;display:flex;gap:26px;align-items:center}.resource-badge{font-family:var(--font-mono);font-size:10.5px;background:var(--jade-tint);color:var(--jade);padding:6px 12px;border-radius:100px;text-transform:uppercase}
 footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 0 26px}.footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:36px}.footer-grid h5{color:#fff;font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}.footer-grid a,.footer-grid p{display:block;font-size:13.5px;color:rgba(250,248,243,.72);margin-bottom:10px;cursor:pointer}.footer-bottom{border-top:1px solid rgba(250,248,243,.15);padding-top:20px;font-size:12px;color:rgba(250,248,243,.5)}
@@ -229,7 +234,13 @@ const res=await fetch(API+'/treatments?lang='+currentLang);
 if(!res.ok)throw new Error('Load failed');
 const data=await res.json();
 let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / '+i18n[currentLang].treatments+'</div><h1>'+i18n[currentLang].treatments+'</h1></div><section class="section"><div class="cond-grid">';
-data.forEach(t=>{html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(nameOf(t))}</h4><p>${esc(truncate(t.summary||'',110))}</p></div><div class="arrow">View →</div></div>`;});
+data.forEach(t=>{
+const isFeatured = t.slug === 'online-tongue-diagnosis';
+const cardClass = isFeatured ? 'cond-card cond-card-featured' : 'cond-card';
+const tagText = isFeatured ? 'Online · New' : 'Treatment';
+const arrowText = isFeatured ? 'Start →' : 'View →';
+html+=`<div class="${cardClass}" onclick="navigateTo('/treatments/${t.slug}')"><div>${isFeatured?'<div class="featured-badge">NEW</div>':''}<div class="tag">${tagText}</div><h4>${esc(nameOf(t))}</h4><p>${esc(truncate(t.summary||'',110))}</p></div><div class="arrow">${arrowText}</div></div>`;
+});
 html+='</div></section>';app.innerHTML=html;
 }catch(e){app.innerHTML='<div class="error">Treatments error: '+e.message+'</div>';}
 }
