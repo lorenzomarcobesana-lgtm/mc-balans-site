@@ -68,6 +68,14 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 .chip-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:8px;}
 .chip{font-family:var(--font-mono);font-size:11.5px;background:var(--jade-tint);color:var(--jade-dark);padding:7px 15px;cursor:pointer;border:1px solid transparent;border-radius:100px;line-height:1.4;}
 .chip:hover{border-color:var(--jade);}
+.evidence-card{background:var(--white);border:1px solid var(--line);border-radius:4px;padding:20px;margin-top:18px;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+.evidence-card h3{font-size:15px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--stone);margin-bottom:12px;font-weight:500;}
+.evidence-list{list-style:none;padding:0;margin:0;}
+.evidence-list li{font-size:13px;line-height:1.5;margin-bottom:10px;padding-left:14px;position:relative;}
+.evidence-list li:last-child{margin-bottom:0;}
+.evidence-list li::before{content:'—';position:absolute;left:0;color:var(--jade);}
+.evidence-list a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line);transition:border-color .15s;}
+.evidence-list a:hover{border-color:var(--jade);}
 @media(max-width:900px){.cond-grid,.cred-grid,.team-grid{grid-template-columns:1fr 1fr}.lin-grid,.hero-grid{grid-template-columns:1fr}.exp-box-body-inner .cond-grid{grid-template-columns:1fr;}}
 </style>
 </head>
@@ -135,7 +143,7 @@ secIntake:'Intake',secTheTreatment:'The treatment',secAftercare:'Aftercare',
 secCombinesWith:'Combines well with',secFrequentlyAsked:'Frequently asked',
 price:'Price',duration:'Duration',insurance:'Insurance',
 practitioners:'Practitioners',treatsConditions:'Treats these conditions',
-contentPending:'Content pending',loading:'Loading...',
+contentPending:'Content pending',loading:'Loading...',evidenceTitle:'Evidence',
 footerTagline:'Western & TCM, The Hague',footerLed:'Led by Dr. Wenzhi Lin',
 hours:'Mon\u2013Fri, 9:30\u201317:00',copyright:'\u00a9 2026 MC Balans'},
 nl:{
@@ -158,7 +166,7 @@ secIntake:'Intake',secTheTreatment:'De behandeling',secAftercare:'Nazorg',
 secCombinesWith:'Combineert goed met',secFrequentlyAsked:'Veelgestelde vragen',
 price:'Prijs',duration:'Duur',insurance:'Verzekering',
 practitioners:'Behandelaars',treatsConditions:'Behandelt deze klachten',
-contentPending:'Inhoud in behandeling',loading:'Laden...',
+contentPending:'Inhoud in behandeling',loading:'Laden...',evidenceTitle:'Wetenschappelijk bewijs',
 footerTagline:'Westers & TCM, Den Haag',footerLed:'Onder leiding van Dr. Wenzhi Lin',
 hours:'Ma-Vr, 9:30-17:00',copyright:'\u00a9 2026 MC Balans'},
 zh:{
@@ -181,7 +189,7 @@ secIntake:'\u63a5\u8bca',secTheTreatment:'\u6cbb\u7597',secAftercare:'\u540e\u7e
 secCombinesWith:'\u53ef\u4e0e\u4ee5\u4e0b\u7597\u6cd5\u914d\u5408',secFrequentlyAsked:'\u5e38\u89c1\u95ee\u9898',
 price:'\u4ef7\u683c',duration:'\u65f6\u957f',insurance:'\u4fdd\u9669',
 practitioners:'\u6cbb\u7597\u5e08',treatsConditions:'\u6cbb\u7597\u7684\u75c5\u75c7',
-contentPending:'\u5185\u5bb9\u5f85\u5b8c\u5584',loading:'\u52a0\u8f7d\u4e2d...',
+contentPending:'\u5185\u5bb9\u5f85\u5b8c\u5584',loading:'\u52a0\u8f7d\u4e2d...',evidenceTitle:'\u79d1\u5b66\u8bc1\u636e',
 footerTagline:'\u4e2d\u897f\u533b\u7ed3\u5408\uff0c\u6d77\u7259',footerLed:'\u7531\u6797\u6587\u5fd7\u533b\u751f\u5e26\u9886',
 hours:'\u5468\u4e00\u81f3\u5468\u4e94 9:30-17:00',copyright:'\u00a9 2026 MC Balans'}
 };
@@ -338,7 +346,7 @@ html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElemen
 data.faqs.forEach(f=>{html+='<div class="faq-item"><div class="q">'+esc(f.question)+'</div><div class="a">'+esc(f.answer)+'</div></div>';});
 html+='</div></div></div>';
 }
-html+='</div><div class="condition-sidebar" style="position:sticky;top:88px;align-self:start;"><div class="cta-card" style="background:var(--white);border:1px solid var(--line);border-radius:4px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.05);"><h3 style="font-size:20px;margin-bottom:12px;color:var(--jade-dark);">Book an appointment</h3><p style="font-size:14px;color:var(--stone);margin-bottom:16px;">Ready to take the next step? Call us or book online.</p><button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;" onclick="navigateTo(\'/contact\')">Book now</button><a class="phone" style="display:block;text-align:center;font-family:var(--font-mono);font-size:15px;color:var(--jade);margin-bottom:8px;" href="tel:+31703888111">070 388 8111</a><p style="font-size:12px;color:var(--stone);">Mon–Fri, 9:30–17:00</p></div></div></div>';
+html+='</div><div class="condition-sidebar" style="position:sticky;top:88px;align-self:start;"><div class="cta-card" style="background:var(--white);border:1px solid var(--line);border-radius:4px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.05);"><h3 style="font-size:20px;margin-bottom:12px;color:var(--jade-dark);">Book an appointment</h3><p style="font-size:14px;color:var(--stone);margin-bottom:16px;">Ready to take the next step? Call us or book online.</p><button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;" onclick="navigateTo(\'/contact\')">Book now</button><a class="phone" style="display:block;text-align:center;font-family:var(--font-mono);font-size:15px;color:var(--jade);margin-bottom:8px;" href="tel:+31703888111">070 388 8111</a><p style="font-size:12px;color:var(--stone);">Mon–Fri, 9:30–17:00</p></div>'+((data.evidence&&data.evidence.length)?'<div class="evidence-card"><h3>'+T('evidenceTitle')+'</h3><ul class="evidence-list">'+data.evidence.map(e=>{const title=e.title||e.id;return '<li><a href="'+esc(e.source_url)+'" target="_blank" rel="noopener noreferrer">'+esc(title)+'</a></li>';}).join('')+'</ul></div>':'')+'</div></div>';
 app.innerHTML=tr(html);
 }catch(e){app.innerHTML='<div class="error">Condition error: '+e.message+'</div>';}
 }
