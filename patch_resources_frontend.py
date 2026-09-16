@@ -25,8 +25,8 @@ new_func = """async function renderResources(){
 }
 """
 
-pattern = r"function renderResources\(\)\{[^\n]*\n"
-new_s, n = re.subn(pattern, new_func, s, count=1)
+pattern = r"function renderResources\(\)\{[^\n]*"
+new_s, n = re.subn(pattern, lambda m: new_func, s, count=1)
 
 if n == 0:
     print('FATAL: could not find renderResources function')

@@ -439,7 +439,27 @@ html+='</div></section>';app.innerHTML=tr(html);
 }catch(e){app.innerHTML='<div class="error">About error: '+e.message+'</div>';}
 }
 function aboutTab(tab){document.querySelectorAll('.about-tab').forEach(t=>t.classList.toggle('active',t.textContent.toLowerCase().replace(' ','')===tab));document.querySelectorAll('.about-panel').forEach(p=>p.classList.remove('active'));const panel=document.getElementById('panel-'+tab);if(panel)panel.classList.add('active');}
-function renderResources(){app.innerHTML=tr('<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Resources</div><h1>Resources</h1><p class="lede">Dr. Lin\'s monthly Medisch Dossier column, published natively.</p></div><section class="section"><div class="wrap"><div class="resource-card" style="margin-bottom:16px;"><div class="rc-text"><span class="resource-badge">Journal</span><h4>Acupuncture for knee injury</h4><p>Written by Dr. Lin · cross-linked to Pain → Joints Pain and Acupuncture.</p></div><div class="rc-meta">21.07.2026 · Dr. Lin</div><button class="btn btn-outline">Read →</button></div><div class="placeholder-box">Further Medisch Dossier articles — content pending</div></div></section>');}
+async function renderResources(){
+  app.innerHTML='<div class="loading">'+T('loading')+'</div>';
+  try{
+    const res=await fetch(API+'/resources?lang='+currentLang);
+    if(!res.ok)throw new Error('Load failed');
+    const resources=await res.json();
+    let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Resources</div><h1>Resources</h1><p class="lede">Dr. Lin\'s monthly Medisch Dossier column, published natively.</p></div><section class="section"><div class="wrap">';
+    if(resources.length===0){
+      html+='<div class="placeholder-box">Content pending</div>';
+    } else {
+      resources.forEach(r=>{
+        const url=r.external_url||r.canonical_url||'#';
+        const meta=[r.publication_name,r.publication_date?String(r.publication_date).slice(0,10):null].filter(Boolean).join(' \u00b7 ');
+        html+='<div class="resource-card" style="margin-bottom:16px;"><div class="rc-text"><span class="resource-badge">'+esc((r.entry_type||'').replace(/_/g,' '))+'</span><h4>'+esc(r.title||r.id)+'</h4><p>'+esc(r.description||'')+'</p></div>'+(meta?'<div class="rc-meta">'+esc(meta)+'</div>':'')+'<a class="btn btn-outline" href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">Read \u2192</a></div>';
+      });
+    }
+    html+='</div></section>';
+    app.innerHTML=tr(html);
+  }catch(e){app.innerHTML='<div class="error">Resources error: '+e.message+'</div>';}
+}
+
 function renderContact(){app.innerHTML=tr('<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Contact</div><h1>Book an appointment</h1></div><div class="wrap section"><p>Phone: 070 388 8111</p><p>Email: info@mcbalans.nl</p><p>Mon-Fri, 9:30-17:00</p></div>');}
 
 document.addEventListener('DOMContentLoaded',()=>{applyNavTranslations();route();});
