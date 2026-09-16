@@ -445,7 +445,7 @@ async function renderResources(){
     const res=await fetch(API+'/resources?lang='+currentLang);
     if(!res.ok)throw new Error('Load failed');
     const resources=await res.json();
-    let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Resources</div><h1>Resources</h1><p class="lede">Dr. Lin\'s monthly Medisch Dossier column, published natively.</p></div><section class="section"><div class="wrap">';
+    let html='<div class="subhero wrap"><div class="breadcrumb"><a onclick="navigateTo(\'/\')">Home</a> / Resources</div><h1>Resources</h1><p class="lede">Articles, columns and resources from MC Balans.</p></div><section class="section"><div class="wrap">';
     if(resources.length===0){
       html+='<div class="placeholder-box">Content pending</div>';
     } else {
@@ -532,6 +532,7 @@ nl: {
   ">Acupuncture for knee injury<": ">Acupunctuur bij knieblessure<",
   ">Read \u2192<": ">Lees \u2192<",
   ">Resources<": ">Bronnen<",
+  "Articles, columns and resources from MC Balans.": "Artikelen, columns en bronnen van MC Balans.",
   ">Contact<": ">Contact<",
 },
 zh: {
@@ -601,6 +602,7 @@ zh: {
   ">Acupuncture for knee injury<": ">\u9488\u7078\u6cbb\u7597\u819d\u5173\u8282\u635f\u4f24<",
   ">Read \u2192<": ">\u9605\u8bfb \u2192<",
   ">Resources<": ">\u8d44\u6e90<",
+  "Articles, columns and resources from MC Balans.": "\u6765\u81ea MC Balans \u7684\u6587\u7ae0\u3001\u4e13\u680f\u548c\u8d44\u6e90\u3002",
   ">Contact<": ">\u8054\u7cfb<",
 }
 };
