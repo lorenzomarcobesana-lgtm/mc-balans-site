@@ -13,8 +13,12 @@ header.site{position:sticky;top:0;z-index:50;background:rgba(248,245,238,0.95);b
 .header-inner{display:flex;align-items:center;justify-content:space-between;padding:15px 32px;max-width:1180px;margin:0 auto;gap:24px}
 .logo{font-family:var(--font-display);font-size:22px;font-weight:600;cursor:pointer}.logo .dot{color:var(--red)}
 nav.main-nav{display:flex;gap:2px}nav.main-nav a{font-size:13.5px;color:var(--ink);opacity:.7;cursor:pointer;padding:8px 13px;border-radius:2px;white-space:nowrap}nav.main-nav a:hover{opacity:1;background:var(--jade-tint)}
-nav.main-nav a.nav-cta{background:var(--jade);color:#fff;opacity:1;font-weight:600;padding:9px 16px;border-radius:2px;margin-left:8px}
-nav.main-nav a.nav-cta:hover{background:var(--jade-dark);color:#fff}
+.nav-cta-group{display:flex;flex-direction:column;gap:3px;margin-left:8px;}
+.nav-cta-group a{display:block;text-align:center;font-size:11px;font-weight:600;padding:5px 12px;border-radius:2px;white-space:nowrap;text-decoration:none;transition:background .15s;}
+.nav-cta-group a.call{background:var(--jade);color:#fff;}
+.nav-cta-group a.call:hover{background:var(--jade-dark);color:#fff;}
+.nav-cta-group a.herbal{background:transparent;color:var(--jade);border:1px solid var(--jade);}
+.nav-cta-group a.herbal:hover{background:var(--jade-tint);}
 .header-right{display:flex;align-items:center;gap:12px}
 .lang-select{display:flex;gap:4px}.lang-select button{background:transparent;border:1px solid var(--line);padding:4px 8px;font-size:12px;cursor:pointer;border-radius:4px}.lang-select button.active{background:var(--jade);color:#fff;border-color:var(--jade)}
 .ask-mini{display:flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--line);border-radius:2px;padding:9px 14px;min-width:200px;color:var(--stone);font-size:12.5px;position:relative}
@@ -97,7 +101,7 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 <a href="/resources" onclick="navigateTo('/resources')" data-i18n="resources">Resources</a>
 <a href="/about" onclick="navigateTo('/about')" data-i18n="about">About</a>
 <a href="/contact" onclick="navigateTo('/contact')" data-i18n="contact">Contact</a>
-<a class="nav-cta" href="/treatments/online-tongue-diagnosis" onclick="navigateTo('/treatments/online-tongue-diagnosis')" data-i18n="onlineDiagnosis">Online Diagnosis</a>
+<div class="nav-cta-group"><a class="call" href="tel:+31703888111" data-i18n="callNow">Call now</a><a class="herbal" href="/treatments/online-tongue-diagnosis" onclick="navigateTo('/treatments/online-tongue-diagnosis')" data-i18n="herbalService">Herbal Service</a></div>
 </nav>
 <div class="header-right">
 <div class="lang-select">
@@ -131,7 +135,7 @@ function nl2br(html){return esc(html).replace(/\n/g,'<br>');}
 
 const i18n={
 en:{
-home:'Home',conditions:'What We Treat',treatments:'Treatments',resources:'Resources',about:'About',contact:'Contact',onlineDiagnosis:'Online Diagnosis',
+home:'Home',conditions:'What We Treat',treatments:'Treatments',resources:'Resources',about:'About',contact:'Contact',callNow:'Call now',herbalService:'Herbal Service',
 bookAppointment:'Book an appointment',bookNow:'Book now',
 heroTitle:'A comprehensive approach, from Dr. Lin.',heroLede:'A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans\' approach assesses how your body\'s structure, function and regulation relate to your symptoms to address their root cause.',
 credibilityTitle:'Dr. Wenzhi Lin',
@@ -154,7 +158,7 @@ contentPending:'Content pending',loading:'Loading...',evidenceTitle:'Evidence',
 footerTagline:'Western & TCM, The Hague',footerLed:'Led by Dr. Wenzhi Lin',
 hours:'Mon\u2013Fri, 9:30\u201317:00',copyright:'\u00a9 2026 MC Balans'},
 nl:{
-home:'Home',conditions:'Wat we behandelen',treatments:'Behandelingen',resources:'Bronnen',about:'Over ons',contact:'Contact',onlineDiagnosis:'Online diagnose',
+home:'Home',conditions:'Wat we behandelen',treatments:'Behandelingen',resources:'Bronnen',about:'Over ons',contact:'Contact',callNow:'Bel nu',herbalService:'Kruidenservice',
 bookAppointment:'Maak een afspraak',bookNow:'Boek nu',
 heroTitle:'Een <em>gebalanceerde</em> benadering van de gezondheid van geest en lichaam.',heroLede:'Dr. Wenzhi Lin brengt meer dan 40 jaar dubbele ervaring met zich mee.',
 credibilityTitle:'Waarom vertrouwen pati\u00ebnten Dr. Lin?',
@@ -177,7 +181,7 @@ contentPending:'Inhoud in behandeling',loading:'Laden...',evidenceTitle:'Wetensc
 footerTagline:'Westers & TCM, Den Haag',footerLed:'Onder leiding van Dr. Wenzhi Lin',
 hours:'Ma-Vr, 9:30-17:00',copyright:'\u00a9 2026 MC Balans'},
 zh:{
-home:'\u9996\u9875',conditions:'\u6cbb\u7597\u9879\u76ee',treatments:'\u7597\u6cd5',resources:'\u8d44\u6e90',about:'\u5173\u4e8e\u6211\u4eec',contact:'\u8054\u7cfb',onlineDiagnosis:'\u5728\u7ebf\u8bca\u65ad',
+home:'\u9996\u9875',conditions:'\u6cbb\u7597\u9879\u76ee',treatments:'\u7597\u6cd5',resources:'\u8d44\u6e90',about:'\u5173\u4e8e\u6211\u4eec',contact:'\u8054\u7cfb',callNow:'\u7acb\u5373\u81f4\u7535',herbalService:'\u8349\u836f\u670d\u52a1',
 bookAppointment:'\u9884\u7ea6',bookNow:'\u7acb\u5373\u9884\u7ea6',
 heroTitle:'\u8eab\u5fc3\u5065\u5eb7\u7684<em>\u5e73\u8861</em>\u4e4b\u9053\u3002',heroLede:'\u6797\u6587\u5fd7\u533b\u751f\u62e5\u6709\u8d85\u8fc740\u5e74\u7684\u4e2d\u897f\u533b\u53cc\u91cd\u7ecf\u9a8c\u3002',
 credibilityTitle:'\u60a3\u8005\u4e3a\u4f55\u4fe1\u4efb\u6797\u533b\u751f\uff1f',
