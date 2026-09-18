@@ -128,7 +128,7 @@ const i18n={
 en:{
 home:'Home',conditions:'What We Treat',treatments:'Treatments',resources:'Resources',about:'About',contact:'Contact',onlineDiagnosis:'Online Diagnosis',
 bookAppointment:'Book an appointment',bookNow:'Book now',
-heroTitle:'A <em>balanced</em> approach to the health of mind and body.',heroLede:'Dr. Wenzhi Lin brings over 40 years of dual experience.',
+heroTitle:'A comprehensive approach, from Dr. Lin.',heroLede:'A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans\' approach assesses how your body\'s structure, function and regulation relate to your symptoms to address their root cause.',
 credibilityTitle:'Why do patients trust Dr. Lin?',
 cred1Title:'Credible',cred1Text:'A practising, licensed medical doctor in the Netherlands.',
 cred2Title:'Experienced',cred2Text:'40+ years of sustained practice across Chinese and Western medicine.',
@@ -199,8 +199,8 @@ function T(k){return (i18n[currentLang]&&i18n[currentLang][k])||i18n.en[k]||k;}
 function tr(html){
 if(currentLang==='en')return html;
 const m=[
-['A <em>balanced</em> approach to the health of mind and body.',t('heroTitle')],
-['Dr. Wenzhi Lin brings over 40 years of dual experience.',t('heroLede')],
+['A comprehensive approach, from Dr. Lin.',T('heroTitle')],
+['A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans\' approach assesses how your body\'s structure, function and regulation relate to your symptoms to address their root cause.',T('heroLede')],
 ['>Book an appointment<','>'+t('bookAppointment')+'<'],
 ['>Book now<','>'+t('bookNow')+'<'],
 ['>Why do patients trust Dr. Lin?<','>'+t('credibilityTitle')+'<'],
@@ -270,7 +270,7 @@ app.innerHTML='<div class="loading">'+T('loading')+'</div>';
 const [condRes,catRes]=await Promise.all([fetch(API+'/conditions?lang='+currentLang),fetch(API+'/categories?lang='+currentLang)]);
 if(!condRes.ok||!catRes.ok)throw new Error('Load failed');
 const conditions=await condRes.json();const categories=await catRes.json();
-let html='<section class="hero"><div class="wrap hero-grid"><div class="hero-copy"><h1>A <em>balanced</em> approach to the health of mind and body.</h1><p class="lede">Dr. Wenzhi Lin brings over 40 years of dual experience.</p><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div><div class="hero-portrait"><div class="portrait-frame" style="aspect-ratio:4/5;background:linear-gradient(155deg,#DCE3D9,#C7D2C1);border-radius:2px;display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--font-mono);font-size:12px;color:var(--jade-dark);opacity:.5;">PHOTO<br>PLACEHOLDER</span></div></div></div></section>';
+let html='<section class="hero"><div class="wrap hero-grid"><div class="hero-copy"><h1>A comprehensive approach, from Dr. Lin.</h1><p class="lede">A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans\' approach assesses how your body\'s structure, function and regulation relate to your symptoms to address their root cause.</p><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div><div class="hero-portrait"><div class="portrait-frame" style="aspect-ratio:4/5;background:linear-gradient(155deg,#DCE3D9,#C7D2C1);border-radius:2px;display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--font-mono);font-size:12px;color:var(--jade-dark);opacity:.5;">PHOTO<br>PLACEHOLDER</span></div></div></div></section>';
 html+='<section class="cred-section"><div class="wrap"><h2>Why do patients trust Dr. Lin?</h2><div class="cred-grid">';
 const creds=[
 {num:'01',title:'Credible',text:'A practising, licensed medical doctor in the Netherlands.'},
@@ -482,8 +482,8 @@ document.addEventListener('DOMContentLoaded',()=>{applyNavTranslations();route()
 /* === UI translation override === */
 const uiTr = {
 nl: {
-  "A <em>balanced</em> approach to the health of mind and body.": "Een <em>gebalanceerde</em> benadering van de gezondheid van geest en lichaam.",
-  "Dr. Wenzhi Lin brings over 40 years of dual experience.": "Dr. Wenzhi Lin brengt meer dan 40 jaar dubbele ervaring met zich mee.",
+  "A comprehensive approach, from Dr. Lin.": "Een integrale benadering, van Dr. Lin.",
+  "A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans' approach assesses how your body's structure, function and regulation relate to your symptoms to address their root cause.": "Een aanhoudende klacht zonder duidelijke verklaring kan nog steeds invaliderende gevolgen hebben. De benadering van MC Balans beoordeelt hoe de structuur, functie en regulatie van uw lichaam zich verhouden tot uw symptomen, om de onderliggende oorzaak aan te pakken.",
   "Book an appointment": "Maak een afspraak",
   "Book now": "Boek nu",
   ">Recognition<": ">Herkennen<",
@@ -556,8 +556,8 @@ nl: {
   ">Contact<": ">Contact<",
 },
 zh: {
-  "A <em>balanced</em> approach to the health of mind and body.": "\u8eab\u5fc3\u5065\u5eb7\u7684<em>\u5e73\u8861</em>\u4e4b\u9053\u3002",
-  "Dr. Wenzhi Lin brings over 40 years of dual experience.": "\u6797\u6587\u5fd7\u533b\u751f\u62e5\u6709\u8d85\u8fc740\u5e74\u7684\u4e2d\u897f\u533b\u53cc\u91cd\u7ecf\u9a8c\u3002",
+  "A comprehensive approach, from Dr. Lin.": "\u5168\u9762\u7684\u8bca\u7597\u65b9\u6cd5\uff0c\u6765\u81ea\u6797\u533b\u751f\u3002",
+  "A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans' approach assesses how your body's structure, function and regulation relate to your symptoms to address their root cause.": "\u4e00\u4e2a\u6ca1\u6709\u660e\u786e\u89e3\u91ca\u7684\u6301\u7eed\u75c7\u72b6\u4ecd\u7136\u53ef\u80fd\u5e26\u6765\u4ee4\u4eba\u8870\u5f31\u7684\u5f71\u54cd\u3002MC Balans \u7684\u65b9\u6cd5\u8bc4\u4f30\u60a8\u8eab\u4f53\u7684\u7ed3\u6784\u3001\u529f\u80fd\u548c\u8c03\u8282\u4e0e\u60a8\u7684\u75c7\u72b6\u4e4b\u95f4\u7684\u5173\u7cfb\uff0c\u4ee5\u89e3\u51b3\u5176\u6839\u672c\u539f\u56e0\u3002",
   "Book an appointment": "\u9884\u7ea6",
   "Book now": "\u7acb\u5373\u9884\u7ea6",
   ">Recognition<": ">\u8bc6\u522b<",
