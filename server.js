@@ -383,7 +383,18 @@ app.get('/api/treatments', async (req, res) => {
       WHERE t.status = 'published'
       ORDER BY t.sort_order NULLS LAST, t.id
     `, [lang]);
-    res.json(result.rows);
+
+    const introResult = await pool.query(`
+      SELECT COALESCE(
+        (SELECT value FROM translations WHERE shared_block_id = 'SHARED-0006' AND locale = $1 LIMIT 1),
+        (SELECT value FROM shared_content_blocks WHERE id = 'SHARED-0006')
+      ) AS intro
+    `, [lang]);
+
+    res.json({
+      intro: introResult.rows[0]?.intro || '',
+      treatments: result.rows
+    });
   } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
