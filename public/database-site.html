@@ -70,6 +70,11 @@ footer.site{background:var(--jade-dark);color:rgba(250,248,243,.8);padding:60px 
 .chip-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:8px;}
 .chip{font-family:var(--font-mono);font-size:11.5px;background:var(--jade-tint);color:var(--jade-dark);padding:7px 15px;cursor:pointer;border:1px solid transparent;border-radius:100px;line-height:1.4;}
 .chip:hover{border-color:var(--jade);}
+.category-chip-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;}
+.category-chip{display:inline-flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--line);border-radius:100px;padding:14px 22px;cursor:pointer;transition:border-color .15s, transform .15s;text-decoration:none;}
+.category-chip:hover{border-color:var(--jade);transform:translateY(-1px);}
+.category-chip .chip-name{font-family:var(--font-body);font-size:15px;font-weight:500;color:var(--ink);}
+.category-chip .chip-count{font-family:var(--font-mono);font-size:11px;color:var(--stone);background:var(--jade-tint);padding:3px 9px;border-radius:100px;line-height:1;}
 .evidence-card{background:var(--white);border:1px solid var(--line);border-radius:4px;padding:20px;margin-top:18px;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
 .evidence-card h3{font-size:15px;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--stone);margin-bottom:12px;font-weight:500;}
 .evidence-list{list-style:none;padding:0;margin:0;}
@@ -129,7 +134,7 @@ en:{
 home:'Home',conditions:'What We Treat',treatments:'Treatments',resources:'Resources',about:'About',contact:'Contact',onlineDiagnosis:'Online Diagnosis',
 bookAppointment:'Book an appointment',bookNow:'Book now',
 heroTitle:'A comprehensive approach, from Dr. Lin.',heroLede:'A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans\' approach assesses how your body\'s structure, function and regulation relate to your symptoms to address their root cause.',
-credibilityTitle:'Why do patients trust Dr. Lin?',
+credibilityTitle:'Dr. Wenzhi Lin',
 cred1Title:'Credible',cred1Text:'A practising, licensed medical doctor in the Netherlands.',
 cred2Title:'Experienced',cred2Text:'40+ years of sustained practice across Chinese and Western medicine.',
 cred3Title:'Respected',cred3Text:'Monthly Medisch Dossier column, NPO documentary, Knight of Orange-Nassau (2012).',
@@ -203,7 +208,7 @@ const m=[
 ['A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans\' approach assesses how your body\'s structure, function and regulation relate to your symptoms to address their root cause.',T('heroLede')],
 ['>Book an appointment<','>'+t('bookAppointment')+'<'],
 ['>Book now<','>'+t('bookNow')+'<'],
-['>Why do patients trust Dr. Lin?<','>'+t('credibilityTitle')+'<'],
+['>Dr. Wenzhi Lin<','>'+t('credibilityTitle')+'<'],
 ['>Credible<','>'+t('cred1Title')+'<'],
 ['>Experienced<','>'+t('cred2Title')+'<'],
 ['>Respected<','>'+t('cred3Title')+'<'],
@@ -271,7 +276,7 @@ const [condRes,catRes]=await Promise.all([fetch(API+'/conditions?lang='+currentL
 if(!condRes.ok||!catRes.ok)throw new Error('Load failed');
 const conditions=await condRes.json();const categories=await catRes.json();
 let html='<section class="hero"><div class="wrap hero-grid"><div class="hero-copy"><h1>A comprehensive approach, from Dr. Lin.</h1><p class="lede">A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans\' approach assesses how your body\'s structure, function and regulation relate to your symptoms to address their root cause.</p><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div><div class="hero-portrait"><div class="portrait-frame" style="aspect-ratio:4/5;background:linear-gradient(155deg,#DCE3D9,#C7D2C1);border-radius:2px;display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--font-mono);font-size:12px;color:var(--jade-dark);opacity:.5;">PHOTO<br>PLACEHOLDER</span></div></div></div></section>';
-html+='<section class="cred-section"><div class="wrap"><h2>Why do patients trust Dr. Lin?</h2><div class="cred-grid">';
+html+='<section class="cred-section"><div class="wrap"><h2>Dr. Wenzhi Lin</h2><div class="cred-grid">';
 const creds=[
 {num:'01',title:'Credible',text:'A practising, licensed medical doctor in the Netherlands.'},
 {num:'02',title:'Experienced',text:'40+ years of sustained practice across Chinese and Western medicine.'},
@@ -281,15 +286,15 @@ const creds=[
 creds.forEach(c=>{html+='<div class="cred-card"><div class="num">'+c.num+'</div><h3>'+c.title+'</h3><p>'+c.text+'</p></div>';});
 html+='</div></div></section>';
 html+='<div class="insurance-band"><div class="wrap insurance-inner"><p><strong>Insurance:</strong> Consultations and treatments may be reimbursed through your supplementary health insurance (aanvullende verzekering), depending on your individual policy. We can help you check your coverage.</p></div></div>';
-html+='<section class="section" style="background:var(--jade-tint);"><div class="wrap"><div class="section-head"><h2>What We Treat</h2></div>';
+html+='<section class="section" style="background:var(--jade-tint);"><div class="wrap"><div class="section-head"><h2>What We Treat</h2><p>Select a category to see the conditions we treat within it.</p></div>';
+html+='<div class="category-chip-row">';
 categories.forEach(cat=>{
 const catConditions=conditions.filter(c=>c.category_slug===cat.slug);
 if(catConditions.length>0){
-html+='<div class="category-group"><h3>'+esc(nameOf(cat))+'</h3><div class="cond-grid">';
-catConditions.forEach(c=>{html+=`<div class="cond-card" onclick="navigateTo('/conditions/${c.slug}')"><div><div class="tag">${esc(nameOf(cat))}</div><h4>${esc(nameOf(c))}</h4><p>${esc(truncate(c.summary||'',110))}</p></div><div class="arrow">Explore →</div></div>`;});
-html+='</div></div>';
+html+='<a class="category-chip" onclick="navigateTo(\'/conditions\')"><span class="chip-name">'+esc(nameOf(cat))+'</span><span class="chip-count">'+catConditions.length+'</span></a>';
 }
 });
+html+='</div>';
 html+='</div></section>';
 app.innerHTML=tr(html);
 }catch(e){app.innerHTML='<div class="error">Home error: '+e.message+'</div>';}
@@ -508,7 +513,7 @@ nl: {
   ">Practitioners<": ">Behandelaars<",
   ">Treats these conditions<": ">Behandelt deze klachten<",
   ">Content pending<": ">Inhoud in behandeling<",
-  ">Why do patients trust Dr. Lin?<": ">Waarom vertrouwen pati\u00ebnten Dr. Lin?<",
+  ">Dr. Wenzhi Lin<": ">Dr. Wenzhi Lin<",
   ">Credible<": ">Geloofwaardig<",
   ">Experienced<": ">Ervaren<",
   ">Respected<": ">Gerespecteerd<",
@@ -582,7 +587,7 @@ zh: {
   ">Practitioners<": ">\u6cbb\u7597\u5e08<",
   ">Treats these conditions<": ">\u6cbb\u7597\u7684\u75c5\u75c7<",
   ">Content pending<": ">\u5185\u5bb9\u5f85\u5b8c\u5584<",
-  ">Why do patients trust Dr. Lin?<": ">\u60a3\u8005\u4e3a\u4f55\u4fe1\u4efb\u6797\u533b\u751f\uff1f<",
+  ">Dr. Wenzhi Lin<": ">\u6797\u6587\u5fd7\u533b\u751f<",
   ">Credible<": ">\u53ef\u4fe1<",
   ">Experienced<": ">\u7ecf\u9a8c\u4e30\u5bcc<",
   ">Respected<": ">\u53d7\u4eba\u5c0a\u656c<",
