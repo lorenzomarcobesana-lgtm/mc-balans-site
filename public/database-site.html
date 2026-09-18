@@ -134,7 +134,7 @@ cred1Title:'Credible',cred1Text:'A practising, licensed medical doctor in the Ne
 cred2Title:'Experienced',cred2Text:'40+ years of sustained practice across Chinese and Western medicine.',
 cred3Title:'Respected',cred3Text:'Monthly Medisch Dossier column, NPO documentary, Knight of Orange-Nassau (2012).',
 cred4Title:'Successful',cred4Text:'Reviews supporting treatment effectiveness.',
-insuranceLabel:'Insurance:',insuranceText:'Consultations may be covered under standard health insurance. TCM treatments may be covered under supplementary insurance (aanvullende verzekering). We can help you check.',
+insuranceLabel:'Insurance:',insuranceText:'Consultations and treatments may be reimbursed through your supplementary health insurance (aanvullende verzekering), depending on your individual policy. We can help you check your coverage.',
 whatWeTreat:'What We Treat',tagTreatment:'Treatment',
 arrowExplore:'Explore \u2192',arrowView:'View \u2192',arrowStart:'Start \u2192',
 secRecognition:'Recognition',secRedFlags:'Red Flags',secUnderstanding:'Understanding',
@@ -213,7 +213,7 @@ const m=[
 ['Monthly Medisch Dossier column, NPO documentary, Knight of Orange-Nassau (2012).',t('cred3Text')],
 ['Reviews supporting treatment effectiveness.',t('cred4Text')],
 ['Insurance:',t('insuranceLabel')],
-['Consultations may be covered under standard health insurance. TCM treatments may be covered under supplementary insurance (aanvullende verzekering). We can help you check.',t('insuranceText')],
+['Consultations and treatments may be reimbursed through your supplementary health insurance (aanvullende verzekering), depending on your individual policy. We can help you check your coverage.',t('insuranceText')],
 ['>What We Treat<','>'+t('whatWeTreat')+'<'],
 ['>Treatment<','>'+t('tagTreatment')+'<'],
 ['>Explore \u2192<','>'+t('arrowExplore')+'<'],
@@ -280,7 +280,7 @@ const creds=[
 ];
 creds.forEach(c=>{html+='<div class="cred-card"><div class="num">'+c.num+'</div><h3>'+c.title+'</h3><p>'+c.text+'</p></div>';});
 html+='</div></div></section>';
-html+='<div class="insurance-band"><div class="wrap insurance-inner"><p><strong>Insurance:</strong> Consultations may be covered under standard health insurance. TCM treatments may be covered under supplementary insurance (aanvullende verzekering). We can help you check.</p></div></div>';
+html+='<div class="insurance-band"><div class="wrap insurance-inner"><p><strong>Insurance:</strong> Consultations and treatments may be reimbursed through your supplementary health insurance (aanvullende verzekering), depending on your individual policy. We can help you check your coverage.</p></div></div>';
 html+='<section class="section" style="background:var(--jade-tint);"><div class="wrap"><div class="section-head"><h2>What We Treat</h2></div>';
 categories.forEach(cat=>{
 const catConditions=conditions.filter(c=>c.category_slug===cat.slug);
@@ -504,7 +504,7 @@ nl: {
   "Monthly Medisch Dossier column, NPO documentary, Knight of Orange-Nassau (2012).": "Maandelijkse column in Medisch Dossier, NPO-documentaire, Ridder in de Orde van Oranje-Nassau (2012).",
   "Reviews supporting treatment effectiveness.": "Beoordelingen die de effectiviteit van de behandelingen ondersteunen.",
   "Insurance:": "Verzekering:",
-  "Consultations may be covered under standard health insurance. TCM treatments may be covered under supplementary insurance (aanvullende verzekering). We can help you check.": "Consultaties kunnen worden gedekt door de basisverzekering. TCM-behandelingen kunnen worden gedekt door een aanvullende verzekering. Wij helpen u graag dit te controleren.",
+  "Consultations and treatments may be reimbursed through your supplementary health insurance (aanvullende verzekering), depending on your individual policy. We can help you check your coverage.": "Consultaties kunnen worden gedekt door de basisverzekering. TCM-behandelingen kunnen worden gedekt door een aanvullende verzekering. Wij helpen u graag dit te controleren.",
   ">Explore \u2192<": ">Verken \u2192<",
   ">View \u2192<": ">Bekijk \u2192<",
   ">Start \u2192<": ">Start \u2192<",
@@ -574,7 +574,7 @@ zh: {
   "Monthly Medisch Dossier column, NPO documentary, Knight of Orange-Nassau (2012).": "Medisch Dossier \u6708\u5ea6\u4e13\u680f\u4f5c\u8005\uff0cNPO\u7eaa\u5f55\u7247\uff0c\u5965\u5170\u6cbb-\u62ff\u9a9a\u9a91\u58eb\u52cb\u7ae0\uff082012\uff09\u3002",
   "Reviews supporting treatment effectiveness.": "\u652f\u6301\u6cbb\u7597\u6709\u6548\u6027\u7684\u60a3\u8005\u8bc4\u4ef7\u3002",
   "Insurance:": "\u4fdd\u9669\uff1a",
-  "Consultations may be covered under standard health insurance. TCM treatments may be covered under supplementary insurance (aanvullende verzekering). We can help you check.": "\u54a8\u8be2\u53ef\u80fd\u7531\u57fa\u672c\u533b\u7597\u4fdd\u9669\u627f\u4fdd\u3002\u4e2d\u533b\u6cbb\u7597\u53ef\u80fd\u7531\u8865\u5145\u4fdd\u9669\u627f\u4fdd\u3002\u6211\u4eec\u53ef\u534f\u52a9\u60a8\u786e\u8ba4\u3002",
+  "Consultations and treatments may be reimbursed through your supplementary health insurance (aanvullende verzekering), depending on your individual policy. We can help you check your coverage.": "\u54a8\u8be2\u53ef\u80fd\u7531\u57fa\u672c\u533b\u7597\u4fdd\u9669\u627f\u4fdd\u3002\u4e2d\u533b\u6cbb\u7597\u53ef\u80fd\u7531\u8865\u5145\u4fdd\u9669\u627f\u4fdd\u3002\u6211\u4eec\u53ef\u534f\u52a9\u60a8\u786e\u8ba4\u3002",
   ">Explore \u2192<": ">\u4e86\u89e3 \u2192<",
   ">View \u2192<": ">\u67e5\u770b \u2192<",
   ">Start \u2192<": ">\u5f00\u59cb \u2192<",
