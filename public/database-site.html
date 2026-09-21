@@ -136,7 +136,7 @@ function nl2br(html){return esc(html).replace(/\n/g,'<br>');}
 const i18n={
 en:{
 home:'Home',conditions:'What We Treat',treatments:'Treatments',resources:'Resources',about:'About',contact:'Contact',callNow:'Call now',herbalService:'Herbal Service',
-bookAppointment:'Book an appointment',bookNow:'Book now',
+bookAppointment:'Call to Book',bookNow:'Call to Book',
 heroTitle:'A comprehensive approach, from Dr. Lin.',heroLede:'A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans\' approach assesses how your body\'s structure, function and regulation relate to your symptoms to address their root cause.',
 credibilityTitle:'Dr. Wenzhi Lin',
 cred1Title:'Credible',cred1Text:'A practising, licensed medical doctor in the Netherlands.',
@@ -159,7 +159,7 @@ footerTagline:'MC Balans, The Hague',footerLed:'Led by Dr. Wenzhi Lin',
 hours:'Mon\u2013Fri, 9:30\u201317:00',copyright:'\u00a9 2026 MC Balans'},
 nl:{
 home:'Home',conditions:'Wat we behandelen',treatments:'Behandelingen',resources:'Bronnen',about:'Over ons',contact:'Contact',callNow:'Bel nu',herbalService:'Kruidenservice',
-bookAppointment:'Maak een afspraak',bookNow:'Boek nu',
+bookAppointment:'Bel om te boeken',bookNow:'Bel om te boeken',
 heroTitle:'Een <em>gebalanceerde</em> benadering van de gezondheid van geest en lichaam.',heroLede:'Dr. Wenzhi Lin brengt meer dan 40 jaar dubbele ervaring met zich mee.',
 credibilityTitle:'Waarom vertrouwen pati\u00ebnten Dr. Lin?',
 cred1Title:'Geloofwaardig',cred1Text:'Een praktiserend, bevoegd arts in Nederland.',
@@ -182,7 +182,7 @@ footerTagline:'MC Balans, Den Haag',footerLed:'Onder leiding van Dr. Wenzhi Lin'
 hours:'Ma-Vr, 9:30-17:00',copyright:'\u00a9 2026 MC Balans'},
 zh:{
 home:'\u9996\u9875',conditions:'\u6cbb\u7597\u9879\u76ee',treatments:'\u7597\u6cd5',resources:'\u8d44\u6e90',about:'\u5173\u4e8e\u6211\u4eec',contact:'\u8054\u7cfb',callNow:'\u7acb\u5373\u81f4\u7535',herbalService:'\u8349\u836f\u670d\u52a1',
-bookAppointment:'\u9884\u7ea6',bookNow:'\u7acb\u5373\u9884\u7ea6',
+bookAppointment:'\u81f4\u7535\u9884\u7ea6',bookNow:'\u81f4\u7535\u9884\u7ea6',
 heroTitle:'\u8eab\u5fc3\u5065\u5eb7\u7684<em>\u5e73\u8861</em>\u4e4b\u9053\u3002',heroLede:'\u6797\u6587\u5fd7\u533b\u751f\u62e5\u6709\u8d85\u8fc740\u5e74\u7684\u4e2d\u897f\u533b\u53cc\u91cd\u7ecf\u9a8c\u3002',
 credibilityTitle:'\u60a3\u8005\u4e3a\u4f55\u4fe1\u4efb\u6797\u533b\u751f\uff1f',
 cred1Title:'\u53ef\u4fe1',cred1Text:'\u5728\u8377\u5170\u6267\u4e1a\u4e14\u6301\u6709\u6267\u7167\u7684\u533b\u751f\u3002',
@@ -210,8 +210,7 @@ if(currentLang==='en')return html;
 const m=[
 ['A comprehensive approach, from Dr. Lin.',T('heroTitle')],
 ['A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans\' approach assesses how your body\'s structure, function and regulation relate to your symptoms to address their root cause.',T('heroLede')],
-['>Book an appointment<','>'+t('bookAppointment')+'<'],
-['>Book now<','>'+t('bookNow')+'<'],
+['>Call to Book<','>'+T('bookAppointment')+'<'],
 ['>Dr. Wenzhi Lin<','>'+t('credibilityTitle')+'<'],
 ['>Credible<','>'+t('cred1Title')+'<'],
 ['>Experienced<','>'+t('cred2Title')+'<'],
@@ -279,7 +278,7 @@ app.innerHTML='<div class="loading">'+T('loading')+'</div>';
 const [condRes,catRes]=await Promise.all([fetch(API+'/conditions?lang='+currentLang),fetch(API+'/categories?lang='+currentLang)]);
 if(!condRes.ok||!catRes.ok)throw new Error('Load failed');
 const conditions=await condRes.json();const categories=await catRes.json();
-let html='<section class="hero"><div class="wrap hero-grid"><div class="hero-copy"><h1>A comprehensive approach, from Dr. Lin.</h1><p class="lede">A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans\' approach assesses how your body\'s structure, function and regulation relate to your symptoms to address their root cause.</p><button class="btn btn-primary" onclick="navigateTo(\'/contact\')">Book an appointment</button></div><div class="hero-portrait"><div class="portrait-frame" style="aspect-ratio:4/5;background:linear-gradient(155deg,#DCE3D9,#C7D2C1);border-radius:2px;display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--font-mono);font-size:12px;color:var(--jade-dark);opacity:.5;">PHOTO<br>PLACEHOLDER</span></div></div></div></section>';
+let html='<section class="hero"><div class="wrap hero-grid"><div class="hero-copy"><h1>A comprehensive approach, from Dr. Lin.</h1><p class="lede">A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans\' approach assesses how your body\'s structure, function and regulation relate to your symptoms to address their root cause.</p><a class="btn btn-primary" href="tel:+31703888111">Call to Book</a></div><div class="hero-portrait"><div class="portrait-frame" style="aspect-ratio:4/5;background:linear-gradient(155deg,#DCE3D9,#C7D2C1);border-radius:2px;display:flex;align-items:center;justify-content:center;"><span style="font-family:var(--font-mono);font-size:12px;color:var(--jade-dark);opacity:.5;">PHOTO<br>PLACEHOLDER</span></div></div></div></section>';
 html+='<section class="cred-section"><div class="wrap"><h2>Dr. Wenzhi Lin</h2><div class="cred-grid">';
 const creds=[
 {num:'01',title:'Credible',text:'A practising, licensed medical doctor in the Netherlands.'},
@@ -357,7 +356,7 @@ html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElemen
 data.faqs.forEach(f=>{html+='<div class="faq-item"><div class="q">'+esc(f.question)+'</div><div class="a">'+esc(f.answer)+'</div></div>';});
 html+='</div></div></div>';
 }
-html+='</div><div class="condition-sidebar" style="position:sticky;top:88px;align-self:start;"><div class="cta-card" style="background:var(--white);border:1px solid var(--line);border-radius:4px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.05);"><h3 style="font-size:20px;margin-bottom:12px;color:var(--jade-dark);">Book an appointment</h3><p style="font-size:14px;color:var(--stone);margin-bottom:16px;">Ready to take the next step? Call us or book online.</p><button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;" onclick="navigateTo(\'/contact\')">Book now</button><a class="phone" style="display:block;text-align:center;font-family:var(--font-mono);font-size:15px;color:var(--jade);margin-bottom:8px;" href="tel:+31703888111">070 388 8111</a><p style="font-size:12px;color:var(--stone);">Mon–Fri, 9:30–17:00</p></div>'+((data.evidence&&data.evidence.length)?'<div class="evidence-card"><h3>'+T('evidenceTitle')+'</h3><ul class="evidence-list">'+data.evidence.map(e=>{const title=e.title||e.id;return '<li><a href="'+esc(e.source_url)+'" target="_blank" rel="noopener noreferrer">'+esc(title)+'</a></li>';}).join('')+'</ul></div>':'')+'</div></div>';
+html+='</div><div class="condition-sidebar" style="position:sticky;top:88px;align-self:start;"><div class="cta-card" style="background:var(--white);border:1px solid var(--line);border-radius:4px;padding:24px;box-shadow:0 2px 8px rgba(0,0,0,0.05);"><h3 style="font-size:20px;margin-bottom:12px;color:var(--jade-dark);">Call to Book</h3><p style="font-size:14px;color:var(--stone);margin-bottom:16px;">Ready to make an appointment? Call us directly.</p><a class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px;display:inline-flex;" href="tel:+31703888111">Call to Book</a><a class="phone" style="display:block;text-align:center;font-family:var(--font-mono);font-size:15px;color:var(--jade);margin-bottom:8px;" href="tel:+31703888111">070 388 8111</a><p style="font-size:12px;color:var(--stone);">Mon–Fri, 9:30–17:00</p></div>'+((data.evidence&&data.evidence.length)?'<div class="evidence-card"><h3>'+T('evidenceTitle')+'</h3><ul class="evidence-list">'+data.evidence.map(e=>{const title=e.title||e.id;return '<li><a href="'+esc(e.source_url)+'" target="_blank" rel="noopener noreferrer">'+esc(title)+'</a></li>';}).join('')+'</ul></div>':'')+'</div></div>';
 app.innerHTML=tr(html);
 }catch(e){app.innerHTML='<div class="error">Condition error: '+e.message+'</div>';}
 }
@@ -443,7 +442,7 @@ data.conditions.forEach(c=>{html+=`<span class="chip" onclick="navigateTo('/cond
 }else{html+='<span class="chip">Pending</span>';}
 html+='</div></div>';
 
-html+='<a class="btn btn-primary" style="width:100%;justify-content:center;" onclick="navigateTo(\'/contact\')">Book an appointment</a>';
+html+='<a class="btn btn-primary" style="width:100%;justify-content:center;display:inline-flex;" href="'+(slug==='online-tongue-diagnosis'?'#':'tel:+31703888111')+'">'+(slug==='online-tongue-diagnosis'?'Intake Survey':'Call to Book')+'</a>';
 html+='</div></div>';
 app.innerHTML=tr(html);
 }catch(e){app.innerHTML='<div class="error">Treatment error: '+e.message+'</div>';}
@@ -493,8 +492,7 @@ const uiTr = {
 nl: {
   "A comprehensive approach, from Dr. Lin.": "Een integrale benadering, van Dr. Lin.",
   "A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans' approach assesses how your body's structure, function and regulation relate to your symptoms to address their root cause.": "Een aanhoudende klacht zonder duidelijke verklaring kan nog steeds invaliderende gevolgen hebben. De benadering van MC Balans beoordeelt hoe de structuur, functie en regulatie van uw lichaam zich verhouden tot uw symptomen, om de onderliggende oorzaak aan te pakken.",
-  "Book an appointment": "Maak een afspraak",
-  "Book now": "Boek nu",
+  "Call to Book": "Bel om te boeken",
   ">Recognition<": ">Herkennen<",
   ">Red Flags<": ">Rode vlaggen<",
   ">Understanding<": ">Begrijpen<",
@@ -558,6 +556,7 @@ nl: {
   ">Read \u2192<": ">Lees \u2192<",
   ">Resources<": ">Bronnen<",
   "Articles, columns and resources from MC Balans.": "Artikelen, columns en bronnen van MC Balans.",
+  "Ready to make an appointment? Call us directly.": "Klaar om een afspraak te maken? Bel ons direct.",
   "Consultations & assessment": "Consultaties & beoordeling",
   "Treatment techniques": "Behandeltechnieken",
   "Supportive care": "Ondersteunende zorg",
@@ -567,8 +566,7 @@ nl: {
 zh: {
   "A comprehensive approach, from Dr. Lin.": "\u5168\u9762\u7684\u8bca\u7597\u65b9\u6cd5\uff0c\u6765\u81ea\u6797\u533b\u751f\u3002",
   "A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans' approach assesses how your body's structure, function and regulation relate to your symptoms to address their root cause.": "\u4e00\u4e2a\u6ca1\u6709\u660e\u786e\u89e3\u91ca\u7684\u6301\u7eed\u75c7\u72b6\u4ecd\u7136\u53ef\u80fd\u5e26\u6765\u4ee4\u4eba\u8870\u5f31\u7684\u5f71\u54cd\u3002MC Balans \u7684\u65b9\u6cd5\u8bc4\u4f30\u60a8\u8eab\u4f53\u7684\u7ed3\u6784\u3001\u529f\u80fd\u548c\u8c03\u8282\u4e0e\u60a8\u7684\u75c7\u72b6\u4e4b\u95f4\u7684\u5173\u7cfb\uff0c\u4ee5\u89e3\u51b3\u5176\u6839\u672c\u539f\u56e0\u3002",
-  "Book an appointment": "\u9884\u7ea6",
-  "Book now": "\u7acb\u5373\u9884\u7ea6",
+  "Call to Book": "\u81f4\u7535\u9884\u7ea6",
   ">Recognition<": ">\u8bc6\u522b<",
   ">Red Flags<": ">\u8b66\u793a\u4fe1\u53f7<",
   ">Understanding<": ">\u7406\u89e3<",
