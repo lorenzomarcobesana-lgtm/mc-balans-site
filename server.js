@@ -492,12 +492,11 @@ app.get('/api/practitioners', async (req, res) => {
 app.get('/api/pricing', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT pricing_group,
-             MIN(amount) AS min_amount,
-             currency
+      SELECT pricing_group, amount, currency
       FROM price_tiers
-      WHERE pricing_group IS NOT NULL AND show_on_pricing_page = true
-      GROUP BY pricing_group, currency
+      WHERE pricing_group IS NOT NULL
+        AND show_on_pricing_page = true
+        AND show_in_summary = true
       ORDER BY CASE pricing_group
         WHEN 'consultations' THEN 1
         WHEN 'treatments' THEN 2

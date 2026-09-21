@@ -468,7 +468,7 @@ if(prices && prices.length){
   const labels={consultations:'Consultations',treatments:'Treatments',herbal:'Chinese herbal medicine',additional:'Additional treatments'};
   prices.forEach(p=>{
     const label=labels[p.pricing_group]||p.pricing_group;
-    html+='<div class="pricing-row"><span class="pricing-label">'+esc(label)+'</span><span class="pricing-amount">from '+esc(p.currency||'\u20ac')+esc(p.min_amount)+'</span></div>';
+    html+='<div class="pricing-row"><span class="pricing-label">'+esc(label)+'</span><span class="pricing-amount">from '+esc(p.currency||'\u20ac')+esc(p.amount)+'</span></div>';
   });
 } else {
   html+='<div class="placeholder-box">Pricing information pending</div>';
