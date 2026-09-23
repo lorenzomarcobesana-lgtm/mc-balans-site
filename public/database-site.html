@@ -360,7 +360,7 @@ html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElemen
 html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>MC Balans Assessment</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.assessment?'<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;">'+c.assessment+'</div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
 
 if(data.treatments&&data.treatments.length>0){
-html+='<h2>Treatments</h2><div class="cond-grid">';
+html+='<h2>Treatment may include</h2><p style="color:var(--stone);font-size:14px;margin-bottom:20px;">The specific plan depends on what we find during your assessment.</p><div class="cond-grid">';
 data.treatments.forEach(t=>{html+=`<div class="cond-card" onclick="navigateTo('/treatments/${t.slug}')"><div><div class="tag">Treatment</div><h4>${esc(nameOf(t))}</h4><p>${esc(truncate(t.summary||'',100))}</p>${t.duration?'<div style="margin-top:4px;color:var(--stone);"><strong>Duration:</strong> '+esc(t.duration)+'</div>':''}</div><div class="arrow">View →</div></div>`;});
 html+='</div>';
 }
@@ -591,6 +591,8 @@ nl: {
   ">Read \u2192<": ">Lees \u2192<",
   ">Resources<": ">Bronnen<",
   "Articles, columns and resources from MC Balans.": "Artikelen, columns en bronnen van MC Balans.",
+  "Treatment may include": "Behandeling kan omvatten",
+  "The specific plan depends on what we find during your assessment.": "Het specifieke plan hangt af van wat we tijdens uw beoordeling vinden.",
   "View all conditions →": "Bekijk alle aandoeningen →",
   "I have a persistent physical complaint": "Ik heb een aanhoudende lichamelijke klacht",
   "Treatment or investigations have not resolved it.": "Behandeling of onderzoek heeft het niet opgelost.",
@@ -674,6 +676,8 @@ zh: {
   ">Read \u2192<": ">\u9605\u8bfb \u2192<",
   ">Resources<": ">\u8d44\u6e90<",
   "Articles, columns and resources from MC Balans.": "\u6765\u81ea MC Balans \u7684\u6587\u7ae0\u3001\u4e13\u680f\u548c\u8d44\u6e90\u3002",
+  "Treatment may include": "\u6cbb\u7597\u53ef\u80fd\u5305\u62ec",
+  "The specific plan depends on what we find during your assessment.": "\u5177\u4f53\u65b9\u6848\u53d6\u51b3\u4e8e\u6211\u4eec\u5728\u8bc4\u4f30\u4e2d\u7684\u53d1\u73b0\u3002",
   "View all conditions →": "查看所有病症 →",
   "I have a persistent physical complaint": "我有持续的身体症状",
   "Treatment or investigations have not resolved it.": "治疗或检查未能解决它。",

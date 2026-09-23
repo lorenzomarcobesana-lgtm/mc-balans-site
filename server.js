@@ -346,6 +346,7 @@ app.get('/api/conditions/:slug', async (req, res) => {
       LEFT JOIN translations tt_name    ON tt_name.treatment_id = tr.id AND tt_name.field_name = 'name' AND tt_name.locale = $2
       LEFT JOIN translations tt_summary ON tt_summary.treatment_id = tr.id AND tt_summary.field_name = 'summary' AND tt_summary.locale = $2
       WHERE c.slug = $1
+        AND tr.slug NOT IN ('western-medicine-consultation', 'tcm-consultation')
       ORDER BY ct.display_order
     `, [slug, lang]);
 
@@ -605,7 +606,9 @@ app.get('/conditions/:slug', async (req, res) => {
       pool.query(`SELECT tr.slug, COALESCE(tr.name, tr.slug) AS name,
                          COALESCE((SELECT value FROM translations WHERE treatment_id = tr.id AND field_name = 'summary' AND locale = 'en' LIMIT 1), '') AS summary
                   FROM condition_treatments ct JOIN treatments tr ON tr.id = ct.treatment_id
-                  WHERE ct.condition_id = $1 ORDER BY ct.display_order`, [c.id]),
+                  WHERE ct.condition_id = $1
+                    AND tr.slug NOT IN ('western-medicine-consultation', 'tcm-consultation')
+                  ORDER BY ct.display_order`, [c.id]),
       pool.query(`SELECT DISTINCT p.id, p.email, p.roles, p.display_role, p.credentials, p.experience_years
                   FROM practitioners p
                   JOIN practitioner_treatments pt ON pt.practitioner_id = p.id
