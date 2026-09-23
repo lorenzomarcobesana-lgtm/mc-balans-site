@@ -372,11 +372,7 @@ data.practitioners.forEach(p=>{const name=p.email?p.email.split('@')[0]:p.id;con
 html+='</div>';
 }else{html+='<div class="placeholder-box">Content pending</div>';}
 html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Expectations</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.expectations?'<p>'+nl2br(c.expectations)+'</p>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
-html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Practical Information</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">';
-if(c.insurance) html+='<div style="background:var(--jade-tint);padding:24px;border-radius:4px;"><p>'+nl2br(c.insurance)+'</p></div>';
-if(c.what_to_bring) html+='<div style="background:var(--white);border:1px solid var(--line);padding:24px;border-radius:4px;margin-top:'+(c.insurance?'16px':'0')+';"><p>'+nl2br(c.what_to_bring)+'</p></div>';
-if(!c.insurance && !c.what_to_bring) html+='<div class="placeholder-box">Content pending</div>';
-html+='</div></div></div>';
+html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>Practical Information</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">'+(c.insurance?'<div style="background:var(--jade-tint);padding:24px;border-radius:4px;"><p>'+nl2br(c.insurance)+'</p></div>':'<div class="placeholder-box">Content pending</div>')+'</div></div></div>';
 if(data.faqs&&data.faqs.length>0){
 html+='<div class="exp-box"><div class="exp-box-head" onclick="this.parentElement.classList.toggle(\'open\')"><h3>FAQ</h3><span class="plus">+</span></div><div class="exp-box-body"><div class="exp-box-body-inner">';
 data.faqs.forEach(f=>{html+='<div class="faq-item"><div class="q">'+esc(f.question)+'</div><div class="a">'+esc(f.answer)+'</div></div>';});
