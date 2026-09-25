@@ -393,6 +393,7 @@ app.get('/api/treatments', async (req, res) => {
       LEFT JOIN translations tt_name    ON tt_name.treatment_id = t.id AND tt_name.field_name = 'name' AND tt_name.locale = $1
       LEFT JOIN translations tt_summary ON tt_summary.treatment_id = t.id AND tt_summary.field_name = 'summary' AND tt_summary.locale = $1
       WHERE t.status = 'published'
+        AND NOT (t.slug = 'western-medicine-consultation' AND $1 != 'zh')
       ORDER BY t.sort_order NULLS LAST, t.id
     `, [lang]);
 
@@ -639,7 +640,7 @@ app.get('/treatments', async (req, res) => {
     const tR = await pool.query(`
       SELECT t.slug, COALESCE(t.name, t.slug) AS name,
              COALESCE((SELECT value FROM translations WHERE treatment_id = t.id AND field_name = 'summary' AND locale = 'en' LIMIT 1), '') AS summary
-      FROM treatments t WHERE t.status = 'published' ORDER BY t.sort_order NULLS LAST, t.id
+      FROM treatments t WHERE t.status = 'published' AND t.slug != 'western-medicine-consultation' ORDER BY t.sort_order NULLS LAST, t.id
     `);
     const head = buildSeoHead({
       title: 'Treatments — Acupuncture, Cupping, Herbal Medicine | MC Balans',
