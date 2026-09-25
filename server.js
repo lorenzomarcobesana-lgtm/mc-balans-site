@@ -527,7 +527,7 @@ app.get('/sitemap.xml', async (req, res) => {
   try {
     const conditions = await pool.query(`SELECT slug, updated_at FROM conditions WHERE status = 'published'`);
     const treatments = await pool.query(`SELECT slug, updated_at FROM treatments WHERE status = 'published'`);
-    const staticPages = ['', 'conditions', 'treatments', 'resources', 'about', 'contact'];
+    const staticPages = ['', 'conditions', 'treatments', 'resources', 'about', 'about/team', 'about/clinic', 'about/philosophy', 'prices', 'contact'];
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
     for (const p of staticPages) xml += `  <url><loc>${SITE_URL}/${p}</loc></url>\n`;
     for (const r of conditions.rows) {
@@ -715,6 +715,38 @@ app.get('/about', (req, res) => {
     title: 'About MC Balans — Dr. Wenzhi Lin & Team',
     description: 'Meet the team, see the clinic, check pricing, or read about our approach to Western and Traditional Chinese Medicine in The Hague.',
     canonical: SITE_URL + '/about'
+  }), ''));
+});
+
+app.get('/about/team', (req, res) => {
+  res.send(renderPage(buildSeoHead({
+    title: 'Our Team — MC Balans',
+    description: 'Meet the MC Balans team, led by Dr. Wenzhi Lin, licensed medical doctor with over 40 years of dual training in Western and Chinese medicine.',
+    canonical: SITE_URL + '/about/team'
+  }), ''));
+});
+
+app.get('/about/clinic', (req, res) => {
+  res.send(renderPage(buildSeoHead({
+    title: 'Our Clinic — MC Balans, The Hague',
+    description: 'The MC Balans clinic in The Hague: treatment rooms, consultation rooms and Chinese herbal dispensary.',
+    canonical: SITE_URL + '/about/clinic'
+  }), ''));
+});
+
+app.get('/about/philosophy', (req, res) => {
+  res.send(renderPage(buildSeoHead({
+    title: 'Our Philosophy — MC Balans',
+    description: 'How MC Balans approaches medicine: conventional assessment first, then structural, functional and regulatory analysis, with Traditional Chinese Medicine where relevant.',
+    canonical: SITE_URL + '/about/philosophy'
+  }), ''));
+});
+
+app.get('/prices', (req, res) => {
+  res.send(renderPage(buildSeoHead({
+    title: 'Pricing — MC Balans',
+    description: 'Consultation and treatment pricing at MC Balans, The Hague. Most treatments are reimbursed through supplementary insurance.',
+    canonical: SITE_URL + '/prices'
   }), ''));
 });
 
