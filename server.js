@@ -14,6 +14,8 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+require('./admin')(app, pool);
+
 const HTML_TEMPLATE = fs.readFileSync(path.join(__dirname, 'public', 'database-site.html'), 'utf8');
 
 // ---------- Utilities ----------
