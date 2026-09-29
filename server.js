@@ -278,7 +278,7 @@ function renderTreatmentsListBody(treatments) {
 
 // ---------- API ROUTES (unchanged) ----------
 app.get('/api/categories', async (req, res) => {
-  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : '__none__';
+  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : null;
   try {
     const result = await pool.query(`
       SELECT c.slug, COALESCE(t.value, c.name, c.slug) AS name
@@ -292,7 +292,7 @@ app.get('/api/categories', async (req, res) => {
 });
 
 app.get('/api/conditions', async (req, res) => {
-  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : '__none__';
+  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : null;
   try {
     const result = await pool.query(`
       SELECT c.id, c.slug, c.summary, c.recognition, c.red_flags, c.understanding, c.approach, c.assessment,
@@ -311,7 +311,7 @@ app.get('/api/conditions', async (req, res) => {
 
 app.get('/api/conditions/:slug', async (req, res) => {
   const { slug } = req.params;
-  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : '__none__';
+  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : null;
   try {
     const conditionResult = await pool.query(`
       SELECT c.*,
@@ -391,7 +391,7 @@ app.get('/api/conditions/:slug', async (req, res) => {
 });
 
 app.get('/api/treatments', async (req, res) => {
-  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : '__none__';
+  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : null;
   try {
     const result = await pool.query(`
       SELECT t.slug, t.duration,
@@ -421,7 +421,7 @@ app.get('/api/treatments', async (req, res) => {
 
 app.get('/api/treatments/:slug', async (req, res) => {
   const { slug } = req.params;
-  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : '__none__';
+  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : null;
   try {
     const treatmentResult = await pool.query(`
       SELECT t.*,
@@ -776,7 +776,7 @@ app.get('/contact', (req, res) => {
 
 // ---------- API: RESOURCES ----------
 app.get('/api/resources', async (req, res) => {
-  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : '__none__';
+  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : null;
   try {
     const result = await pool.query(`
       SELECT r.id, r.entry_type, r.publication_name, r.publication_date,
@@ -802,7 +802,7 @@ app.get('/api/resources', async (req, res) => {
 
 app.get('/api/resources/:id', async (req, res) => {
   const { id } = req.params;
-  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : '__none__';
+  const lang = (req.query.lang && req.query.lang !== 'en') ? req.query.lang : null;
   try {
     const result = await pool.query(`
       SELECT r.*,
