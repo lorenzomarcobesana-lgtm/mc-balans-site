@@ -72,13 +72,15 @@ module.exports = function(app, pool) {
       }
 
       const colr = await client.query(`
-        SELECT column_name FROM information_schema.columns
+        SELECT column_name, data_type FROM information_schema.columns
         WHERE table_name = 'conditions'
           AND column_name NOT IN ('id', 'created_at', 'updated_at')
       `);
-      const editable = new Set(colr.rows.map(r => r.column_name));
+      const types = {};
+      for (const r of colr.rows) types[r.column_name] = r.data_type;
 
-      const fields = Object.keys(req.body).filter(k => editable.has(k));
+      const TEXT_TYPES = new Set(['text', 'character varying', 'character']);
+      const fields = Object.keys(req.body).filter(k => types[k] !== undefined);
       if (!fields.length) {
         await client.query('ROLLBACK');
         return res.status(400).json({ error: 'No editable fields provided' });
@@ -90,8 +92,13 @@ module.exports = function(app, pool) {
       );
 
       const setClauses = fields.map((k, i) => `"${k}" = $${i + 1}`);
-      const values = fields.map(k => req.body[k]);
+      const values = fields.map(k => {
+        const v = req.body[k];
+        if (v === '' && !TEXT_TYPES.has(types[k])) return null;
+        return v;
+      });
       values.push(slug);
+
       await client.query(
         `UPDATE conditions SET ${setClauses.join(', ')}, updated_at = NOW() WHERE slug = $${values.length}`,
         values
