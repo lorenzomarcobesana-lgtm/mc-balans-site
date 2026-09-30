@@ -163,6 +163,51 @@ module.exports = function(app, pool) {
     }
   });
 
+  router.get('/api/meta', requireAdmin, async (req, res) => {
+    try {
+      const cats = await pool.query('SELECT id, name, slug FROM categories ORDER BY id');
+      const pracs = await pool.query('SELECT id, COALESCE(display_role, roles) AS role FROM practitioners ORDER BY id');
+      res.json({ categories: cats.rows, practitioners: pracs.rows });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  router.post('/api/conditions/create', requireAdmin, async (req, res) => {
+    const { name, slug, category_id, author_id, medical_reviewer_id, status } = req.body || {};
+    if (!name || !slug || !category_id || !author_id) {
+      return res.status(400).json({ error: 'name, slug, category_id and author_id are required' });
+    }
+    const cleanSlug = String(slug).toLowerCase().trim()
+      .replace(/[^a-z0-9\-]+/g, '-').replace(/^-+|-+$/g, '').replace(/-{2,}/g, '-');
+    if (!cleanSlug) return res.status(400).json({ error: 'slug contains no valid characters' });
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const dup = await client.query('SELECT 1 FROM conditions WHERE slug = $1', [cleanSlug]);
+      if (dup.rows.length) { await client.query('ROLLBACK'); return res.status(409).json({ error: 'A condition with this slug already exists' }); }
+
+      const next = await client.query(
+        "SELECT COALESCE(MAX(CAST(SUBSTRING(id FROM 6) AS INTEGER)), 0) + 1 AS n FROM conditions WHERE id ~ '^COND-[0-9]+$'"
+      );
+      const newId = 'COND-' + String(next.rows[0].n).padStart(4, '0');
+
+      await client.query(`
+        INSERT INTO conditions (id, slug, name, category_id, author_id, medical_reviewer_id, status, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+      `, [newId, cleanSlug, name, category_id, author_id, medical_reviewer_id || author_id, status || 'draft']);
+
+      await client.query('COMMIT');
+      res.json({ ok: true, id: newId, slug: cleanSlug });
+    } catch (e) {
+      await client.query('ROLLBACK');
+      console.error(e);
+      res.status(500).json({ error: e.message });
+    } finally {
+      client.release();
+    }
+  });
+
   app.use('/admin', router);
 };
 

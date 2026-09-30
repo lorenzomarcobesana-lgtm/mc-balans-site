@@ -22,9 +22,16 @@
   .row select { flex:1; }
   button.primary { background:var(--jade); color:#fff; border:none; padding:10px 22px; border-radius:4px; cursor:pointer; font-size:15px; font-weight:600; }
   button.primary:disabled { opacity:0.5; cursor:not-allowed; }
+  button.secondary { background:#fff; color:var(--jade); border:1px solid var(--jade); padding:10px 18px; border-radius:4px; cursor:pointer; font-size:14px; font-weight:600; }
   .status { font-size:14px; color:#666; }
   .status.ok { color:var(--jade); font-weight:600; }
   .status.err { color:#b00; }
+  .hidden { display:none !important; }
+  #modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:flex-start; justify-content:center; padding:60px 20px; z-index:100; }
+  #modal { background:#fff; border-radius:8px; max-width:520px; width:100%; padding:28px; box-shadow:0 20px 60px rgba(0,0,0,0.3); max-height:90vh; overflow-y:auto; }
+  #modal h2 { margin:0 0 8px; font-size:20px; }
+  #modal p.hint { color:#666; font-size:13px; margin-top:0; margin-bottom:20px; }
+  .modal-actions { display:flex; gap:10px; margin-top:28px; align-items:center; }
 </style>
 </head>
 <body>
@@ -40,6 +47,7 @@
 <main>
   <div class="row">
     <select id="picker"><option value="">Loading…</option></select>
+    <button type="button" id="newBtn" class="secondary hidden">+ New condition</button>
   </div>
 
   <form id="form" style="display:none;">
@@ -50,6 +58,28 @@
     </div>
   </form>
 </main>
+
+<div id="modal-backdrop" class="hidden">
+  <div id="modal">
+    <h2>New condition</h2>
+    <p class="hint">Creates a new row with empty body fields. Pick it from the dropdown afterwards to fill in the content.</p>
+
+    <form id="createForm">
+      <label><strong>Name</strong><input type="text" name="name" required autofocus></label>
+      <label><strong>Slug</strong><input type="text" name="slug" required placeholder="auto-generated from name"></label>
+      <label><strong>Category</strong><select name="category_id" required><option value="">Loading…</option></select></label>
+      <label><strong>Author</strong><select name="author_id" required><option value="">Loading…</option></select></label>
+      <label><strong>Medical reviewer</strong><select name="medical_reviewer_id"><option value="">— same as author —</option></select></label>
+      <label><strong>Status</strong><select name="status"><option value="draft">draft</option><option value="in_review">in_review</option><option value="medically_reviewed">medically_reviewed</option><option value="approved">approved</option><option value="published">published</option><option value="archived">archived</option></select></label>
+
+      <div class="modal-actions">
+        <button type="submit" class="primary">Create</button>
+        <button type="button" id="cancelBtn" class="secondary">Cancel</button>
+        <span class="status" id="modalStatus"></span>
+      </div>
+    </form>
+  </div>
+</div>
 
 <script>
 const HIDDEN = {
@@ -66,8 +96,21 @@ const form = document.getElementById('form');
 const fieldsEl = document.getElementById('fields');
 const statusEl = document.getElementById('status');
 const saveBtn = document.getElementById('save');
+const newBtn = document.getElementById('newBtn');
+const backdrop = document.getElementById('modal-backdrop');
+const createForm = document.getElementById('createForm');
+const modalStatus = document.getElementById('modalStatus');
 let currentTable = null;
 let currentKey = '';
+let meta = null;
+
+function slugify(s) {
+  return s.toLowerCase().trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 async function loadTabs() {
   const r = await fetch('/admin/api/tables');
@@ -97,6 +140,7 @@ async function selectTab(tableKey) {
   tabsEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === tableKey));
   form.style.display = 'none';
   statusEl.textContent = '';
+  newBtn.classList.toggle('hidden', tableKey !== 'conditions');
   picker.innerHTML = '<option>Loading…</option>';
   const r = await fetch('/admin/api/list/' + tableKey);
   if (!r.ok) { picker.innerHTML = '<option>Error</option>'; return; }
@@ -158,6 +202,67 @@ form.addEventListener('submit', async (e) => {
 });
 
 picker.addEventListener('change', () => loadRow(picker.value));
+
+async function loadMeta() {
+  const r = await fetch('/admin/api/meta');
+  if (!r.ok) return;
+  meta = await r.json();
+  const catSel = createForm.querySelector('[name="category_id"]');
+  const authSel = createForm.querySelector('[name="author_id"]');
+  const revSel = createForm.querySelector('[name="medical_reviewer_id"]');
+  catSel.innerHTML = '<option value="">— pick a category —</option>' +
+    meta.categories.map(c => '<option value="' + esc(c.id) + '">' + esc(c.id + ' — ' + c.name) + '</option>').join('');
+  const pracOpts = meta.practitioners.map(p => '<option value="' + esc(p.id) + '">' + esc(p.id + (p.role ? ' — ' + p.role : '')) + '</option>').join('');
+  authSel.innerHTML = '<option value="">— pick an author —</option>' + pracOpts;
+  revSel.innerHTML = '<option value="">— same as author —</option>' + pracOpts;
+}
+
+newBtn.addEventListener('click', async () => {
+  if (!meta) await loadMeta();
+  createForm.reset();
+  modalStatus.textContent = ''; modalStatus.className = 'status';
+  backdrop.classList.remove('hidden');
+  createForm.querySelector('[name="name"]').focus();
+});
+
+document.getElementById('cancelBtn').addEventListener('click', () => {
+  backdrop.classList.add('hidden');
+});
+
+backdrop.addEventListener('click', (e) => {
+  if (e.target === backdrop) backdrop.classList.add('hidden');
+});
+
+createForm.querySelector('[name="name"]').addEventListener('input', (e) => {
+  const slugField = createForm.querySelector('[name="slug"]');
+  if (!slugField.dataset.touched) slugField.value = slugify(e.target.value);
+});
+createForm.querySelector('[name="slug"]').addEventListener('input', (e) => {
+  e.target.dataset.touched = '1';
+});
+
+createForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  modalStatus.textContent = 'Creating…'; modalStatus.className = 'status';
+  const body = {};
+  for (const el of createForm.querySelectorAll('input, select')) body[el.name] = el.value;
+  try {
+    const r = await fetch('/admin/api/conditions/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const out = await r.json();
+    if (!r.ok) throw new Error(out.error || 'Create failed');
+    backdrop.classList.add('hidden');
+    await selectTab('conditions');
+    picker.value = out.slug;
+    await loadRow(out.slug);
+    statusEl.textContent = 'Created ' + out.id; statusEl.className = 'status ok';
+  } catch (err) {
+    modalStatus.textContent = 'Error: ' + err.message; modalStatus.className = 'status err';
+  }
+});
 
 function esc(s) {
   return String(s == null ? '' : s)
