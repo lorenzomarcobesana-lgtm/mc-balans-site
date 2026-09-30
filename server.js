@@ -531,6 +531,18 @@ app.get('/api/pricing', async (req, res) => {
 });
 
 // ---------- sitemap.xml ----------
+app.get('/api/ui-strings', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT string_key, locale, value FROM ui_strings');
+    const out = {};
+    for (const row of r.rows) {
+      if (!out[row.locale]) out[row.locale] = {};
+      out[row.locale][row.string_key] = row.value;
+    }
+    res.json(out);
+  } catch (e) { console.error(e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
 app.get('/sitemap.xml', async (req, res) => {
   try {
     const conditions = await pool.query(`SELECT slug, updated_at FROM conditions WHERE status = 'published'`);

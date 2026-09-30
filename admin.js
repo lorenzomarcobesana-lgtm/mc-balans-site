@@ -9,22 +9,33 @@ const TABLES = {
     keyColumn: 'slug',
     label: 'Conditions',
     order: 'id',
-    hide: ['id','slug','created_at','updated_at','category_id','author_id','medical_reviewer_id','search_vector','ai_summary'],
+    listColumns: ['id','slug','name'],
+    hide: ['id','slug','created_at','updated_at','category_id','author_id','medical_reviewer_id','search_vector','ai_summary']
   },
   treatments: {
     table: 'treatments',
     keyColumn: 'slug',
     label: 'Treatments',
     order: 'sort_order, id',
-    hide: ['id','slug','created_at','updated_at','parent_treatment_id','intake_text_block_id','treatment_selection_approach_id','insurance_coverage_block_id','author_id','medical_reviewer_id','search_vector'],
+    listColumns: ['id','slug','name'],
+    hide: ['id','slug','created_at','updated_at','parent_treatment_id','intake_text_block_id','treatment_selection_approach_id','insurance_coverage_block_id','author_id','medical_reviewer_id','search_vector']
   },
   shared_content_blocks: {
     table: 'shared_content_blocks',
     keyColumn: 'id',
     label: 'Shared blocks',
     order: 'id',
-    hide: ['id','created_at','updated_at','block_type'],
+    listColumns: ['id','value'],
+    hide: ['id','created_at','updated_at','block_type']
   },
+  ui_strings: {
+    table: 'ui_strings',
+    keyColumn: 'id',
+    label: 'UI strings',
+    order: 'string_key, locale',
+    listColumns: ['id','string_key','locale','value'],
+    hide: ['id','updated_at','string_key','locale']
+  }
 };
 
 const SKIP_TYPES = new Set(['tsvector']);
@@ -87,12 +98,8 @@ module.exports = function(app, pool) {
   router.get('/api/list/:tableKey', requireAdmin, async (req, res) => {
     const cfg = TABLES[req.params.tableKey];
     if (!cfg) return res.status(400).json({ error: 'Unknown table' });
-    const labelCol = cfg.table === 'shared_content_blocks' ? 'id' : 'name';
-    const cols = [cfg.keyColumn];
-    if (!cols.includes(labelCol)) cols.push(labelCol);
-    if (cfg.table !== 'shared_content_blocks') cols.push('id');
     try {
-      const r = await pool.query(`SELECT ${[...new Set(cols)].join(', ')} FROM ${cfg.table} ORDER BY ${cfg.order}`);
+      const r = await pool.query(`SELECT ${cfg.listColumns.join(', ')} FROM ${cfg.table} ORDER BY ${cfg.order}`);
       res.json(r.rows);
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
@@ -118,9 +125,7 @@ module.exports = function(app, pool) {
       const current = await client.query(`SELECT * FROM ${cfg.table} WHERE ${cfg.keyColumn} = $1 FOR UPDATE`, [key]);
       if (!current.rows[0]) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'Not found' }); }
 
-      const colr = await client.query(`
-        SELECT column_name, data_type FROM information_schema.columns WHERE table_name = $1
-      `, [cfg.table]);
+      const colr = await client.query(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = $1`, [cfg.table]);
       const types = {};
       for (const r of colr.rows) types[r.column_name] = r.data_type;
 
@@ -132,7 +137,7 @@ module.exports = function(app, pool) {
 
       await client.query(
         'INSERT INTO edit_history (entity_type, entity_id, snapshot) VALUES ($1, $2, $3)',
-        [cfg.table, current.rows[0].id, JSON.stringify(current.rows[0])]
+        [cfg.table, String(current.rows[0].id), JSON.stringify(current.rows[0])]
       );
 
       const setClauses = fields.map((k, i) => `"${k}" = $${i + 1}`);

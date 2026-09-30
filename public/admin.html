@@ -10,7 +10,7 @@
   header { background:#1a1a1a; color:#fff; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; }
   header h1 { font-size:16px; margin:0; font-weight:600; }
   header button { background:transparent; color:#fff; border:1px solid #555; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:13px; }
-  nav { background:#fff; border-bottom:1px solid var(--line); padding:0 24px; display:flex; gap:0; }
+  nav { background:#fff; border-bottom:1px solid var(--line); padding:0 24px; display:flex; gap:0; flex-wrap:wrap; }
   nav button { background:none; border:none; padding:14px 18px; font-size:14px; font-weight:600; color:#666; cursor:pointer; border-bottom:2px solid transparent; }
   nav button.active { color:var(--jade); border-bottom-color:var(--jade); }
   main { max-width:820px; margin:32px auto; padding:0 24px; }
@@ -56,6 +56,7 @@ const HIDDEN = {
   conditions: new Set(['id','slug','created_at','updated_at','category_id','author_id','medical_reviewer_id','search_vector','ai_summary']),
   treatments: new Set(['id','slug','created_at','updated_at','parent_treatment_id','intake_text_block_id','treatment_selection_approach_id','insurance_coverage_block_id','author_id','medical_reviewer_id','search_vector']),
   shared_content_blocks: new Set(['id','created_at','updated_at','block_type']),
+  ui_strings: new Set(['id','updated_at','string_key','locale'])
 };
 const LONG = new Set(['summary','recognition','red_flags','understanding','approach','assessment','expectations','practical','intake','aftercare','lede','body','value','name','treatment_selection_approach']);
 
@@ -77,6 +78,20 @@ async function loadTabs() {
   selectTab(tables[0].key);
 }
 
+function pickerValue(tableKey, row) {
+  if (tableKey === 'ui_strings' || tableKey === 'shared_content_blocks') return row.id;
+  return row.slug;
+}
+function pickerLabel(tableKey, row) {
+  if (tableKey === 'ui_strings') return row.string_key + ' [' + row.locale + ']';
+  if (tableKey === 'shared_content_blocks') {
+    const preview = (row.value || '').slice(0, 60);
+    return row.id + ' — ' + preview + (row.value && row.value.length > 60 ? '…' : '');
+  }
+  const id = row.id ? row.id + ' — ' : '';
+  return id + (row.name || row.slug || '');
+}
+
 async function selectTab(tableKey) {
   currentTable = tableKey;
   tabsEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === tableKey));
@@ -87,11 +102,7 @@ async function selectTab(tableKey) {
   if (!r.ok) { picker.innerHTML = '<option>Error</option>'; return; }
   const rows = await r.json();
   picker.innerHTML = '<option value="">— pick one —</option>' +
-    rows.map(row => {
-      const label = row.name || row.id;
-      const id = row.id && row.id !== label ? row.id + ' — ' : '';
-      return '<option value="' + esc(row[tableKey === 'shared_content_blocks' ? 'id' : 'slug']) + '">' + esc(id + label) + '</option>';
-    }).join('');
+    rows.map(row => '<option value="' + esc(pickerValue(tableKey, row)) + '">' + esc(pickerLabel(tableKey, row)) + '</option>').join('');
 }
 
 async function loadRow(key) {

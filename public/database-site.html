@@ -219,7 +219,16 @@ contentPending:'\u5185\u5bb9\u5f85\u5b8c\u5584',loading:'\u52a0\u8f7d\u4e2d...',
 footerTagline:'MC Balans\uff0c\u6d77\u7259',footerLed:'\u7531\u6797\u6587\u5fd7\u533b\u751f\u5e26\u9886',
 hours:'\u5468\u4e00\u81f3\u5468\u4e94 9:30-17:00',copyright:'\u00a9 2026 MC Balans'}
 };
-function T(k){return (i18n[currentLang]&&i18n[currentLang][k])||i18n.en[k]||k;}
+var dbUi=null;
+function T(k){
+  if(dbUi===null){
+    dbUi={};
+    try{var x=new XMLHttpRequest();x.open('GET','/api/ui-strings',false);x.send();if(x.status===200)dbUi=JSON.parse(x.responseText)||{};}catch(e){dbUi={};}
+  }
+  var d=dbUi[currentLang]&&dbUi[currentLang][k];
+  if(d)return d;
+  return (i18n[currentLang]&&i18n[currentLang][k])||i18n.en[k]||k;
+}
 function tr(html){
 if(currentLang==='en')return html;
 const m=[
