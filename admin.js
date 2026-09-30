@@ -166,7 +166,7 @@ module.exports = function(app, pool) {
   router.get('/api/meta', requireAdmin, async (req, res) => {
     try {
       const cats = await pool.query('SELECT id, name, slug FROM categories ORDER BY id');
-      const pracs = await pool.query('SELECT id, COALESCE(display_role, roles) AS role FROM practitioners ORDER BY id');
+      const pracs = await pool.query('SELECT id, display_role AS role FROM practitioners ORDER BY id');
       res.json({ categories: cats.rows, practitioners: pracs.rows });
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
