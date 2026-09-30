@@ -3,16 +3,52 @@ const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 
+const TABLES = {
+  conditions: {
+    table: 'conditions',
+    keyColumn: 'slug',
+    label: 'Conditions',
+    order: 'id',
+    hide: ['id','slug','created_at','updated_at','category_id','author_id','medical_reviewer_id','search_vector','ai_summary'],
+  },
+  treatments: {
+    table: 'treatments',
+    keyColumn: 'slug',
+    label: 'Treatments',
+    order: 'sort_order, id',
+    hide: ['id','slug','created_at','updated_at','parent_treatment_id','intake_text_block_id','treatment_selection_approach_id','insurance_coverage_block_id','author_id','medical_reviewer_id','search_vector'],
+  },
+  shared_content_blocks: {
+    table: 'shared_content_blocks',
+    keyColumn: 'id',
+    label: 'Shared blocks',
+    order: 'id',
+    hide: ['id','created_at','updated_at','block_type'],
+  },
+};
+
+const SKIP_TYPES = new Set(['tsvector']);
+
 module.exports = function(app, pool) {
+  pool.query(`
+    CREATE TABLE IF NOT EXISTS edit_history (
+      id SERIAL PRIMARY KEY,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      snapshot JSONB NOT NULL,
+      saved_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `).then(() => pool.query(`
+    CREATE INDEX IF NOT EXISTS edit_history_lookup
+    ON edit_history (entity_type, entity_id, saved_at DESC);
+  `)).then(() => console.log('edit_history ready'))
+    .catch(e => console.error('edit_history init failed:', e));
+
   app.use(session({
     secret: process.env.SESSION_SECRET || 'change-me-please',
     resave: false,
     saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    }
+    cookie: { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 }
   }));
 
   const router = express.Router();
@@ -44,51 +80,59 @@ module.exports = function(app, pool) {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
   });
 
-  router.get('/api/conditions', requireAdmin, async (req, res) => {
+  router.get('/api/tables', requireAdmin, (req, res) => {
+    res.json(Object.entries(TABLES).map(([key, cfg]) => ({ key, label: cfg.label })));
+  });
+
+  router.get('/api/list/:tableKey', requireAdmin, async (req, res) => {
+    const cfg = TABLES[req.params.tableKey];
+    if (!cfg) return res.status(400).json({ error: 'Unknown table' });
+    const labelCol = cfg.table === 'shared_content_blocks' ? 'id' : 'name';
+    const cols = [cfg.keyColumn];
+    if (!cols.includes(labelCol)) cols.push(labelCol);
+    if (cfg.table !== 'shared_content_blocks') cols.push('id');
     try {
-      const r = await pool.query('SELECT id, name, slug, status FROM conditions ORDER BY id');
+      const r = await pool.query(`SELECT ${[...new Set(cols)].join(', ')} FROM ${cfg.table} ORDER BY ${cfg.order}`);
       res.json(r.rows);
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
 
-  router.get('/api/condition/:slug', requireAdmin, async (req, res) => {
+  router.get('/api/row/:tableKey/:key', requireAdmin, async (req, res) => {
+    const cfg = TABLES[req.params.tableKey];
+    if (!cfg) return res.status(400).json({ error: 'Unknown table' });
     try {
-      const r = await pool.query('SELECT * FROM conditions WHERE slug = $1', [req.params.slug]);
+      const r = await pool.query(`SELECT * FROM ${cfg.table} WHERE ${cfg.keyColumn} = $1`, [req.params.key]);
       if (!r.rows[0]) return res.status(404).json({ error: 'Not found' });
       res.json(r.rows[0]);
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
 
-  router.post('/api/condition/:slug', requireAdmin, async (req, res) => {
-    const slug = req.params.slug;
+  router.post('/api/row/:tableKey/:key', requireAdmin, async (req, res) => {
+    const cfg = TABLES[req.params.tableKey];
+    if (!cfg) return res.status(400).json({ error: 'Unknown table' });
+    const key = req.params.key;
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
 
-      const current = await client.query('SELECT * FROM conditions WHERE slug = $1', [slug]);
-      if (!current.rows[0]) {
-        await client.query('ROLLBACK');
-        return res.status(404).json({ error: 'Not found' });
-      }
+      const current = await client.query(`SELECT * FROM ${cfg.table} WHERE ${cfg.keyColumn} = $1 FOR UPDATE`, [key]);
+      if (!current.rows[0]) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'Not found' }); }
 
       const colr = await client.query(`
-        SELECT column_name, data_type FROM information_schema.columns
-        WHERE table_name = 'conditions'
-          AND column_name NOT IN ('id', 'created_at', 'updated_at')
-      `);
+        SELECT column_name, data_type FROM information_schema.columns WHERE table_name = $1
+      `, [cfg.table]);
       const types = {};
       for (const r of colr.rows) types[r.column_name] = r.data_type;
 
-      const TEXT_TYPES = new Set(['text', 'character varying', 'character']);
-      const fields = Object.keys(req.body).filter(k => types[k] !== undefined);
-      if (!fields.length) {
-        await client.query('ROLLBACK');
-        return res.status(400).json({ error: 'No editable fields provided' });
-      }
+      const TEXT_TYPES = new Set(['text','character varying','character']);
+      const fields = Object.keys(req.body).filter(k =>
+        types[k] !== undefined && !cfg.hide.includes(k) && !SKIP_TYPES.has(types[k])
+      );
+      if (!fields.length) { await client.query('ROLLBACK'); return res.status(400).json({ error: 'No editable fields' }); }
 
       await client.query(
-        'INSERT INTO condition_history (condition_id, snapshot) VALUES ($1, $2)',
-        [current.rows[0].id, JSON.stringify(current.rows[0])]
+        'INSERT INTO edit_history (entity_type, entity_id, snapshot) VALUES ($1, $2, $3)',
+        [cfg.table, current.rows[0].id, JSON.stringify(current.rows[0])]
       );
 
       const setClauses = fields.map((k, i) => `"${k}" = $${i + 1}`);
@@ -97,13 +141,12 @@ module.exports = function(app, pool) {
         if (v === '' && !TEXT_TYPES.has(types[k])) return null;
         return v;
       });
-      values.push(slug);
+      values.push(key);
 
       await client.query(
-        `UPDATE conditions SET ${setClauses.join(', ')}, updated_at = NOW() WHERE slug = $${values.length}`,
+        `UPDATE ${cfg.table} SET ${setClauses.join(', ')}, updated_at = NOW() WHERE ${cfg.keyColumn} = $${values.length}`,
         values
       );
-
       await client.query('COMMIT');
       res.json({ ok: true, saved: fields });
     } catch (e) {
