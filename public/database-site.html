@@ -227,6 +227,8 @@ function T(k){
   }
   var d=dbUi[currentLang]&&dbUi[currentLang][k];
   if(d)return d;
+  var e=dbUi.en&&dbUi.en[k];
+  if(e)return e;
   return (i18n[currentLang]&&i18n[currentLang][k])||i18n.en[k]||k;
 }
 function tr(html){
@@ -512,7 +514,7 @@ if(prices && prices.length){
 html+='</div>';
 html+='<p style="margin-top:24px;color:var(--stone);font-size:14px;">Most treatments are covered under supplementary insurance (aanvullende verzekering). Whether and how much is reimbursed depends on your individual policy. We can help you check your coverage.</p>';
 html+='</div>';
-html+='<div class="about-panel'+(activeTab==='philosophy'?' active':'')+'" id="panel-philosophy"><div class="section-head"><h2>Our Philosophy</h2></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;"><div class="placeholder-box">Vision</div><div class="placeholder-box">Mission</div></div></div>';
+html+='<div class="about-panel'+(activeTab==='philosophy'?' active':'')+'" id="panel-philosophy"><div class="section-head"><h2>Our Philosophy</h2></div><div style="margin-top:24px;"><h3 style="font-size:16px;margin:0 0 8px;">'+T('philosophy_purpose_h')+'</h3><p style="margin:0;">'+T('philosophy_purpose')+'</p></div><div style="margin-top:28px;"><h3 style="font-size:16px;margin:0 0 8px;">'+T('philosophy_vision_h')+'</h3><p style="margin:0;">'+T('philosophy_vision')+'</p></div><div style="margin-top:28px;"><h3 style="font-size:16px;margin:0 0 8px;">'+T('philosophy_mission_h')+'</h3><p style="margin:0;">'+T('philosophy_mission')+'</p></div></div>';
 html+='</div></section>';app.innerHTML=tr(html);
 }catch(e){app.innerHTML='<div class="error">About error: '+e.message+'</div>';}
 }
