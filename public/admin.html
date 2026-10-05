@@ -15,7 +15,7 @@
   nav button.active { color:var(--jade); border-bottom-color:var(--jade); }
   main { max-width:820px; margin:32px auto; padding:0 24px; }
   select, input, textarea { font-family:inherit; font-size:15px; width:100%; padding:10px; border:1px solid var(--line); border-radius:4px; background:#fff; }
-  textarea { min-height:140px; font-family:ui-monospace, Menlo, monospace; font-size:13px; line-height:1.6; }
+  textarea { min-height:100px; font-family:inherit; font-size:14px; line-height:1.55; resize:vertical; }
   label { display:block; margin-top:20px; }
   label strong { display:block; font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:#666; margin-bottom:6px; }
   .row { display:flex; gap:12px; align-items:center; margin-top:20px; }
@@ -32,6 +32,13 @@
   #modal h2 { margin:0 0 8px; font-size:20px; }
   #modal p.hint { color:#666; font-size:13px; margin-top:0; margin-bottom:20px; }
   .modal-actions { display:flex; gap:10px; margin-top:28px; align-items:center; }
+  .trans-field { background:#fff; border:1px solid var(--line); border-radius:6px; padding:16px; margin-top:16px; }
+  .trans-field-name { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:var(--jade); margin-bottom:10px; }
+  .trans-lang-row { display:grid; grid-template-columns:42px 1fr; gap:10px; align-items:start; margin-top:8px; }
+  .trans-lang { font-size:11px; font-weight:700; padding-top:12px; letter-spacing:0.04em; color:#666; }
+  .trans-lang.en { color:#2b6e5c; }
+  .trans-lang.nl { color:#8a5a00; }
+  .trans-lang.zh { color:#8a0000; }
 </style>
 </head>
 <body>
@@ -45,25 +52,45 @@
 <nav id="tabs"></nav>
 
 <main>
-  <div class="row">
-    <select id="picker"><option value="">Loading…</option></select>
-    <button type="button" id="newBtn" class="secondary hidden">+ New condition</button>
+  <div id="normalPanel">
+    <div class="row">
+      <select id="picker"><option value="">Loading…</option></select>
+      <button type="button" id="newBtn" class="secondary hidden">+ New condition</button>
+    </div>
+    <form id="form" style="display:none;">
+      <div id="fields"></div>
+      <div class="row" style="margin-top:32px;">
+        <button class="primary" type="submit" id="save">Save</button>
+        <span class="status" id="status"></span>
+      </div>
+    </form>
   </div>
 
-  <form id="form" style="display:none;">
-    <div id="fields"></div>
-    <div class="row" style="margin-top:32px;">
-      <button class="primary" type="submit" id="save">Save</button>
-      <span class="status" id="status"></span>
+  <div id="translationsPanel" class="hidden">
+    <div class="row">
+      <select id="transType">
+        <option value="conditions">Conditions</option>
+        <option value="treatments">Treatments</option>
+        <option value="shared_content_blocks">Shared blocks</option>
+      </select>
     </div>
-  </form>
+    <div class="row">
+      <select id="transPicker"><option value="">— pick a row —</option></select>
+    </div>
+    <form id="transForm" style="display:none;">
+      <div id="transFields"></div>
+      <div class="row" style="margin-top:32px;">
+        <button class="primary" type="submit" id="transSave">Save all languages</button>
+        <span class="status" id="transStatus"></span>
+      </div>
+    </form>
+  </div>
 </main>
 
 <div id="modal-backdrop" class="hidden">
   <div id="modal">
     <h2>New condition</h2>
     <p class="hint">Creates a new row with empty body fields. Pick it from the dropdown afterwards to fill in the content.</p>
-
     <form id="createForm">
       <label><strong>Name</strong><input type="text" name="name" required autofocus></label>
       <label><strong>Slug</strong><input type="text" name="slug" required placeholder="auto-generated from name"></label>
@@ -71,7 +98,6 @@
       <label><strong>Author</strong><select name="author_id" required><option value="">Loading…</option></select></label>
       <label><strong>Medical reviewer</strong><select name="medical_reviewer_id"><option value="">— same as author —</option></select></label>
       <label><strong>Status</strong><select name="status"><option value="draft">draft</option><option value="in_review">in_review</option><option value="medically_reviewed">medically_reviewed</option><option value="approved">approved</option><option value="published">published</option><option value="archived">archived</option></select></label>
-
       <div class="modal-actions">
         <button type="submit" class="primary">Create</button>
         <button type="button" id="cancelBtn" class="secondary">Cancel</button>
@@ -91,6 +117,8 @@ const HIDDEN = {
 const LONG = new Set(['summary','recognition','red_flags','understanding','approach','assessment','expectations','practical','intake','aftercare','lede','body','value','name','treatment_selection_approach']);
 
 const tabsEl = document.getElementById('tabs');
+const normalPanel = document.getElementById('normalPanel');
+const translationsPanel = document.getElementById('translationsPanel');
 const picker = document.getElementById('picker');
 const form = document.getElementById('form');
 const fieldsEl = document.getElementById('fields');
@@ -100,8 +128,16 @@ const newBtn = document.getElementById('newBtn');
 const backdrop = document.getElementById('modal-backdrop');
 const createForm = document.getElementById('createForm');
 const modalStatus = document.getElementById('modalStatus');
+const transType = document.getElementById('transType');
+const transPicker = document.getElementById('transPicker');
+const transForm = document.getElementById('transForm');
+const transFields = document.getElementById('transFields');
+const transStatus = document.getElementById('transStatus');
+const transSave = document.getElementById('transSave');
+
 let currentTable = null;
 let currentKey = '';
+let currentTransKey = '';
 let meta = null;
 
 function slugify(s) {
@@ -116,7 +152,8 @@ async function loadTabs() {
   const r = await fetch('/admin/api/tables');
   if (!r.ok) { location.href = '/admin/login'; return; }
   const tables = await r.json();
-  tabsEl.innerHTML = tables.map(t => '<button data-tab="' + t.key + '">' + esc(t.label) + '</button>').join('');
+  tabsEl.innerHTML = tables.map(t => '<button data-tab="' + t.key + '">' + esc(t.label) + '</button>').join('')
+    + '<button data-tab="__translations__">Translations</button>';
   tabsEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => selectTab(b.dataset.tab)));
   selectTab(tables[0].key);
 }
@@ -136,8 +173,16 @@ function pickerLabel(tableKey, row) {
 }
 
 async function selectTab(tableKey) {
-  currentTable = tableKey;
   tabsEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === tableKey));
+  if (tableKey === '__translations__') {
+    normalPanel.classList.add('hidden');
+    translationsPanel.classList.remove('hidden');
+    await loadTransPicker();
+    return;
+  }
+  normalPanel.classList.remove('hidden');
+  translationsPanel.classList.add('hidden');
+  currentTable = tableKey;
   form.style.display = 'none';
   statusEl.textContent = '';
   newBtn.classList.toggle('hidden', tableKey !== 'conditions');
@@ -261,6 +306,89 @@ createForm.addEventListener('submit', async (e) => {
     statusEl.textContent = 'Created ' + out.id; statusEl.className = 'status ok';
   } catch (err) {
     modalStatus.textContent = 'Error: ' + err.message; modalStatus.className = 'status err';
+  }
+});
+
+async function loadTransPicker() {
+  const type = transType.value;
+  transForm.style.display = 'none';
+  transStatus.textContent = '';
+  transPicker.innerHTML = '<option>Loading…</option>';
+  const r = await fetch('/admin/api/list/' + type);
+  if (!r.ok) { transPicker.innerHTML = '<option>Error</option>'; return; }
+  const rows = await r.json();
+  transPicker.innerHTML = '<option value="">— pick a row —</option>' +
+    rows.map(row => '<option value="' + esc(pickerValue(type, row)) + '">' + esc(pickerLabel(type, row)) + '</option>').join('');
+}
+
+transType.addEventListener('change', loadTransPicker);
+
+transPicker.addEventListener('change', async () => {
+  const key = transPicker.value;
+  if (!key) { transForm.style.display = 'none'; currentTransKey = ''; return; }
+  transStatus.textContent = ''; transStatus.className = 'status';
+  const r = await fetch('/admin/api/translations/' + transType.value + '/' + encodeURIComponent(key));
+  if (!r.ok) { transStatus.textContent = 'Failed to load'; transStatus.className = 'status err'; return; }
+  const data = await r.json();
+  renderTransFields(data);
+  transForm.style.display = 'block';
+  currentTransKey = key;
+});
+
+function renderTransFields(data) {
+  transFields.innerHTML = '';
+  for (const field of Object.keys(data.fields)) {
+    const values = data.fields[field];
+    const block = document.createElement('div');
+    block.className = 'trans-field';
+    block.innerHTML = '<div class="trans-field-name">' + esc(field.replace(/_/g, ' ')) + '</div>';
+    for (const locale of ['en','nl','zh']) {
+      const row = document.createElement('div');
+      row.className = 'trans-lang-row';
+      const langLabel = document.createElement('div');
+      langLabel.className = 'trans-lang ' + locale;
+      langLabel.textContent = locale.toUpperCase();
+      const ta = document.createElement('textarea');
+      ta.name = field + '[' + locale + ']';
+      ta.value = values[locale] || '';
+      row.appendChild(langLabel);
+      row.appendChild(ta);
+      block.appendChild(row);
+    }
+    transFields.appendChild(block);
+  }
+}
+
+transForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!currentTransKey) return;
+  transSave.disabled = true;
+  transStatus.textContent = 'Saving…'; transStatus.className = 'status';
+  const body = {};
+  for (const ta of transForm.querySelectorAll('textarea')) {
+    const m = ta.name.match(/^(.+)\[(en|nl|zh)\]$/);
+    if (!m) continue;
+    const field = m[1], locale = m[2];
+    if (!body[field]) body[field] = {};
+    body[field][locale] = ta.value;
+  }
+  try {
+    const r = await fetch('/admin/api/translations/' + transType.value + '/' + encodeURIComponent(currentTransKey), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const out = await r.json();
+    if (!r.ok) throw new Error(out.error || 'Save failed');
+    if (!out.saved || out.saved.length === 0) {
+      transStatus.textContent = 'No changes.'; transStatus.className = 'status';
+    } else {
+      transStatus.textContent = 'Saved ' + out.saved.length + ' field(s) ✓'; transStatus.className = 'status ok';
+    }
+  } catch (err) {
+    transStatus.textContent = 'Error: ' + err.message; transStatus.className = 'status err';
+  } finally {
+    transSave.disabled = false;
   }
 });
 
