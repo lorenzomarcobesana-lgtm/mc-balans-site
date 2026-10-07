@@ -940,6 +940,114 @@ app.get('/api/resources/:id', async (req, res) => {
   }
 });
 
+// ---------- HERBAL SERVICE APPLICATION (preview) ----------
+function renderHerbalApplyBody() {
+  const style = `
+    <style>
+      .ha-form { max-width:720px; }
+      .ha-section { margin-top:40px; padding-top:24px; border-top:1px solid var(--line); }
+      .ha-section h2 { font-size:18px; margin:0 0 16px; }
+      .ha-field { margin-top:16px; }
+      .ha-field > label, .ha-field > span.lbl { display:block; font-size:14px; font-weight:600; margin-bottom:6px; }
+      .ha-field input[type=text], .ha-field input[type=email], .ha-field input[type=tel], .ha-field input[type=date], .ha-field select, .ha-field textarea { width:100%; padding:10px; font-size:15px; border:1px solid var(--line); border-radius:4px; font-family:inherit; background:#fff; }
+      .ha-field textarea { min-height:90px; resize:vertical; }
+      .ha-radio-group { display:flex; flex-wrap:wrap; gap:16px; margin-top:4px; }
+      .ha-radio-group label { display:flex; align-items:center; gap:6px; font-weight:400; font-size:15px; }
+      .ha-file-drop { border:2px dashed var(--line); border-radius:6px; padding:24px; text-align:center; background:#fff; cursor:pointer; }
+      .ha-file-drop:hover { border-color:var(--jade); }
+      .ha-file-drop input { display:none; }
+      .ha-file-drop .hint { font-size:13px; color:#888; margin:8px 0 0; }
+      .ha-photo-list { list-style:none; padding:0; margin:12px 0 0; font-size:13px; color:#555; }
+      .ha-photo-list li { padding:4px 0; }
+      .ha-preview-banner { background:#fff4d6; border-left:4px solid #e6a817; padding:16px 20px; border-radius:4px; font-size:14px; margin-bottom:32px; line-height:1.6; }
+      .ha-submit { background:var(--jade); color:#fff; border:none; padding:14px 28px; border-radius:4px; font-size:16px; font-weight:600; cursor:pointer; margin-top:32px; }
+      .ha-consent { display:flex; align-items:flex-start; gap:10px; margin-top:24px; font-size:14px; line-height:1.5; }
+      .ha-consent input { margin-top:4px; }
+    </style>
+  `;
+
+  let h = style;
+  h += '<div class="subhero wrap"><div class="breadcrumb"><a href="/">Home</a> / <a href="/herbal-service">Herbal Service</a> / Apply</div><h1>Online Tongue Diagnosis — Application</h1><p class="lede">Upload three tongue photos and answer the questionnaire below. Dr. Lin will review your request and reply by email.</p></div>';
+  h += '<div class="wrap section">';
+  h += '<div class="ha-form">';
+
+  h += '<div class="ha-preview-banner"><strong>Preview mode.</strong> This form shows how the online tongue diagnosis application works. Submitting it does not send anything yet — email delivery and photo storage are still to be connected. To book now, please call <a href="tel:0703888111" style="color:#8a5a00;text-decoration:underline;">070 388 8111</a>.</div>';
+
+  h += '<form id="herbal-apply-form">';
+
+  h += '<div class="ha-section"><h2>1. Your tongue photos</h2>';
+  h += '<p style="font-size:14px;color:#555;margin:0 0 12px;">Please upload three photos of your tongue taken in daylight, before brushing or drinking coffee.</p>';
+  h += '<label for="ha-photos" class="ha-file-drop"><input type="file" id="ha-photos" name="photos" multiple accept=".jpg,.jpeg,.gif,.png,.pdf"><div style="font-weight:600;color:var(--jade);">Drag files here or click to select</div><p class="hint">Accepted: jpg, gif, png, pdf. Maximum 100 MB total, maximum 3 files.</p></label>';
+  h += '<ul class="ha-photo-list" id="ha-photo-list"></ul>';
+  h += '</div>';
+
+  h += '<div class="ha-section"><h2>2. Personal details</h2>';
+  h += '<div class="ha-field"><label>First name(s) *</label><input type="text" name="first_names" required></div>';
+  h += '<div class="ha-field"><label>Surname *</label><input type="text" name="surname" required></div>';
+  h += '<div class="ha-field"><label>Date of birth *</label><input type="date" name="dob" required></div>';
+  h += '<div class="ha-field"><span class="lbl">Sex *</span><div class="ha-radio-group"><label><input type="radio" name="sex" value="f" required> Female</label><label><input type="radio" name="sex" value="m"> Male</label><label><input type="radio" name="sex" value="x"> Other / prefer not to say</label></div></div>';
+  h += '<div class="ha-field"><label>Street and house number *</label><input type="text" name="street" required></div>';
+  h += '<div class="ha-field"><label>Postcode and city *</label><input type="text" name="postcode_city" required></div>';
+  h += '<div class="ha-field"><label>Phone number *</label><input type="tel" name="phone" required></div>';
+  h += '<div class="ha-field"><label>Email address *</label><input type="email" name="email" required></div>';
+  h += '<div class="ha-field"><label>Health insurer *</label><input type="text" name="insurer" required></div>';
+  h += '</div>';
+
+  h += '<div class="ha-section"><h2>3. About your complaint</h2>';
+  h += '<div class="ha-field"><label>What is your main complaint? (How long, how often, when — describe in your own words.) *</label><textarea name="main_complaint" required></textarea></div>';
+  h += '<div class="ha-field"><label>What are your secondary complaints? *</label><textarea name="secondary_complaints" required></textarea></div>';
+  h += '<div class="ha-field"><label>Has your doctor made a diagnosis? If yes, which? *</label><textarea name="diagnosis" required></textarea></div>';
+  h += '<div class="ha-field"><label>Do you use medication? If yes, which? *</label><textarea name="medication" required></textarea></div>';
+  h += '</div>';
+
+  h += '<div class="ha-section"><h2>4. Body function</h2>';
+  h += '<div class="ha-field"><label>Bowel movements (times per day) *</label><input type="text" name="bowel_frequency" required></div>';
+  h += '<div class="ha-field"><span class="lbl">Stool texture *</span><div class="ha-radio-group"><label><input type="radio" name="stool_texture" value="dry" required> Dry</label><label><input type="radio" name="stool_texture" value="soft"> Soft</label><label><input type="radio" name="stool_texture" value="sticky"> Sticky</label><label><input type="radio" name="stool_texture" value="mushy"> Mushy</label></div></div>';
+  h += '<div class="ha-field"><label>Sleep (hours per night) *</label><input type="text" name="sleep" required></div>';
+  h += '<div class="ha-field"><span class="lbl">Night sweats? *</span><div class="ha-radio-group"><label><input type="radio" name="night_sweats" value="yes" required> Yes</label><label><input type="radio" name="night_sweats" value="no"> No</label></div></div>';
+  h += '<div class="ha-field"><label>Menstruation (cycle, colour, texture, pain — leave blank if not applicable)</label><textarea name="menstruation"></textarea></div>';
+  h += '<div class="ha-field"><span class="lbl">Currently pregnant? *</span><div class="ha-radio-group"><label><input type="radio" name="pregnant" value="yes" required> Yes</label><label><input type="radio" name="pregnant" value="no"> No</label></div></div>';
+  h += '<div class="ha-field"><span class="lbl">Breastfeeding? *</span><div class="ha-radio-group"><label><input type="radio" name="breastfeeding" value="yes" required> Yes</label><label><input type="radio" name="breastfeeding" value="no"> No</label></div></div>';
+  h += '<div class="ha-field"><label>Other comments</label><textarea name="other"></textarea></div>';
+  h += '</div>';
+
+  h += '<label class="ha-consent"><input type="checkbox" name="consent" required><span>I consent to MC Balans processing the health information I have entered above for the purpose of assessing my request. *</span></label>';
+
+  h += '<div><button type="submit" class="ha-submit">Submit application</button></div>';
+
+  h += '</form>';
+  h += '</div></div>';
+
+  h += '<script>(function(){' +
+    'var form=document.getElementById("herbal-apply-form");' +
+    'var photos=document.getElementById("ha-photos");' +
+    'var list=document.getElementById("ha-photo-list");' +
+    'photos.addEventListener("change",function(e){' +
+      'list.innerHTML="";' +
+      'for(var i=0;i<e.target.files.length;i++){' +
+        'var f=e.target.files[i];' +
+        'var li=document.createElement("li");' +
+        'li.textContent=f.name+" ("+Math.round(f.size/1024)+" KB)";' +
+        'list.appendChild(li);' +
+      '}' +
+    '});' +
+    'form.addEventListener("submit",function(e){' +
+      'e.preventDefault();' +
+      'alert("Preview mode: submission is not enabled yet. Please call 070 388 8111 to book, or ask Lorenzo to enable the form.");' +
+    '});' +
+  '})();</script>';
+
+  return h;
+}
+
+app.get('/herbal-service/apply', (req, res) => {
+  res.send(renderPage(buildSeoHead({
+    title: 'Online Tongue Diagnosis — Application | MC Balans',
+    description: 'Apply for an online tongue diagnosis with Dr. Lin. Upload three tongue photos and answer a short questionnaire.',
+    canonical: SITE_URL + '/herbal-service/apply'
+  }), renderHerbalApplyBody()));
+});
+
 app.get('*', (req, res) => {
   res.send(renderPage(buildSeoHead({
     title: 'MC Balans', description: 'MC Balans — Western & Traditional Chinese Medicine, The Hague.',
