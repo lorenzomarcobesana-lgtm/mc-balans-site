@@ -318,6 +318,117 @@ module.exports = function(app, pool) {
     }
   });
 
+  router.get('/api/relations-options', requireAdmin, async (req, res) => {
+    try {
+      const t = await pool.query("SELECT id, name FROM treatments ORDER BY name");
+      const f = await pool.query("SELECT id, slug AS name FROM faqs ORDER BY slug");
+      const e = await pool.query("SELECT id, COALESCE((SELECT value FROM translations WHERE evidence_id = evidence_resources.id AND field_name = 'title' AND locale = 'en' LIMIT 1), id) AS name FROM evidence_resources ORDER BY id");
+      res.json({ treatments: t.rows, faqs: f.rows, evidence: e.rows });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+  });
+
+  router.get('/api/relations/:slug', requireAdmin, async (req, res) => {
+    try {
+      const c = await pool.query("SELECT id FROM conditions WHERE slug = $1", [req.params.slug]);
+      if (!c.rows[0]) return res.status(404).json({ error: 'Condition not found' });
+      const cid = c.rows[0].id;
+
+      const t = await pool.query("SELECT ct.treatment_id, ct.display_order, tr.name FROM condition_treatments ct JOIN treatments tr ON tr.id = ct.treatment_id WHERE ct.condition_id = $1 ORDER BY ct.display_order", [cid]);
+      const f = await pool.query("SELECT cf.faq_id, cf.display_order, fa.slug FROM condition_faqs cf JOIN faqs fa ON fa.id = cf.faq_id WHERE cf.condition_id = $1 ORDER BY cf.display_order", [cid]);
+      const e = await pool.query("SELECT ce.evidence_id, ce.relevance_note, ce.display_order FROM condition_evidence ce WHERE ce.condition_id = $1 ORDER BY ce.display_order NULLS LAST", [cid]);
+      const p = await pool.query("SELECT id, tier_label, amount, currency, show_on_pricing_page, pricing_group, show_in_summary FROM price_tiers WHERE condition_id = $1 ORDER BY id", [cid]);
+
+      res.json({ conditionId: cid, treatments: t.rows, faqs: f.rows, evidence: e.rows, pricing: p.rows });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+  });
+
+  router.post('/api/relations/:slug/treatments', requireAdmin, async (req, res) => {
+    const items = (req.body && req.body.items) || [];
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const c = await client.query("SELECT id FROM conditions WHERE slug = $1", [req.params.slug]);
+      if (!c.rows[0]) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'Condition not found' }); }
+      const cid = c.rows[0].id;
+      const curr = await client.query("SELECT * FROM condition_treatments WHERE condition_id = $1", [cid]);
+      await client.query('INSERT INTO edit_history (entity_type, entity_id, snapshot) VALUES ($1, $2, $3)', ['condition_treatments', cid, JSON.stringify(curr.rows)]);
+      await client.query("DELETE FROM condition_treatments WHERE condition_id = $1", [cid]);
+      for (let i = 0; i < items.length; i++) {
+        await client.query("INSERT INTO condition_treatments (condition_id, treatment_id, display_order) VALUES ($1, $2, $3)", [cid, items[i].treatment_id, i]);
+      }
+      await client.query('COMMIT');
+      res.json({ ok: true, saved: items.length });
+    } catch (e) { await client.query('ROLLBACK'); console.error(e); res.status(500).json({ error: e.message }); }
+    finally { client.release(); }
+  });
+
+  router.post('/api/relations/:slug/faqs', requireAdmin, async (req, res) => {
+    const items = (req.body && req.body.items) || [];
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const c = await client.query("SELECT id FROM conditions WHERE slug = $1", [req.params.slug]);
+      if (!c.rows[0]) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'Condition not found' }); }
+      const cid = c.rows[0].id;
+      const curr = await client.query("SELECT * FROM condition_faqs WHERE condition_id = $1", [cid]);
+      await client.query('INSERT INTO edit_history (entity_type, entity_id, snapshot) VALUES ($1, $2, $3)', ['condition_faqs', cid, JSON.stringify(curr.rows)]);
+      await client.query("DELETE FROM condition_faqs WHERE condition_id = $1", [cid]);
+      for (let i = 0; i < items.length; i++) {
+        await client.query("INSERT INTO condition_faqs (condition_id, faq_id, display_order) VALUES ($1, $2, $3)", [cid, items[i].faq_id, i]);
+      }
+      await client.query('COMMIT');
+      res.json({ ok: true, saved: items.length });
+    } catch (e) { await client.query('ROLLBACK'); console.error(e); res.status(500).json({ error: e.message }); }
+    finally { client.release(); }
+  });
+
+  router.post('/api/relations/:slug/evidence', requireAdmin, async (req, res) => {
+    const items = (req.body && req.body.items) || [];
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const c = await client.query("SELECT id FROM conditions WHERE slug = $1", [req.params.slug]);
+      if (!c.rows[0]) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'Condition not found' }); }
+      const cid = c.rows[0].id;
+      const curr = await client.query("SELECT * FROM condition_evidence WHERE condition_id = $1", [cid]);
+      await client.query('INSERT INTO edit_history (entity_type, entity_id, snapshot) VALUES ($1, $2, $3)', ['condition_evidence', cid, JSON.stringify(curr.rows)]);
+      await client.query("DELETE FROM condition_evidence WHERE condition_id = $1", [cid]);
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        const order = (it.display_order === null || it.display_order === undefined || it.display_order === '') ? null : parseInt(it.display_order, 10);
+        await client.query("INSERT INTO condition_evidence (condition_id, evidence_id, relevance_note, display_order) VALUES ($1, $2, $3, $4)", [cid, it.evidence_id, it.relevance_note || null, order]);
+      }
+      await client.query('COMMIT');
+      res.json({ ok: true, saved: items.length });
+    } catch (e) { await client.query('ROLLBACK'); console.error(e); res.status(500).json({ error: e.message }); }
+    finally { client.release(); }
+  });
+
+  router.post('/api/relations/:slug/pricing', requireAdmin, async (req, res) => {
+    const items = (req.body && req.body.items) || [];
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const c = await client.query("SELECT id FROM conditions WHERE slug = $1", [req.params.slug]);
+      if (!c.rows[0]) { await client.query('ROLLBACK'); return res.status(404).json({ error: 'Condition not found' }); }
+      const cid = c.rows[0].id;
+      const curr = await client.query("SELECT * FROM price_tiers WHERE condition_id = $1", [cid]);
+      await client.query('INSERT INTO edit_history (entity_type, entity_id, snapshot) VALUES ($1, $2, $3)', ['price_tiers', cid, JSON.stringify(curr.rows)]);
+      await client.query("DELETE FROM price_tiers WHERE condition_id = $1", [cid]);
+      for (const it of items) {
+        const amount = parseFloat(it.amount);
+        if (isNaN(amount)) { await client.query('ROLLBACK'); return res.status(400).json({ error: 'Amount must be a number' }); }
+        await client.query(
+          "INSERT INTO price_tiers (condition_id, tier_label, amount, currency, show_on_pricing_page, pricing_group, show_in_summary) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+          [cid, it.tier_label || null, amount, it.currency || 'EUR', it.show_on_pricing_page !== false, it.pricing_group || null, it.show_in_summary === true]
+        );
+      }
+      await client.query('COMMIT');
+      res.json({ ok: true, saved: items.length });
+    } catch (e) { await client.query('ROLLBACK'); console.error(e); res.status(500).json({ error: e.message }); }
+    finally { client.release(); }
+  });
+
   app.use('/admin', router);
 };
 
