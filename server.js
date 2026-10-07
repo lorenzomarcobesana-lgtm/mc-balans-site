@@ -941,7 +941,69 @@ app.get('/api/resources/:id', async (req, res) => {
 });
 
 // ---------- HERBAL SERVICE APPLICATION (preview) ----------
-function renderHerbalApplyBody() {
+const HERBAL_DEFAULTS = {
+  title: 'Online Tongue Diagnosis — Application',
+  lede: 'Upload three tongue photos and answer the questionnaire below. Dr. Lin will review your request and reply by email.',
+  preview_title: 'Preview mode.',
+  preview_body: 'This form shows how the online tongue diagnosis application works. Submitting it does not send anything yet — email delivery and photo storage are still to be connected. To book now, please call',
+  section1: '1. Your tongue photos',
+  photo_hint: 'Please upload three photos of your tongue taken in daylight, before brushing or drinking coffee.',
+  photo_drop: 'Drag files here or click to select',
+  photo_types: 'Accepted: jpg, gif, png, pdf. Maximum 100 MB total, maximum 3 files.',
+  section2: '2. Personal details',
+  first_names: 'First name(s) *',
+  surname: 'Surname *',
+  dob: 'Date of birth *',
+  sex: 'Sex *',
+  sex_female: 'Female',
+  sex_male: 'Male',
+  sex_other: 'Other / prefer not to say',
+  street: 'Street and house number *',
+  postcode_city: 'Postcode and city *',
+  phone: 'Phone number *',
+  email: 'Email address *',
+  insurer: 'Health insurer *',
+  section3: '3. About your complaint',
+  main_complaint: 'What is your main complaint? (How long, how often, when — describe in your own words.) *',
+  secondary_complaints: 'What are your secondary complaints? *',
+  diagnosis: 'Has your doctor made a diagnosis? If yes, which? *',
+  medication: 'Do you use medication? If yes, which? *',
+  section4: '4. Body function',
+  bowel_frequency: 'Bowel movements (times per day) *',
+  stool_texture: 'Stool texture *',
+  stool_dry: 'Dry',
+  stool_soft: 'Soft',
+  stool_sticky: 'Sticky',
+  stool_mushy: 'Mushy',
+  sleep: 'Sleep (hours per night) *',
+  night_sweats: 'Night sweats? *',
+  yes: 'Yes',
+  no: 'No',
+  menstruation: 'Menstruation (cycle, colour, texture, pain — leave blank if not applicable)',
+  pregnant: 'Currently pregnant? *',
+  breastfeeding: 'Breastfeeding? *',
+  other: 'Other comments',
+  consent: 'I consent to MC Balans processing the health information I have entered above for the purpose of assessing my request. *',
+  submit: 'Submit application',
+  back_link: '← Back to Herbal Service'
+};
+
+async function fetchHerbalStrings(lang) {
+  const overrides = {};
+  if (lang === 'en' || !lang) return overrides;
+  try {
+    const r = await pool.query("SELECT string_key, value FROM ui_strings WHERE locale = $1 AND string_key LIKE 'herbal_apply_%'", [lang]);
+    for (const row of r.rows) {
+      const key = row.string_key.replace(/^herbal_apply_/, '');
+      overrides[key] = row.value;
+    }
+  } catch (e) { console.error('fetchHerbalStrings:', e.message); }
+  return overrides;
+}
+
+function renderHerbalApplyBody(lang, overrides) {
+  const S = (k) => (overrides && overrides[k]) || HERBAL_DEFAULTS[k] || k;
+  const langLabel = {en:'EN', nl:'NL', zh:'中文'};
   const style = `
     <style>
       .ha-form { max-width:720px; }
@@ -953,7 +1015,7 @@ function renderHerbalApplyBody() {
       .ha-field textarea { min-height:90px; resize:vertical; }
       .ha-radio-group { display:flex; flex-wrap:wrap; gap:16px; margin-top:4px; }
       .ha-radio-group label { display:flex; align-items:center; gap:6px; font-weight:400; font-size:15px; }
-      .ha-file-drop { border:2px dashed var(--line); border-radius:6px; padding:24px; text-align:center; background:#fff; cursor:pointer; }
+      .ha-file-drop { border:2px dashed var(--line); border-radius:6px; padding:24px; text-align:center; background:#fff; cursor:pointer; display:block; }
       .ha-file-drop:hover { border-color:var(--jade); }
       .ha-file-drop input { display:none; }
       .ha-file-drop .hint { font-size:13px; color:#888; margin:8px 0 0; }
@@ -963,89 +1025,84 @@ function renderHerbalApplyBody() {
       .ha-submit { background:var(--jade); color:#fff; border:none; padding:14px 28px; border-radius:4px; font-size:16px; font-weight:600; cursor:pointer; margin-top:32px; }
       .ha-consent { display:flex; align-items:flex-start; gap:10px; margin-top:24px; font-size:14px; line-height:1.5; }
       .ha-consent input { margin-top:4px; }
+      .ha-langs { display:flex; gap:10px; margin:16px 0 0; font-size:14px; }
+      .ha-langs a { color:var(--jade); text-decoration:none; padding:4px 10px; border-radius:4px; }
+      .ha-langs a.active { background:var(--jade); color:#fff; font-weight:600; }
     </style>
   `;
 
   let h = style;
-  h += '<div class="subhero wrap"><div class="breadcrumb"><a href="/">Home</a> / <a href="/herbal-service">Herbal Service</a> / Apply</div><h1>Online Tongue Diagnosis — Application</h1><p class="lede">Upload three tongue photos and answer the questionnaire below. Dr. Lin will review your request and reply by email.</p></div>';
+  h += '<div class="subhero wrap"><div class="breadcrumb"><a href="/">Home</a> / <a href="/treatments/online-tongue-diagnosis">' + esc(S('back_link').replace(/^←\s*/, '')) + '</a> / ' + esc(S('title')) + '</div>';
+  h += '<h1>' + esc(S('title')) + '</h1><p class="lede">' + esc(S('lede')) + '</p>';
+  h += '<div class="ha-langs">';
+  for (const lc of ['en','nl','zh']) {
+    h += '<a href="?lang=' + lc + '"' + (lang === lc ? ' class="active"' : '') + '>' + langLabel[lc] + '</a>';
+  }
+  h += '</div></div>';
   h += '<div class="wrap section">';
   h += '<div class="ha-form">';
 
-  h += '<div class="ha-preview-banner"><strong>Preview mode.</strong> This form shows how the online tongue diagnosis application works. Submitting it does not send anything yet — email delivery and photo storage are still to be connected. To book now, please call <a href="tel:0703888111" style="color:#8a5a00;text-decoration:underline;">070 388 8111</a>.</div>';
+  h += '<div class="ha-preview-banner"><strong>' + esc(S('preview_title')) + '</strong> ' + esc(S('preview_body')) + ' <a href="tel:0703888111" style="color:#8a5a00;text-decoration:underline;">070 388 8111</a>.</div>';
 
   h += '<form id="herbal-apply-form">';
 
-  h += '<div class="ha-section"><h2>1. Your tongue photos</h2>';
-  h += '<p style="font-size:14px;color:#555;margin:0 0 12px;">Please upload three photos of your tongue taken in daylight, before brushing or drinking coffee.</p>';
-  h += '<label for="ha-photos" class="ha-file-drop"><input type="file" id="ha-photos" name="photos" multiple accept=".jpg,.jpeg,.gif,.png,.pdf"><div style="font-weight:600;color:var(--jade);">Drag files here or click to select</div><p class="hint">Accepted: jpg, gif, png, pdf. Maximum 100 MB total, maximum 3 files.</p></label>';
+  h += '<div class="ha-section"><h2>' + esc(S('section1')) + '</h2>';
+  h += '<p style="font-size:14px;color:#555;margin:0 0 12px;">' + esc(S('photo_hint')) + '</p>';
+  h += '<label for="ha-photos" class="ha-file-drop"><input type="file" id="ha-photos" name="photos" multiple accept=".jpg,.jpeg,.gif,.png,.pdf"><div style="font-weight:600;color:var(--jade);">' + esc(S('photo_drop')) + '</div><p class="hint">' + esc(S('photo_types')) + '</p></label>';
   h += '<ul class="ha-photo-list" id="ha-photo-list"></ul>';
   h += '</div>';
 
-  h += '<div class="ha-section"><h2>2. Personal details</h2>';
-  h += '<div class="ha-field"><label>First name(s) *</label><input type="text" name="first_names" required></div>';
-  h += '<div class="ha-field"><label>Surname *</label><input type="text" name="surname" required></div>';
-  h += '<div class="ha-field"><label>Date of birth *</label><input type="date" name="dob" required></div>';
-  h += '<div class="ha-field"><span class="lbl">Sex *</span><div class="ha-radio-group"><label><input type="radio" name="sex" value="f" required> Female</label><label><input type="radio" name="sex" value="m"> Male</label><label><input type="radio" name="sex" value="x"> Other / prefer not to say</label></div></div>';
-  h += '<div class="ha-field"><label>Street and house number *</label><input type="text" name="street" required></div>';
-  h += '<div class="ha-field"><label>Postcode and city *</label><input type="text" name="postcode_city" required></div>';
-  h += '<div class="ha-field"><label>Phone number *</label><input type="tel" name="phone" required></div>';
-  h += '<div class="ha-field"><label>Email address *</label><input type="email" name="email" required></div>';
-  h += '<div class="ha-field"><label>Health insurer *</label><input type="text" name="insurer" required></div>';
+  h += '<div class="ha-section"><h2>' + esc(S('section2')) + '</h2>';
+  h += '<div class="ha-field"><label>' + esc(S('first_names')) + '</label><input type="text" name="first_names" required></div>';
+  h += '<div class="ha-field"><label>' + esc(S('surname')) + '</label><input type="text" name="surname" required></div>';
+  h += '<div class="ha-field"><label>' + esc(S('dob')) + '</label><input type="date" name="dob" required></div>';
+  h += '<div class="ha-field"><span class="lbl">' + esc(S('sex')) + '</span><div class="ha-radio-group"><label><input type="radio" name="sex" value="f" required> ' + esc(S('sex_female')) + '</label><label><input type="radio" name="sex" value="m"> ' + esc(S('sex_male')) + '</label><label><input type="radio" name="sex" value="x"> ' + esc(S('sex_other')) + '</label></div></div>';
+  h += '<div class="ha-field"><label>' + esc(S('street')) + '</label><input type="text" name="street" required></div>';
+  h += '<div class="ha-field"><label>' + esc(S('postcode_city')) + '</label><input type="text" name="postcode_city" required></div>';
+  h += '<div class="ha-field"><label>' + esc(S('phone')) + '</label><input type="tel" name="phone" required></div>';
+  h += '<div class="ha-field"><label>' + esc(S('email')) + '</label><input type="email" name="email" required></div>';
+  h += '<div class="ha-field"><label>' + esc(S('insurer')) + '</label><input type="text" name="insurer" required></div>';
   h += '</div>';
 
-  h += '<div class="ha-section"><h2>3. About your complaint</h2>';
-  h += '<div class="ha-field"><label>What is your main complaint? (How long, how often, when — describe in your own words.) *</label><textarea name="main_complaint" required></textarea></div>';
-  h += '<div class="ha-field"><label>What are your secondary complaints? *</label><textarea name="secondary_complaints" required></textarea></div>';
-  h += '<div class="ha-field"><label>Has your doctor made a diagnosis? If yes, which? *</label><textarea name="diagnosis" required></textarea></div>';
-  h += '<div class="ha-field"><label>Do you use medication? If yes, which? *</label><textarea name="medication" required></textarea></div>';
+  h += '<div class="ha-section"><h2>' + esc(S('section3')) + '</h2>';
+  h += '<div class="ha-field"><label>' + esc(S('main_complaint')) + '</label><textarea name="main_complaint" required></textarea></div>';
+  h += '<div class="ha-field"><label>' + esc(S('secondary_complaints')) + '</label><textarea name="secondary_complaints" required></textarea></div>';
+  h += '<div class="ha-field"><label>' + esc(S('diagnosis')) + '</label><textarea name="diagnosis" required></textarea></div>';
+  h += '<div class="ha-field"><label>' + esc(S('medication')) + '</label><textarea name="medication" required></textarea></div>';
   h += '</div>';
 
-  h += '<div class="ha-section"><h2>4. Body function</h2>';
-  h += '<div class="ha-field"><label>Bowel movements (times per day) *</label><input type="text" name="bowel_frequency" required></div>';
-  h += '<div class="ha-field"><span class="lbl">Stool texture *</span><div class="ha-radio-group"><label><input type="radio" name="stool_texture" value="dry" required> Dry</label><label><input type="radio" name="stool_texture" value="soft"> Soft</label><label><input type="radio" name="stool_texture" value="sticky"> Sticky</label><label><input type="radio" name="stool_texture" value="mushy"> Mushy</label></div></div>';
-  h += '<div class="ha-field"><label>Sleep (hours per night) *</label><input type="text" name="sleep" required></div>';
-  h += '<div class="ha-field"><span class="lbl">Night sweats? *</span><div class="ha-radio-group"><label><input type="radio" name="night_sweats" value="yes" required> Yes</label><label><input type="radio" name="night_sweats" value="no"> No</label></div></div>';
-  h += '<div class="ha-field"><label>Menstruation (cycle, colour, texture, pain — leave blank if not applicable)</label><textarea name="menstruation"></textarea></div>';
-  h += '<div class="ha-field"><span class="lbl">Currently pregnant? *</span><div class="ha-radio-group"><label><input type="radio" name="pregnant" value="yes" required> Yes</label><label><input type="radio" name="pregnant" value="no"> No</label></div></div>';
-  h += '<div class="ha-field"><span class="lbl">Breastfeeding? *</span><div class="ha-radio-group"><label><input type="radio" name="breastfeeding" value="yes" required> Yes</label><label><input type="radio" name="breastfeeding" value="no"> No</label></div></div>';
-  h += '<div class="ha-field"><label>Other comments</label><textarea name="other"></textarea></div>';
+  h += '<div class="ha-section"><h2>' + esc(S('section4')) + '</h2>';
+  h += '<div class="ha-field"><label>' + esc(S('bowel_frequency')) + '</label><input type="text" name="bowel_frequency" required></div>';
+  h += '<div class="ha-field"><span class="lbl">' + esc(S('stool_texture')) + '</span><div class="ha-radio-group"><label><input type="radio" name="stool_texture" value="dry" required> ' + esc(S('stool_dry')) + '</label><label><input type="radio" name="stool_texture" value="soft"> ' + esc(S('stool_soft')) + '</label><label><input type="radio" name="stool_texture" value="sticky"> ' + esc(S('stool_sticky')) + '</label><label><input type="radio" name="stool_texture" value="mushy"> ' + esc(S('stool_mushy')) + '</label></div></div>';
+  h += '<div class="ha-field"><label>' + esc(S('sleep')) + '</label><input type="text" name="sleep" required></div>';
+  h += '<div class="ha-field"><span class="lbl">' + esc(S('night_sweats')) + '</span><div class="ha-radio-group"><label><input type="radio" name="night_sweats" value="yes" required> ' + esc(S('yes')) + '</label><label><input type="radio" name="night_sweats" value="no"> ' + esc(S('no')) + '</label></div></div>';
+  h += '<div class="ha-field"><label>' + esc(S('menstruation')) + '</label><textarea name="menstruation"></textarea></div>';
+  h += '<div class="ha-field"><span class="lbl">' + esc(S('pregnant')) + '</span><div class="ha-radio-group"><label><input type="radio" name="pregnant" value="yes" required> ' + esc(S('yes')) + '</label><label><input type="radio" name="pregnant" value="no"> ' + esc(S('no')) + '</label></div></div>';
+  h += '<div class="ha-field"><span class="lbl">' + esc(S('breastfeeding')) + '</span><div class="ha-radio-group"><label><input type="radio" name="breastfeeding" value="yes" required> ' + esc(S('yes')) + '</label><label><input type="radio" name="breastfeeding" value="no"> ' + esc(S('no')) + '</label></div></div>';
+  h += '<div class="ha-field"><label>' + esc(S('other')) + '</label><textarea name="other"></textarea></div>';
   h += '</div>';
 
-  h += '<label class="ha-consent"><input type="checkbox" name="consent" required><span>I consent to MC Balans processing the health information I have entered above for the purpose of assessing my request. *</span></label>';
-
-  h += '<div><button type="submit" class="ha-submit">Submit application</button></div>';
+  h += '<label class="ha-consent"><input type="checkbox" name="consent" required><span>' + esc(S('consent')) + '</span></label>';
+  h += '<div><button type="submit" class="ha-submit">' + esc(S('submit')) + '</button></div>';
 
   h += '</form>';
   h += '</div></div>';
 
-  h += '<script>(function(){' +
-    'var form=document.getElementById("herbal-apply-form");' +
-    'var photos=document.getElementById("ha-photos");' +
-    'var list=document.getElementById("ha-photo-list");' +
-    'photos.addEventListener("change",function(e){' +
-      'list.innerHTML="";' +
-      'for(var i=0;i<e.target.files.length;i++){' +
-        'var f=e.target.files[i];' +
-        'var li=document.createElement("li");' +
-        'li.textContent=f.name+" ("+Math.round(f.size/1024)+" KB)";' +
-        'list.appendChild(li);' +
-      '}' +
-    '});' +
-    'form.addEventListener("submit",function(e){' +
-      'e.preventDefault();' +
-      'alert("Preview mode: submission is not enabled yet. Please call 070 388 8111 to book, or ask Lorenzo to enable the form.");' +
-    '});' +
-  '})();</script>';
+  h += '<script>(function(){var f=document.getElementById("herbal-apply-form");var p=document.getElementById("ha-photos");var l=document.getElementById("ha-photo-list");p.addEventListener("change",function(e){l.innerHTML="";for(var i=0;i<e.target.files.length;i++){var x=e.target.files[i];var li=document.createElement("li");li.textContent=x.name+" ("+Math.round(x.size/1024)+" KB)";l.appendChild(li);}});f.addEventListener("submit",function(e){e.preventDefault();alert("Preview mode: submission is not enabled yet.");});})();</script>';
 
   return h;
 }
 
-app.get('/herbal-service/apply', (req, res) => {
-  res.send(renderPage(buildSeoHead({
-    title: 'Online Tongue Diagnosis — Application | MC Balans',
-    description: 'Apply for an online tongue diagnosis with Dr. Lin. Upload three tongue photos and answer a short questionnaire.',
-    canonical: SITE_URL + '/herbal-service/apply'
-  }), renderHerbalApplyBody()));
+app.get('/herbal-service/apply', async (req, res) => {
+  const lang = (req.query.lang && ['nl','zh'].includes(String(req.query.lang))) ? String(req.query.lang) : 'en';
+  try {
+    const overrides = await fetchHerbalStrings(lang);
+    res.send(renderPage(buildSeoHead({
+      title: 'Online Tongue Diagnosis — Application | MC Balans',
+      description: 'Apply for an online tongue diagnosis with Dr. Lin. Upload three tongue photos and answer a short questionnaire.',
+      canonical: SITE_URL + '/herbal-service/apply'
+    }), renderHerbalApplyBody(lang, overrides)));
+  } catch (e) { console.error(e); res.status(500).send('Error'); }
 });
 
 app.get('*', (req, res) => {
