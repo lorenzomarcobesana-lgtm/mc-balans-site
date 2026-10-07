@@ -298,6 +298,7 @@ function navigateTo(url){history.pushState({},'',url);route();}
 function route(){
 try{
 const p=location.pathname;
+if(p==='/herbal-service/apply')return;
 if(p==='/')renderHome();
 else if(p==='/conditions')renderConditions();
 else if(p.startsWith('/conditions/'))renderCondition(p.split('/')[2]);
