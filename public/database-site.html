@@ -491,7 +491,7 @@ data.conditions.forEach(c=>{html+=`<span class="chip" onclick="navigateTo('/cond
 }else{html+='<span class="chip">Pending</span>';}
 html+='</div></div>';
 
-html+='<a class="btn btn-primary" style="width:100%;justify-content:center;display:inline-flex;" href="'+(slug==='online-tongue-diagnosis'?'#':'tel:+31703888111')+'">'+(slug==='online-tongue-diagnosis'?'Intake Survey':'Call to Book')+'</a>';
+html+='<a class="btn btn-primary" style="width:100%;justify-content:center;display:inline-flex;" href="'+(slug==='online-tongue-diagnosis'?'/herbal-service/apply':'tel:+31703888111')+'">'+(slug==='online-tongue-diagnosis'?'Intake Survey':'Call to Book')+'</a>';
 html+='</div></div>';
 app.innerHTML=tr(html);
 }catch(e){app.innerHTML='<div class="error">Treatment error: '+e.message+'</div>';}
