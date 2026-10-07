@@ -730,52 +730,155 @@ app.get('/treatments/:slug', async (req, res) => {
   }
 });
 
-app.get('/about', (req, res) => {
-  res.send(renderPage(buildSeoHead({
-    title: 'About MC Balans — Dr. Wenzhi Lin & Team',
-    description: 'Meet the team, see the clinic, check pricing, or read about our approach to Western and Traditional Chinese Medicine in The Hague.',
-    canonical: SITE_URL + '/about'
-  }), ''));
+// ---------- SSR bodies: About group, Resources, Contact ----------
+function renderContactBody() {
+  return '<div class="subhero wrap"><div class="breadcrumb"><a href="/">Home</a> / Contact</div><h1>Book an appointment</h1></div><div class="wrap section"><p>Phone: 070 388 8111</p><p>Email: info@mcbalans.nl</p><p>Mon-Fri, 9:30-17:00</p></div>';
+}
+
+function renderResourcesBody(resources) {
+  let h = '<div class="subhero wrap"><div class="breadcrumb"><a href="/">Home</a> / Resources</div><h1>Resources</h1><p class="lede">Articles, columns and resources from MC Balans.</p></div><section class="section"><div class="wrap">';
+  if (!resources || resources.length === 0) {
+    h += '<div class="placeholder-box">Content pending</div>';
+  } else {
+    for (const r of resources) {
+      const url = r.external_url || r.canonical_url || '#';
+      const meta = [r.publication_name, r.publication_date ? String(r.publication_date).slice(0,10) : null].filter(Boolean).join(' \u00b7 ');
+      h += '<div class="resource-card" style="margin-bottom:16px;"><div class="rc-text"><span class="resource-badge">' + esc((r.entry_type||'').replace(/_/g,' ')) + '</span><h4>' + esc(r.title||r.id) + '</h4><p>' + esc(r.description||'') + '</p></div>' + (meta ? '<div class="rc-meta">' + esc(meta) + '</div>' : '') + '<a class="btn btn-outline" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">Read \u2192</a></div>';
+    }
+  }
+  h += '</div></section>';
+  return h;
+}
+
+function renderAboutBody(practitioners, prices, philosophy, activeTab) {
+  const tabMeta = {
+    ourteam: {h1:'About MC Balans', lede:'Meet the team, see the clinic, check pricing, or read about our approach.'},
+    ourclinic: {h1:'Our Clinic', lede:'The space where we see patients, in The Hague.'},
+    pricing: {h1:'Pricing', lede:'What consultations and treatments cost.'},
+    philosophy: {h1:'Our Philosophy', lede:'How MC Balans approaches medicine, assessment and treatment.'}
+  };
+  const tm = tabMeta[activeTab] || tabMeta.ourteam;
+  const tabList = [{k:'ourteam',l:'Our Team'},{k:'ourclinic',l:'Our Clinic'},{k:'pricing',l:'Pricing'},{k:'philosophy',l:'Philosophy'}];
+  let tabsHtml = '';
+  for (const x of tabList) tabsHtml += '<div class="about-tab' + (x.k===activeTab?' active':'') + '" data-tab="' + x.k + '">' + x.l + '</div>';
+  let h = '<div class="subhero wrap"><div class="breadcrumb"><a href="/">Home</a> / <a href="/about">About</a></div><h1>' + esc(tm.h1) + '</h1><p class="lede">' + esc(tm.lede) + '</p><div class="about-tabs">' + tabsHtml + '</div></div><section class="section"><div class="wrap">';
+
+  h += '<div class="about-panel' + (activeTab==='ourteam'?' active':'') + '" id="panel-ourteam"><div class="section-head"><h2>Our Team</h2></div><div class="team-grid">';
+  for (const m of (practitioners||[])) {
+    const name = m.email ? m.email.split('@')[0] : m.id;
+    const roles = m.display_role || (Array.isArray(m.roles) ? m.roles.join(', ') : String(m.roles||'').replace(/[{}]/g,'').split(',').map(r => r.trim().replace(/_/g,' ')).join(', '));
+    const isLin = (m.display_role||'').toLowerCase().includes('head') || name.toLowerCase().includes('lin');
+    h += '<div class="team-card"><div class="team-photo"><span>PHOTO</span></div><div class="team-info"><h4>' + esc(name) + '</h4><div class="role">' + esc(roles) + '</div><p>' + esc(m.email||'') + '</p>' + (isLin ? '<a class="profile-link" href="/resources">Read her Medisch Dossier column \u2192</a>' : '') + '</div></div>';
+  }
+  h += '</div></div>';
+
+  h += '<div class="about-panel' + (activeTab==='ourclinic'?' active':'') + '" id="panel-ourclinic"><div class="section-head"><h2>Our Clinic</h2></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;"><div class="placeholder-box">Clinic photo 1</div><div class="placeholder-box">Clinic photo 2</div></div><p style="margin-top:24px;color:var(--stone);">Our clinic is located in The Hague. We offer a calm, professional environment for your care.</p></div>';
+
+  h += '<div class="about-panel' + (activeTab==='pricing'?' active':'') + '" id="panel-pricing"><div class="section-head"><h2>Pricing</h2><p>At MC Balans you pay per consultation or per treatment. The number and type of treatments depend on your individual assessment and how you respond to treatment. Your practitioner will discuss this with you after your first consultation.</p></div><div class="pricing-summary">';
+  if (prices && prices.length) {
+    const labels = {consultations:'Consultations',treatments:'Treatments',herbal:'Chinese herbal medicine',additional:'Additional treatments'};
+    for (const p of prices) {
+      const label = labels[p.pricing_group] || p.pricing_group;
+      h += '<div class="pricing-row"><span class="pricing-label">' + esc(label) + '</span><span class="pricing-amount">from ' + esc(p.currency||'\u20ac') + esc(p.amount) + '</span></div>';
+    }
+  } else {
+    h += '<div class="placeholder-box">Pricing information pending</div>';
+  }
+  h += '</div><p style="margin-top:24px;color:var(--stone);font-size:14px;">Most treatments are covered under supplementary insurance (aanvullende verzekering). Whether and how much is reimbursed depends on your individual policy. We can help you check your coverage.</p></div>';
+
+  const ph = philosophy || {};
+  h += '<div class="about-panel' + (activeTab==='philosophy'?' active':'') + '" id="panel-philosophy"><div class="section-head"><h2>Our Philosophy</h2></div><div style="margin-top:24px;"><h3 style="font-size:16px;margin:0 0 8px;">' + esc(ph.philosophy_purpose_h||'Our Purpose') + '</h3><p style="margin:0;">' + esc(ph.philosophy_purpose||'') + '</p></div><div style="margin-top:28px;"><h3 style="font-size:16px;margin:0 0 8px;">' + esc(ph.philosophy_vision_h||'Our Vision') + '</h3><p style="margin:0;">' + esc(ph.philosophy_vision||'') + '</p></div><div style="margin-top:28px;"><h3 style="font-size:16px;margin:0 0 8px;">' + esc(ph.philosophy_mission_h||'Our Mission') + '</h3><p style="margin:0;">' + esc(ph.philosophy_mission||'') + '</p></div></div>';
+
+  h += '</div></section>';
+  return h;
+}
+
+async function fetchAboutData() {
+  const [team, prices, philosophyRows] = await Promise.all([
+    pool.query('SELECT id, email, roles, display_role, credentials, languages_spoken, photo_url, quote, experience_years FROM practitioners ORDER BY id'),
+    pool.query(`SELECT DISTINCT ON (pricing_group) pricing_group, currency, amount FROM price_tiers WHERE show_on_pricing_page = true AND pricing_group IS NOT NULL ORDER BY pricing_group, amount`),
+    pool.query(`SELECT string_key, value FROM ui_strings WHERE locale = 'en' AND string_key LIKE 'philosophy_%'`)
+  ]);
+  const philosophy = {};
+  for (const r of philosophyRows.rows) philosophy[r.string_key] = r.value;
+  return { practitioners: team.rows, prices: prices.rows, philosophy };
+}
+
+async function fetchResources() {
+  const r = await pool.query(`
+    SELECT r.id, r.entry_type, r.publication_name, r.publication_date,
+           r.canonical_url, r.external_url, r.sort_order,
+           COALESCE((SELECT value FROM translations WHERE resource_id = r.id AND field_name = 'title' AND locale = 'en' LIMIT 1), r.title) AS title,
+           COALESCE((SELECT value FROM translations WHERE resource_id = r.id AND field_name = 'description' AND locale = 'en' LIMIT 1), r.description) AS description
+    FROM resources r ORDER BY r.sort_order NULLS LAST, r.id
+  `);
+  return r.rows;
+}
+
+app.get('/about', async (req, res) => {
+  try {
+    const d = await fetchAboutData();
+    res.send(renderPage(buildSeoHead({
+      title: 'About MC Balans — Dr. Wenzhi Lin & Team',
+      description: 'Meet the team, see the clinic, check pricing, or read about our approach to Western and Traditional Chinese Medicine in The Hague.',
+      canonical: SITE_URL + '/about'
+    }), renderAboutBody(d.practitioners, d.prices, d.philosophy, 'ourteam')));
+  } catch (e) { console.error(e); res.status(500).send('Error'); }
 });
 
-app.get('/about/team', (req, res) => {
-  res.send(renderPage(buildSeoHead({
-    title: 'Our Team — MC Balans',
-    description: 'Meet the MC Balans team, led by Dr. Wenzhi Lin, licensed medical doctor with over 40 years of dual training in Western and Chinese medicine.',
-    canonical: SITE_URL + '/about/team'
-  }), ''));
+app.get('/about/team', async (req, res) => {
+  try {
+    const d = await fetchAboutData();
+    res.send(renderPage(buildSeoHead({
+      title: 'Our Team — MC Balans',
+      description: 'Meet the MC Balans team, led by Dr. Wenzhi Lin, licensed medical doctor with over 40 years of dual training in Western and Chinese medicine.',
+      canonical: SITE_URL + '/about/team'
+    }), renderAboutBody(d.practitioners, d.prices, d.philosophy, 'ourteam')));
+  } catch (e) { console.error(e); res.status(500).send('Error'); }
 });
 
-app.get('/about/clinic', (req, res) => {
-  res.send(renderPage(buildSeoHead({
-    title: 'Our Clinic — MC Balans, The Hague',
-    description: 'The MC Balans clinic in The Hague: treatment rooms, consultation rooms and Chinese herbal dispensary.',
-    canonical: SITE_URL + '/about/clinic'
-  }), ''));
+app.get('/about/clinic', async (req, res) => {
+  try {
+    const d = await fetchAboutData();
+    res.send(renderPage(buildSeoHead({
+      title: 'Our Clinic — MC Balans, The Hague',
+      description: 'The MC Balans clinic in The Hague: treatment rooms, consultation rooms and Chinese herbal dispensary.',
+      canonical: SITE_URL + '/about/clinic'
+    }), renderAboutBody(d.practitioners, d.prices, d.philosophy, 'ourclinic')));
+  } catch (e) { console.error(e); res.status(500).send('Error'); }
 });
 
-app.get('/about/philosophy', (req, res) => {
-  res.send(renderPage(buildSeoHead({
-    title: 'Our Philosophy — MC Balans',
-    description: 'How MC Balans approaches medicine: conventional assessment first, then structural, functional and regulatory analysis, with Traditional Chinese Medicine where relevant.',
-    canonical: SITE_URL + '/about/philosophy'
-  }), ''));
+app.get('/about/philosophy', async (req, res) => {
+  try {
+    const d = await fetchAboutData();
+    res.send(renderPage(buildSeoHead({
+      title: 'Our Philosophy — MC Balans',
+      description: 'How MC Balans approaches medicine: conventional assessment first, then structural, functional and regulatory analysis, with Traditional Chinese Medicine where relevant.',
+      canonical: SITE_URL + '/about/philosophy'
+    }), renderAboutBody(d.practitioners, d.prices, d.philosophy, 'philosophy')));
+  } catch (e) { console.error(e); res.status(500).send('Error'); }
 });
 
-app.get('/prices', (req, res) => {
-  res.send(renderPage(buildSeoHead({
-    title: 'Pricing — MC Balans',
-    description: 'Consultation and treatment pricing at MC Balans, The Hague. Most treatments are reimbursed through supplementary insurance.',
-    canonical: SITE_URL + '/prices'
-  }), ''));
+app.get('/prices', async (req, res) => {
+  try {
+    const d = await fetchAboutData();
+    res.send(renderPage(buildSeoHead({
+      title: 'Pricing — MC Balans',
+      description: 'Consultation and treatment pricing at MC Balans, The Hague. Most treatments are reimbursed through supplementary insurance.',
+      canonical: SITE_URL + '/prices'
+    }), renderAboutBody(d.practitioners, d.prices, d.philosophy, 'pricing')));
+  } catch (e) { console.error(e); res.status(500).send('Error'); }
 });
 
-app.get('/resources', (req, res) => {
-  res.send(renderPage(buildSeoHead({
-    title: 'Resources — Medisch Dossier column | MC Balans',
-    description: 'Articles and columns by Dr. Lin from Medisch Dossier, cross-linked to the conditions and treatments they cover.',
-    canonical: SITE_URL + '/resources'
-  }), ''));
+app.get('/resources', async (req, res) => {
+  try {
+    const resources = await fetchResources();
+    res.send(renderPage(buildSeoHead({
+      title: 'Resources — Medisch Dossier column | MC Balans',
+      description: 'Articles and columns by Dr. Lin from Medisch Dossier, cross-linked to the conditions and treatments they cover.',
+      canonical: SITE_URL + '/resources'
+    }), renderResourcesBody(resources)));
+  } catch (e) { console.error(e); res.status(500).send('Error'); }
 });
 
 app.get('/contact', (req, res) => {
@@ -783,7 +886,7 @@ app.get('/contact', (req, res) => {
     title: 'Contact — Book an appointment | MC Balans',
     description: 'Call 070 388 8111 or email info@mcbalans.nl. Open Monday to Friday, 9:30–17:00.',
     canonical: SITE_URL + '/contact'
-  }), ''));
+  }), renderContactBody()));
 });
 
 // ---------- API: RESOURCES ----------
