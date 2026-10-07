@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('consent', 'default', {
+  'analytics_storage': 'denied',
+  'ad_storage': 'denied',
+  'ad_user_data': 'denied',
+  'ad_personalization': 'denied',
+  'wait_for_update': 500
+});
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!--SEO_HEAD-->
@@ -724,5 +736,140 @@ function tr(html){
   return html;
 }
 </script>
+<div id="cookie-banner" style="display:none; position:fixed; bottom:0; left:0; right:0; background:#1a1a1a; color:#fff; padding:20px; z-index:9999; font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif; font-size:14px; line-height:1.5;">
+  <div style="max-width:1180px; margin:0 auto; display:flex; flex-wrap:wrap; gap:16px; align-items:center;">
+    <div style="flex:1; min-width:280px;">
+      <p style="margin:0 0 8px; font-weight:600;">We use cookies</p>
+      <p style="margin:0; color:#ccc;">We use analytics cookies to understand how visitors use our site. You can accept, reject, or manage your preferences.</p>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button id="cookie-accept" style="background:#2b6e5c; color:#fff; border:none; padding:10px 20px; border-radius:4px; cursor:pointer; font-size:14px; font-weight:600;">Accept all</button>
+      <button id="cookie-reject" style="background:transparent; color:#fff; border:1px solid #555; padding:10px 20px; border-radius:4px; cursor:pointer; font-size:14px;">Reject all</button>
+      <button id="cookie-settings" style="background:transparent; color:#fff; border:1px solid #555; padding:10px 20px; border-radius:4px; cursor:pointer; font-size:14px;">Settings</button>
+    </div>
+  </div>
+</div>
+
+<div id="cookie-settings-panel" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; color:#1a1a1a; max-width:480px; width:100%; border-radius:8px; padding:28px; font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;">
+    <h3 style="margin:0 0 16px; font-size:18px;">Cookie settings</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #e0e0e0;">
+      <div>
+        <div style="font-weight:600;">Strictly necessary</div>
+        <div style="font-size:13px; color:#666;">Required for the site to function.</div>
+      </div>
+      <span style="color:#2b6e5c; font-size:13px;">Always on</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #e0e0e0;">
+      <div>
+        <div style="font-weight:600;">Analytics</div>
+        <div style="font-size:13px; color:#666;">Helps us understand how visitors use the site.</div>
+      </div>
+      <label style="display:flex; align-items:center; cursor:pointer;">
+        <input type="checkbox" id="cookie-analytics-toggle" style="width:18px; height:18px;">
+      </label>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
+      <button id="cookie-settings-save" style="background:#2b6e5c; color:#fff; border:none; padding:10px 22px; border-radius:4px; cursor:pointer; font-size:14px; font-weight:600;">Save preferences</button>
+      <button id="cookie-settings-cancel" style="background:transparent; color:#1a1a1a; border:1px solid #ccc; padding:10px 22px; border-radius:4px; cursor:pointer; font-size:14px;">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var COOKIE_NAME = 'cookie_consent';
+  var COOKIE_DAYS = 365;
+
+  function getCookie(name) {
+    var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? match[2] : null;
+  }
+
+  function setCookie(name, value, days) {
+    var expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/; SameSite=Lax';
+  }
+
+  function applyConsent(analytics) {
+    if (analytics) {
+      gtag('consent', 'update', {
+        'analytics_storage': 'granted',
+        'ad_storage': 'granted',
+        'ad_user_data': 'granted',
+        'ad_personalization': 'granted'
+      });
+    } else {
+      gtag('consent', 'update', {
+        'analytics_storage': 'denied',
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied'
+      });
+    }
+  }
+
+  function hideBanner() {
+    document.getElementById('cookie-banner').style.display = 'none';
+  }
+
+  function showBanner() {
+    document.getElementById('cookie-banner').style.display = 'block';
+  }
+
+  function init() {
+    var stored = getCookie(COOKIE_NAME);
+    if (stored) {
+      try {
+        var prefs = JSON.parse(stored);
+        applyConsent(prefs.analytics === true);
+        hideBanner();
+      } catch (e) {
+        showBanner();
+      }
+    } else {
+      showBanner();
+    }
+  }
+
+  document.getElementById('cookie-accept').addEventListener('click', function() {
+    setCookie(COOKIE_NAME, JSON.stringify({ analytics: true, necessary: true }), COOKIE_DAYS);
+    applyConsent(true);
+    hideBanner();
+  });
+
+  document.getElementById('cookie-reject').addEventListener('click', function() {
+    setCookie(COOKIE_NAME, JSON.stringify({ analytics: false, necessary: true }), COOKIE_DAYS);
+    applyConsent(false);
+    hideBanner();
+  });
+
+  document.getElementById('cookie-settings').addEventListener('click', function() {
+    var stored = getCookie(COOKIE_NAME);
+    if (stored) {
+      try {
+        var prefs = JSON.parse(stored);
+        document.getElementById('cookie-analytics-toggle').checked = prefs.analytics === true;
+      } catch (e) {}
+    }
+    document.getElementById('cookie-settings-panel').style.display = 'flex';
+  });
+
+  document.getElementById('cookie-settings-cancel').addEventListener('click', function() {
+    document.getElementById('cookie-settings-panel').style.display = 'none';
+  });
+
+  document.getElementById('cookie-settings-save').addEventListener('click', function() {
+    var analytics = document.getElementById('cookie-analytics-toggle').checked;
+    setCookie(COOKIE_NAME, JSON.stringify({ analytics: analytics, necessary: true }), COOKIE_DAYS);
+    applyConsent(analytics);
+    document.getElementById('cookie-settings-panel').style.display = 'none';
+    hideBanner();
+  });
+
+  init();
+})();
+</script>
+
 </body>
 </html>
