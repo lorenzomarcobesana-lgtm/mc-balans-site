@@ -160,6 +160,27 @@
   </div>
 </div>
 
+<div id="treatmentModalBackdrop" class="hidden">
+  <div id="modal">
+    <h2>New treatment</h2>
+    <p class="hint">Creates a new treatment with empty body fields. Pick it from the dropdown afterwards to fill in the content.</p>
+    <form id="createTreatmentForm">
+      <label><strong>Name</strong><input type="text" name="name" required autofocus></label>
+      <label><strong>Slug</strong><input type="text" name="slug" required placeholder="auto-generated from name"></label>
+      <label><strong>Author</strong><select name="author_id" required><option value="">Loading…</option></select></label>
+      <label><strong>Medical reviewer</strong><select name="medical_reviewer_id"><option value="">— same as author —</option></select></label>
+      <label><strong>Duration</strong><input type="text" name="duration" placeholder="e.g. 15-45 min"></label>
+      <label><strong>Parent treatment</strong><select name="parent_treatment_id"><option value="">— none (top-level treatment) —</option></select></label>
+      <label><strong>Status</strong><select name="status"><option value="draft">draft</option><option value="in_review">in_review</option><option value="medically_reviewed">medically_reviewed</option><option value="approved">approved</option><option value="published">published</option><option value="archived">archived</option></select></label>
+      <div class="modal-actions">
+        <button type="submit" class="primary">Create</button>
+        <button type="button" id="cancelTreatmentBtn" class="secondary">Cancel</button>
+        <span class="status" id="treatmentModalStatus"></span>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 const HIDDEN = {
   conditions: new Set(['id','slug','created_at','updated_at','category_id','author_id','medical_reviewer_id','search_vector','ai_summary']),
@@ -249,7 +270,8 @@ async function selectTab(tableKey) {
   currentTable = tableKey;
   form.style.display = 'none';
   statusEl.textContent = '';
-  newBtn.classList.toggle('hidden', tableKey !== 'conditions');
+  newBtn.classList.toggle('hidden', tableKey !== 'conditions' && tableKey !== 'treatments');
+  newBtn.textContent = tableKey === 'treatments' ? '+ New treatment' : '+ New condition';
   picker.innerHTML = '<option>Loading…</option>';
   const r = await fetch('/admin/api/list/' + tableKey);
   if (!r.ok) { picker.innerHTML = '<option>Error</option>'; return; }
@@ -325,14 +347,6 @@ async function loadMeta() {
   authSel.innerHTML = '<option value="">— pick an author —</option>' + pracOpts;
   revSel.innerHTML = '<option value="">— same as author —</option>' + pracOpts;
 }
-
-newBtn.addEventListener('click', async () => {
-  if (!meta) await loadMeta();
-  createForm.reset();
-  modalStatus.textContent = ''; modalStatus.className = 'status';
-  backdrop.classList.remove('hidden');
-  createForm.querySelector('[name="name"]').focus();
-});
 
 document.getElementById('cancelBtn').addEventListener('click', () => {
   backdrop.classList.add('hidden');
@@ -461,6 +475,83 @@ function esc(s) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
+
+// ---------- New treatment modal ----------
+const treatmentBackdrop = document.getElementById('treatmentModalBackdrop');
+const createTreatmentForm = document.getElementById('createTreatmentForm');
+const treatmentModalStatus = document.getElementById('treatmentModalStatus');
+
+async function loadTreatmentMeta() {
+  const [metaR, listR] = await Promise.all([
+    fetch('/admin/api/meta'),
+    fetch('/admin/api/treatments-list')
+  ]);
+  if (!metaR.ok || !listR.ok) return;
+  const metaData = await metaR.json();
+  const treatments = await listR.json();
+  const authSel = createTreatmentForm.querySelector('[name="author_id"]');
+  const revSel = createTreatmentForm.querySelector('[name="medical_reviewer_id"]');
+  const parSel = createTreatmentForm.querySelector('[name="parent_treatment_id"]');
+  const pracOpts = metaData.practitioners.map(p => '<option value="' + esc(p.id) + '">' + esc(p.id + (p.role ? ' — ' + p.role : '')) + '</option>').join('');
+  authSel.innerHTML = '<option value="">— pick an author —</option>' + pracOpts;
+  revSel.innerHTML = '<option value="">— same as author —</option>' + pracOpts;
+  parSel.innerHTML = '<option value="">— none (top-level treatment) —</option>' +
+    treatments.map(t => '<option value="' + esc(t.id) + '">' + esc(t.id + ' — ' + t.name) + '</option>').join('');
+}
+
+newBtn.addEventListener('click', async () => {
+  if (currentTable === 'treatments') {
+    await loadTreatmentMeta();
+    createTreatmentForm.reset();
+    treatmentModalStatus.textContent = ''; treatmentModalStatus.className = 'status';
+    treatmentBackdrop.classList.remove('hidden');
+    createTreatmentForm.querySelector('[name="name"]').focus();
+  } else if (currentTable === 'conditions') {
+    if (!meta) await loadMeta();
+    createForm.reset();
+    modalStatus.textContent = ''; modalStatus.className = 'status';
+    backdrop.classList.remove('hidden');
+    createForm.querySelector('[name="name"]').focus();
+  }
+});
+
+document.getElementById('cancelTreatmentBtn').addEventListener('click', () => {
+  treatmentBackdrop.classList.add('hidden');
+});
+treatmentBackdrop.addEventListener('click', (e) => {
+  if (e.target === treatmentBackdrop) treatmentBackdrop.classList.add('hidden');
+});
+
+createTreatmentForm.querySelector('[name="name"]').addEventListener('input', (e) => {
+  const slugField = createTreatmentForm.querySelector('[name="slug"]');
+  if (!slugField.dataset.touched) slugField.value = slugify(e.target.value);
+});
+createTreatmentForm.querySelector('[name="slug"]').addEventListener('input', (e) => {
+  e.target.dataset.touched = '1';
+});
+
+createTreatmentForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  treatmentModalStatus.textContent = 'Creating…'; treatmentModalStatus.className = 'status';
+  const body = {};
+  for (const el of createTreatmentForm.querySelectorAll('input, select')) body[el.name] = el.value;
+  try {
+    const r = await fetch('/admin/api/treatments/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const out = await r.json();
+    if (!r.ok) throw new Error(out.error || 'Create failed');
+    treatmentBackdrop.classList.add('hidden');
+    await selectTab('treatments');
+    picker.value = out.slug;
+    await loadRow(out.slug);
+    statusEl.textContent = 'Created ' + out.id; statusEl.className = 'status ok';
+  } catch (err) {
+    treatmentModalStatus.textContent = 'Error: ' + err.message; treatmentModalStatus.className = 'status err';
+  }
+});
 
 // ---------- Relations panel ----------
 const relCondition = document.getElementById('relCondition');
