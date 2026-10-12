@@ -1170,10 +1170,11 @@ app.get('/api/site-settings-public', async (req, res) => {
 });
 
 app.get('*', (req, res) => {
-  res.send(renderPage(buildSeoHead({
-    title: 'MC Balans', description: 'MC Balans — Western & Traditional Chinese Medicine, The Hague.',
+  res.status(404).send(renderPage(buildSeoHead({
+    title: 'Page not found — MC Balans',
+    description: 'The page you are looking for does not exist.',
     canonical: SITE_URL + req.path
-  }), ''));
+  }), '<div class="subhero wrap" style="text-align:center;"><h1>Page not found</h1><p class="lede">The page you are looking for doesn\'t exist or has moved.</p><p style="margin-top:24px;"><a class="btn btn-primary" href="/">Back to homepage</a> &nbsp; <a class="btn" href="/conditions" style="border:1px solid var(--line);padding:12px 24px;border-radius:4px;text-decoration:none;color:inherit;">View conditions</a></p></div>'));
 });
 
 app.listen(port, () => { console.log(`MC Balans running on port ${port}`); });
