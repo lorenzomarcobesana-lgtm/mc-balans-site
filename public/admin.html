@@ -47,6 +47,25 @@
   .rel-row .rel-num-input { width:60px; font-size:13px; padding:6px 8px; border:1px solid var(--line); border-radius:3px; }
   .rel-row .rel-move { background:none; border:1px solid var(--line); border-radius:3px; padding:4px 8px; cursor:pointer; font-size:13px; }
   .rel-row .rel-remove { background:none; border:none; color:#b00; cursor:pointer; font-size:16px; padding:4px 8px; }
+  .media-drop { border:2px dashed #ccc; border-radius:8px; padding:36px; text-align:center; background:#fff; cursor:pointer; margin-top:16px; }
+  .media-drop:hover, .media-drop.dragover { border-color:var(--jade); background:#f0f7f4; }
+  .media-drop input { display:none; }
+  .media-drop .md-title { font-weight:600; color:var(--jade); font-size:15px; }
+  .media-drop .md-hint { font-size:13px; color:#888; margin-top:6px; }
+  .media-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px; margin-top:24px; }
+  .media-card { background:#fff; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+  .media-card .mc-img { aspect-ratio:1; background:#f4f4f4; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .media-card .mc-img img { max-width:100%; max-height:100%; object-fit:cover; }
+  .media-card .mc-body { padding:12px; font-size:13px; }
+  .media-card .mc-name { font-weight:600; word-break:break-all; margin-bottom:4px; }
+  .media-card .mc-meta { color:#888; font-size:12px; margin-bottom:8px; }
+  .media-card .mc-url { display:flex; gap:4px; margin-bottom:8px; }
+  .media-card .mc-url input { font-size:11px; padding:4px 6px; font-family:ui-monospace,Menlo,monospace; }
+  .media-card .mc-alt { font-size:12px; padding:4px 6px; margin-bottom:6px; }
+  .media-card .mc-actions { display:flex; gap:6px; }
+  .media-card button { font-size:12px; padding:4px 8px; border-radius:3px; cursor:pointer; border:1px solid var(--line); background:#fff; }
+  .media-card button.mc-copy { background:var(--jade); color:#fff; border-color:var(--jade); }
+  .media-card button.mc-del { color:#b00; }
 </style>
 </head>
 <body>
@@ -138,6 +157,16 @@
       </div>
     </div>
   </div>
+  <div id="mediaPanel" class="hidden">
+    <label for="media-file" class="media-drop" id="media-drop">
+      <input type="file" id="media-file" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+      <div class="md-title">Drag images here or click to select</div>
+      <div class="md-hint">JPEG, PNG, WebP, GIF. Up to 15 MB each. Resized automatically to 2000 px.</div>
+    </label>
+    <div id="media-upload-status" class="status" style="margin-top:12px;"></div>
+    <div id="media-grid" class="media-grid"></div>
+  </div>
+
 </main>
 
 <div id="modal-backdrop" class="hidden">
@@ -194,6 +223,7 @@ const tabsEl = document.getElementById('tabs');
 const normalPanel = document.getElementById('normalPanel');
 const translationsPanel = document.getElementById('translationsPanel');
 const relationsPanel = document.getElementById('relationsPanel');
+const mediaPanel = document.getElementById('mediaPanel');
 const picker = document.getElementById('picker');
 const form = document.getElementById('form');
 const fieldsEl = document.getElementById('fields');
@@ -229,7 +259,8 @@ async function loadTabs() {
   const tables = await r.json();
   tabsEl.innerHTML = tables.map(t => '<button data-tab="' + t.key + '">' + esc(t.label) + '</button>').join('')
     + '<button data-tab="__translations__">Translations</button>'
-    + '<button data-tab="__relations__">Relations</button>';
+    + '<button data-tab="__relations__">Relations</button>'
+    + '<button data-tab="__media__">Media</button>';
   tabsEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => selectTab(b.dataset.tab)));
   selectTab(tables[0].key);
 }
@@ -254,6 +285,7 @@ async function selectTab(tableKey) {
     normalPanel.classList.add('hidden');
     translationsPanel.classList.remove('hidden');
     relationsPanel.classList.add('hidden');
+    mediaPanel.classList.add('hidden');
     await loadTransPicker();
     return;
   }
@@ -261,12 +293,22 @@ async function selectTab(tableKey) {
     normalPanel.classList.add('hidden');
     translationsPanel.classList.add('hidden');
     relationsPanel.classList.remove('hidden');
+    mediaPanel.classList.add('hidden');
     await loadRelationsPicker();
+    return;
+  }
+  if (tableKey === '__media__') {
+    normalPanel.classList.add('hidden');
+    translationsPanel.classList.add('hidden');
+    relationsPanel.classList.add('hidden');
+    mediaPanel.classList.remove('hidden');
+    await loadMedia();
     return;
   }
   normalPanel.classList.remove('hidden');
   translationsPanel.classList.add('hidden');
   relationsPanel.classList.add('hidden');
+  mediaPanel.classList.add('hidden');
   currentTable = tableKey;
   form.style.display = 'none';
   statusEl.textContent = '';
@@ -773,6 +815,107 @@ document.getElementById('relSavePricing').addEventListener('click', () =>
   saveRel('pricing', relPricingData.map(p => ({ tier_label: p.tier_label, amount: p.amount, currency: p.currency, show_on_pricing_page: p.show_on_pricing_page, pricing_group: p.pricing_group, show_in_summary: p.show_in_summary })), document.getElementById('relPricingStatus')));
 
 relCondition.addEventListener('change', () => loadRelations(relCondition.value));
+
+// ---------- Media panel ----------
+async function loadMedia() {
+  const grid = document.getElementById('media-grid');
+  const status = document.getElementById('media-upload-status');
+  status.textContent = ''; status.className = 'status';
+  grid.innerHTML = '<p style="color:#888;">Loading…</p>';
+  try {
+    const r = await fetch('/admin/api/media');
+    if (!r.ok) { grid.innerHTML = '<p style="color:#b00;">Failed to load.</p>'; return; }
+    const items = await r.json();
+    renderMediaGrid(items);
+  } catch (e) {
+    grid.innerHTML = '<p style="color:#b00;">' + esc(e.message) + '</p>';
+  }
+}
+
+function renderMediaGrid(items) {
+  const grid = document.getElementById('media-grid');
+  if (!items.length) {
+    grid.innerHTML = '<p style="color:#888;grid-column:1/-1;">No images yet. Upload one above.</p>';
+    return;
+  }
+  grid.innerHTML = items.map(m => {
+    const url = '/media/' + m.id;
+    const sizeKb = Math.round((m.byte_size || 0) / 1024);
+    const dims = (m.width && m.height) ? m.width + ' × ' + m.height : '';
+    const metaLine = [sizeKb + ' KB', dims].filter(Boolean).join(' · ');
+    return '<div class="media-card" data-id="' + m.id + '">' +
+      '<div class="mc-img"><img src="' + url + '" alt="" loading="lazy"></div>' +
+      '<div class="mc-body">' +
+        '<div class="mc-name">' + esc(m.filename) + '</div>' +
+        '<div class="mc-meta">' + esc(metaLine) + '</div>' +
+        '<div class="mc-url"><input type="text" readonly value="' + url + '" onclick="this.select()"><button class="mc-copy" data-copy="' + url + '">Copy</button></div>' +
+        '<input type="text" class="mc-alt" placeholder="Alt text (for screen readers)" value="' + esc(m.alt_text || '') + '" data-alt-id="' + m.id + '">' +
+        '<div class="mc-actions"><button class="mc-del" data-del="' + m.id + '">Delete</button></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+document.getElementById('media-grid').addEventListener('click', async (e) => {
+  const copyBtn = e.target.closest('[data-copy]');
+  if (copyBtn) {
+    const v = copyBtn.dataset.copy;
+    try { await navigator.clipboard.writeText(v); copyBtn.textContent = 'Copied'; setTimeout(() => copyBtn.textContent = 'Copy', 1200); }
+    catch (err) { alert('Copy failed — select the URL manually.'); }
+    return;
+  }
+  const delBtn = e.target.closest('[data-del]');
+  if (delBtn) {
+    if (!confirm('Delete this image? This cannot be undone.')) return;
+    const id = delBtn.dataset.del;
+    const r = await fetch('/admin/api/media/' + id, { method: 'DELETE' });
+    if (r.ok) loadMedia();
+    else alert('Delete failed.');
+  }
+});
+
+document.getElementById('media-grid').addEventListener('blur', async (e) => {
+  if (!e.target.matches('[data-alt-id]')) return;
+  const id = e.target.dataset.altId;
+  await fetch('/admin/api/media/' + id + '/alt', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ alt_text: e.target.value })
+  });
+}, true);
+
+async function uploadMediaFiles(files) {
+  const status = document.getElementById('media-upload-status');
+  let ok = 0, fail = 0;
+  for (const file of files) {
+    status.textContent = 'Uploading ' + file.name + '…'; status.className = 'status';
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const r = await fetch('/admin/api/media/upload', { method: 'POST', body: fd });
+      const out = await r.json();
+      if (!r.ok) throw new Error(out.error || 'Upload failed');
+      ok++;
+    } catch (e) {
+      fail++;
+      console.error('upload failed:', file.name, e.message);
+    }
+  }
+  status.textContent = 'Uploaded ' + ok + (fail ? ', failed ' + fail : '') + ' ✓';
+  status.className = 'status ' + (fail ? 'err' : 'ok');
+  await loadMedia();
+}
+
+document.getElementById('media-file').addEventListener('change', (e) => {
+  if (e.target.files && e.target.files.length) uploadMediaFiles(e.target.files);
+});
+
+const dropZone = document.getElementById('media-drop');
+['dragenter','dragover'].forEach(ev => dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); }));
+['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); }));
+dropZone.addEventListener('drop', (e) => {
+  if (e.dataTransfer.files && e.dataTransfer.files.length) uploadMediaFiles(e.dataTransfer.files);
+});
 
 loadTabs();
 </script>
