@@ -716,7 +716,7 @@ app.get('/treatments/:slug', async (req, res) => {
              COALESCE((SELECT value FROM translations WHERE shared_block_id = t.insurance_coverage_block_id AND locale = $2 LIMIT 1), t.insurance, (SELECT value FROM shared_content_blocks WHERE id = t.insurance_coverage_block_id)) AS insurance,
              COALESCE((SELECT value FROM translations WHERE shared_block_id = t.treatment_selection_approach_id AND locale = $2 LIMIT 1), (SELECT value FROM shared_content_blocks WHERE id = t.treatment_selection_approach_id)) AS treatment_selection_approach
       FROM treatments t WHERE t.slug = $1 AND t.status = 'published'
-    `, [slug]);
+    `, [slug, (req.query.lang && req.query.lang !== 'en') ? req.query.lang : null]);
     if (tr.rowCount === 0) {
       return res.status(404).send(renderPage(buildSeoHead({
         title: 'Not found | MC Balans', description: '', canonical: `${SITE_URL}/treatments/${slug}`
