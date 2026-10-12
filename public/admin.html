@@ -158,6 +158,29 @@
     </div>
   </div>
   <div id="mediaPanel" class="hidden">
+    <div class="row" style="margin-top:0;">
+      <select id="mediaCategoryFilter">
+        <option value="">All images</option>
+        <option value="uncategorised">Uncategorised</option>
+        <option value="homepage">Homepage</option>
+        <option value="conditions">Conditions</option>
+        <option value="treatments">Treatments</option>
+        <option value="clinic">Clinic</option>
+        <option value="practitioners">Practitioners</option>
+        <option value="resources">Resources</option>
+      </select>
+    </div>
+    <div class="row" style="margin-top:12px;">
+      <select id="mediaUploadCategory">
+        <option value="uncategorised">Upload into: Uncategorised</option>
+        <option value="homepage">Upload into: Homepage</option>
+        <option value="conditions">Upload into: Conditions</option>
+        <option value="treatments">Upload into: Treatments</option>
+        <option value="clinic">Upload into: Clinic</option>
+        <option value="practitioners">Upload into: Practitioners</option>
+        <option value="resources">Upload into: Resources</option>
+      </select>
+    </div>
     <label for="media-file" class="media-drop" id="media-drop">
       <input type="file" id="media-file" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
       <div class="md-title">Drag images here or click to select</div>
@@ -817,6 +840,8 @@ document.getElementById('relSavePricing').addEventListener('click', () =>
 relCondition.addEventListener('change', () => loadRelations(relCondition.value));
 
 // ---------- Media panel ----------
+let mediaAll = [];
+
 async function loadMedia() {
   const grid = document.getElementById('media-grid');
   const status = document.getElementById('media-upload-status');
@@ -825,12 +850,20 @@ async function loadMedia() {
   try {
     const r = await fetch('/admin/api/media');
     if (!r.ok) { grid.innerHTML = '<p style="color:#b00;">Failed to load.</p>'; return; }
-    const items = await r.json();
-    renderMediaGrid(items);
+    mediaAll = await r.json();
+    applyMediaFilter();
   } catch (e) {
     grid.innerHTML = '<p style="color:#b00;">' + esc(e.message) + '</p>';
   }
 }
+
+function applyMediaFilter() {
+  const cat = document.getElementById('mediaCategoryFilter').value;
+  const filtered = cat ? mediaAll.filter(m => m.category === cat) : mediaAll;
+  renderMediaGrid(filtered);
+}
+
+document.getElementById('mediaCategoryFilter').addEventListener('change', applyMediaFilter);
 
 function renderMediaGrid(items) {
   const grid = document.getElementById('media-grid');
@@ -849,6 +882,11 @@ function renderMediaGrid(items) {
         '<div class="mc-name">' + esc(m.filename) + '</div>' +
         '<div class="mc-meta">' + esc(metaLine) + '</div>' +
         '<div class="mc-url"><input type="text" readonly value="' + url + '" onclick="this.select()"><button class="mc-copy" data-copy="' + url + '">Copy</button></div>' +
+        '<select class="mc-cat" data-cat-id="' + m.id + '" style="width:100%;font-size:12px;padding:4px 6px;margin-bottom:6px;border:1px solid var(--line);border-radius:3px;">' +
+          ['uncategorised','homepage','conditions','treatments','clinic','practitioners','resources'].map(c =>
+            '<option value="' + c + '"' + (m.category === c ? ' selected' : '') + '>' + c + '</option>'
+          ).join('') +
+        '</select>' +
         '<input type="text" class="mc-alt" placeholder="Alt text (for screen readers)" value="' + esc(m.alt_text || '') + '" data-alt-id="' + m.id + '">' +
         '<div class="mc-actions"><button class="mc-del" data-del="' + m.id + '">Delete</button></div>' +
       '</div>' +
@@ -884,6 +922,22 @@ document.getElementById('media-grid').addEventListener('blur', async (e) => {
   });
 }, true);
 
+document.getElementById('media-grid').addEventListener('change', async (e) => {
+  if (!e.target.matches('[data-cat-id]')) return;
+  const id = e.target.dataset.catId;
+  const category = e.target.value;
+  const r = await fetch('/admin/api/media/' + id + '/category', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ category })
+  });
+  if (r.ok) {
+    const item = mediaAll.find(m => String(m.id) === String(id));
+    if (item) item.category = category;
+    applyMediaFilter();
+  }
+});
+
 async function uploadMediaFiles(files) {
   const status = document.getElementById('media-upload-status');
   let ok = 0, fail = 0;
@@ -891,6 +945,7 @@ async function uploadMediaFiles(files) {
     status.textContent = 'Uploading ' + file.name + '…'; status.className = 'status';
     const fd = new FormData();
     fd.append('file', file);
+    fd.append('category', document.getElementById('mediaUploadCategory').value);
     try {
       const r = await fetch('/admin/api/media/upload', { method: 'POST', body: fd });
       const out = await r.json();

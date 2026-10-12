@@ -500,7 +500,7 @@ module.exports = function(app, pool) {
 
   router.get('/api/media', requireAdmin, async (req, res) => {
     try {
-      const r = await pool.query('SELECT id, filename, mime_type, byte_size, width, height, alt_text, created_at FROM media ORDER BY id DESC');
+      const r = await pool.query('SELECT id, filename, mime_type, byte_size, width, height, alt_text, category, created_at FROM media ORDER BY id DESC');
       res.json(r.rows);
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
@@ -520,9 +520,10 @@ module.exports = function(app, pool) {
         mime = 'image/jpeg';
       }
 
+      const category = (req.body && req.body.category) ? String(req.body.category).slice(0, 60) : 'uncategorised';
       const r = await pool.query(
-        'INSERT INTO media (filename, mime_type, data, byte_size, width, height) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, filename, mime_type, byte_size, width, height',
-        [req.file.originalname.slice(0, 200), mime, buffer, buffer.length, width, height]
+        'INSERT INTO media (filename, mime_type, data, byte_size, width, height, category) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, filename, mime_type, byte_size, width, height, category',
+        [req.file.originalname.slice(0, 200), mime, buffer, buffer.length, width, height, category]
       );
       res.json({ ok: true, media: r.rows[0], url: '/media/' + r.rows[0].id });
     } catch (e) {
@@ -536,6 +537,15 @@ module.exports = function(app, pool) {
     if (isNaN(id)) return res.status(400).json({ error: 'Bad id' });
     try {
       await pool.query('UPDATE media SET alt_text = $1 WHERE id = $2', [String(req.body.alt_text || '').slice(0, 300), id]);
+      res.json({ ok: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  router.post('/api/media/:id/category', requireAdmin, async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ error: 'Bad id' });
+    try {
+      await pool.query('UPDATE media SET category = $1 WHERE id = $2', [String(req.body.category || 'uncategorised').slice(0, 60), id]);
       res.json({ ok: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
