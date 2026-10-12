@@ -70,6 +70,7 @@ function renderConditionBody(c, treatments, practitioners, faqs) {
   b += `<div class="breadcrumb"><a href="/">Home</a> / <a href="/conditions">What We Treat</a> / ${name}</div>`;
   b += `<h1>${name}</h1>`;
   if (c.summary) b += `<p class="lede">${esc(c.summary)}</p>`;
+  if (c.hero_image_url) b += `<img src="${esc(c.hero_image_url)}" alt="${name}" style="width:100%;max-width:800px;margin:24px 0 0;border-radius:6px;">`;
   b += STAMPS_HTML;
   b += '</div>';
 
@@ -768,7 +769,8 @@ function renderAboutBody(practitioners, prices, philosophy, activeTab) {
     const name = m.email ? m.email.split('@')[0] : m.id;
     const roles = m.display_role || (Array.isArray(m.roles) ? m.roles.join(', ') : String(m.roles||'').replace(/[{}]/g,'').split(',').map(r => r.trim().replace(/_/g,' ')).join(', '));
     const isLin = (m.display_role||'').toLowerCase().includes('head') || name.toLowerCase().includes('lin');
-    h += '<div class="team-card"><div class="team-photo"><span>PHOTO</span></div><div class="team-info"><h4>' + esc(name) + '</h4><div class="role">' + esc(roles) + '</div><p>' + esc(m.email||'') + '</p>' + (isLin ? '<a class="profile-link" href="/resources">Read her Medisch Dossier column \u2192</a>' : '') + '</div></div>';
+    const photo = m.photo_url ? '<img src="' + esc(m.photo_url) + '" alt="' + esc(name) + '" style="width:100%;height:100%;object-fit:cover;">' : '<span>PHOTO</span>';
+    h += '<div class="team-card"><div class="team-photo">' + photo + '</div><div class="team-info"><h4>' + esc(name) + '</h4><div class="role">' + esc(roles) + '</div><p>' + esc(m.email||'') + '</p>' + (isLin ? '<a class="profile-link" href="/resources">Read her Medisch Dossier column \u2192</a>' : '') + '</div></div>';
   }
   h += '</div></div>';
 

@@ -39,6 +39,14 @@ const TABLES = {
     order: 'string_key, locale',
     listColumns: ['id','string_key','locale','value'],
     hide: ['id','updated_at','string_key','locale']
+  },
+  practitioners: {
+    table: 'practitioners',
+    keyColumn: 'id',
+    label: 'Practitioners',
+    order: 'id',
+    listColumns: ['id','display_role','email'],
+    hide: ['id','created_at','updated_at','roles','is_active']
   }
 };
 

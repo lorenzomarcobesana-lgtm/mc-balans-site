@@ -972,7 +972,122 @@ dropZone.addEventListener('drop', (e) => {
   if (e.dataTransfer.files && e.dataTransfer.files.length) uploadMediaFiles(e.dataTransfer.files);
 });
 
+// ---------- Media picker modal ----------
+let pickerTarget = null;
+let pickerItems = [];
+
+function isUrlField(name) {
+  return /_url$/i.test(name) || name === 'photo_url' || name === 'hero_image_url';
+}
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.media-pick-btn');
+  if (!btn) return;
+  const input = document.querySelector('input[name="' + btn.dataset.for + '"]');
+  if (!input) return;
+  pickerTarget = input;
+  openMediaPicker();
+});
+
+async function openMediaPicker() {
+  const backdrop = document.getElementById('mediaPickerModal');
+  backdrop.classList.remove('hidden');
+  await loadPickerItems();
+}
+
+async function loadPickerItems() {
+  const r = await fetch('/admin/api/media');
+  if (!r.ok) return;
+  pickerItems = await r.json();
+  renderPickerGrid();
+}
+
+function renderPickerGrid() {
+  const grid = document.getElementById('mediaPickerGrid');
+  const filter = document.getElementById('mediaPickerFilter').value;
+  const items = filter ? pickerItems.filter(m => m.category === filter) : pickerItems;
+  if (!items.length) {
+    grid.innerHTML = '<p style="color:#888;grid-column:1/-1;">No images. Upload some in the Media tab first.</p>';
+    return;
+  }
+  grid.innerHTML = items.map(m =>
+    '<div class="media-card" data-pick-id="' + m.id + '" style="cursor:pointer;">' +
+      '<div class="mc-img"><img src="/media/' + m.id + '" alt="" loading="lazy"></div>' +
+      '<div class="mc-body">' +
+        '<div class="mc-name" style="font-size:12px;">' + esc(m.filename) + '</div>' +
+        '<div class="mc-meta">' + esc(m.category || 'uncategorised') + '</div>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+}
+
+document.getElementById('mediaPickerFilter').addEventListener('change', renderPickerGrid);
+
+document.getElementById('mediaPickerGrid').addEventListener('click', (e) => {
+  const card = e.target.closest('[data-pick-id]');
+  if (!card || !pickerTarget) return;
+  const id = card.dataset.pickId;
+  pickerTarget.value = '/media/' + id;
+  document.getElementById('mediaPickerModal').classList.add('hidden');
+  pickerTarget = null;
+});
+
+document.getElementById('mediaPickerClose').addEventListener('click', () => {
+  document.getElementById('mediaPickerModal').classList.add('hidden');
+  pickerTarget = null;
+});
+
+document.getElementById('mediaPickerModal').addEventListener('click', (e) => {
+  if (e.target.id === 'mediaPickerModal') {
+    e.target.classList.add('hidden');
+    pickerTarget = null;
+  }
+});
+
+// After renderForm, inject "Pick from library" buttons next to URL fields
+const _originalRenderForm = renderForm;
+renderForm = function(row) {
+  _originalRenderForm(row);
+  const hidden = HIDDEN[currentTable] || new Set();
+  for (const key of Object.keys(row)) {
+    if (hidden.has(key)) continue;
+    if (!isUrlField(key)) continue;
+    const input = fieldsEl.querySelector('input[name="' + key + '"]');
+    if (!input || input.dataset.pickerAdded) continue;
+    input.dataset.pickerAdded = '1';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'secondary media-pick-btn';
+    btn.style.marginTop = '6px';
+    btn.style.fontSize = '13px';
+    btn.textContent = 'Pick from library';
+    btn.dataset.for = key;
+    input.parentNode.insertBefore(btn, input.nextSibling);
+  }
+};
+
 loadTabs();
 </script>
+<div id="mediaPickerModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:50px 20px;">
+  <div style="background:#fff;border-radius:8px;max-width:900px;width:100%;padding:24px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 style="margin:0;font-size:18px;">Pick an image</h2>
+      <button type="button" id="mediaPickerClose" style="background:none;border:none;font-size:22px;cursor:pointer;">&times;</button>
+    </div>
+    <div class="row" style="margin-top:0;">
+      <select id="mediaPickerFilter" style="max-width:280px;">
+        <option value="">All categories</option>
+        <option value="uncategorised">Uncategorised</option>
+        <option value="homepage">Homepage</option>
+        <option value="conditions">Conditions</option>
+        <option value="treatments">Treatments</option>
+        <option value="clinic">Clinic</option>
+        <option value="practitioners">Practitioners</option>
+        <option value="resources">Resources</option>
+      </select>
+    </div>
+    <div id="mediaPickerGrid" class="media-grid" style="margin-top:16px;"></div>
+  </div>
+</div>
 </body>
 </html>
