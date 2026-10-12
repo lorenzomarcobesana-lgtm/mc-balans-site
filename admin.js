@@ -14,7 +14,17 @@ const TABLES = {
     label: 'Conditions',
     order: 'id',
     listColumns: ['id','slug','name'],
-    hide: ['id','slug','created_at','updated_at','category_id','author_id','medical_reviewer_id','search_vector','ai_summary']
+    hide: ['id','slug','created_at','updated_at','search_vector','ai_summary'],
+    hideFromEdit: ['id','slug','created_at','updated_at','search_vector','ai_summary'],
+    idPrefix: 'COND-',
+    idColumn: 'id',
+    canCreate: true,
+    canDelete: true,
+    foreignKeys: {
+      category_id: { table: 'categories', labelColumn: 'name', keyColumn: 'id' },
+      author_id: { table: 'practitioners', labelColumn: 'display_role', keyColumn: 'id' },
+      medical_reviewer_id: { table: 'practitioners', labelColumn: 'display_role', keyColumn: 'id' }
+    }
   },
   treatments: {
     table: 'treatments',
@@ -22,23 +32,33 @@ const TABLES = {
     label: 'Treatments',
     order: 'sort_order, id',
     listColumns: ['id','slug','name'],
-    hide: ['id','slug','created_at','updated_at','parent_treatment_id','intake_text_block_id','treatment_selection_approach_id','insurance_coverage_block_id','author_id','medical_reviewer_id','search_vector']
+    hide: ['id','slug','created_at','updated_at','search_vector'],
+    hideFromEdit: ['id','slug','created_at','updated_at','search_vector'],
+    idPrefix: 'TREAT-',
+    idColumn: 'id',
+    canCreate: true,
+    canDelete: true,
+    foreignKeys: {
+      parent_treatment_id: { table: 'treatments', labelColumn: 'name', keyColumn: 'id' },
+      author_id: { table: 'practitioners', labelColumn: 'display_role', keyColumn: 'id' },
+      medical_reviewer_id: { table: 'practitioners', labelColumn: 'display_role', keyColumn: 'id' },
+      intake_text_block_id: { table: 'shared_content_blocks', labelColumn: 'id', keyColumn: 'id' },
+      treatment_selection_approach_id: { table: 'shared_content_blocks', labelColumn: 'id', keyColumn: 'id' },
+      insurance_coverage_block_id: { table: 'shared_content_blocks', labelColumn: 'id', keyColumn: 'id' }
+    }
   },
-  shared_content_blocks: {
-    table: 'shared_content_blocks',
+  categories: {
+    table: 'categories',
     keyColumn: 'id',
-    label: 'Shared blocks',
+    label: 'Categories',
     order: 'id',
-    listColumns: ['id','value'],
-    hide: ['id','created_at','updated_at','block_type']
-  },
-  ui_strings: {
-    table: 'ui_strings',
-    keyColumn: 'id',
-    label: 'UI strings',
-    order: 'string_key, locale',
-    listColumns: ['id','string_key','locale','value'],
-    hide: ['id','updated_at','string_key','locale']
+    listColumns: ['id','name'],
+    hide: ['created_at','updated_at'],
+    hideFromEdit: ['id','created_at','updated_at'],
+    idPrefix: 'CAT-',
+    idColumn: 'id',
+    canCreate: true,
+    canDelete: true
   },
   practitioners: {
     table: 'practitioners',
@@ -46,7 +66,36 @@ const TABLES = {
     label: 'Practitioners',
     order: 'id',
     listColumns: ['id','display_role','email'],
-    hide: ['id','created_at','updated_at','roles','is_active']
+    hide: ['created_at','updated_at','roles','is_active'],
+    hideFromEdit: ['id','created_at','updated_at','roles','is_active'],
+    idPrefix: 'PRAC-',
+    idColumn: 'id',
+    canCreate: true,
+    canDelete: true
+  },
+  shared_content_blocks: {
+    table: 'shared_content_blocks',
+    keyColumn: 'id',
+    label: 'Shared blocks',
+    order: 'id',
+    listColumns: ['id','value'],
+    hide: ['created_at','updated_at'],
+    hideFromEdit: ['id','created_at','updated_at'],
+    idPrefix: 'SHARED-',
+    idColumn: 'id',
+    canCreate: false,
+    canDelete: true
+  },
+  ui_strings: {
+    table: 'ui_strings',
+    keyColumn: 'id',
+    label: 'UI strings',
+    order: 'string_key, locale',
+    listColumns: ['id','string_key','locale','value'],
+    hide: ['updated_at'],
+    hideFromEdit: ['id','updated_at'],
+    canCreate: false,
+    canDelete: true
   }
 };
 
@@ -589,6 +638,19 @@ module.exports = function(app, pool) {
       );
       res.json({ ok: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  router.get('/api/tables-meta', requireAdmin, (req, res) => {
+    const out = {};
+    for (const [k, cfg] of Object.entries(TABLES)) {
+      out[k] = {
+        label: cfg.label,
+        canCreate: !!cfg.canCreate,
+        canDelete: !!cfg.canDelete,
+        foreignKeys: cfg.foreignKeys ? Object.keys(cfg.foreignKeys) : []
+      };
+    }
+    res.json(out);
   });
 
   app.use('/admin', router);

@@ -89,6 +89,7 @@
       <div class="row" style="margin-top:32px;">
         <button class="primary" type="submit" id="save">Save</button>
         <button class="secondary" type="button" id="saveAndPreview">Save & Preview</button>
+        <button class="secondary" type="button" id="deleteRow" style="color:#b00;border-color:#b00;">Delete</button>
         <span class="status" id="status"></span>
       </div>
     </form>
@@ -271,10 +272,12 @@
 
 <script>
 const HIDDEN = {
-  conditions: new Set(['id','slug','created_at','updated_at','category_id','author_id','medical_reviewer_id','search_vector','ai_summary']),
-  treatments: new Set(['id','slug','created_at','updated_at','parent_treatment_id','intake_text_block_id','treatment_selection_approach_id','insurance_coverage_block_id','author_id','medical_reviewer_id','search_vector']),
-  shared_content_blocks: new Set(['id','created_at','updated_at','block_type']),
-  ui_strings: new Set(['id','updated_at','string_key','locale'])
+  conditions: new Set(['id','slug','created_at','updated_at','search_vector','ai_summary']),
+  treatments: new Set(['id','slug','created_at','updated_at','search_vector']),
+  categories: new Set(['created_at','updated_at']),
+  practitioners: new Set(['created_at','updated_at','roles','is_active']),
+  shared_content_blocks: new Set(['created_at','updated_at']),
+  ui_strings: new Set(['updated_at'])
 };
 const LONG = new Set(['summary','recognition','red_flags','understanding','approach','assessment','expectations','practical','intake','aftercare','lede','body','value','name','treatment_selection_approach']);
 
@@ -325,7 +328,7 @@ async function loadTabs() {
 }
 
 function pickerValue(tableKey, row) {
-  if (tableKey === 'ui_strings' || tableKey === 'shared_content_blocks' || tableKey === 'practitioners') return row.id;
+  if (tableKey === 'ui_strings' || tableKey === 'shared_content_blocks' || tableKey === 'practitioners' || tableKey === 'categories') return row.id;
   return row.slug;
 }
 function pickerLabel(tableKey, row) {
@@ -337,12 +340,19 @@ function pickerLabel(tableKey, row) {
   if (tableKey === 'practitioners') {
     return row.id + ' — ' + (row.display_role || row.email || '');
   }
+  if (tableKey === 'categories') {
+    return row.id + ' — ' + (row.name || '');
+  }
   const id = row.id ? row.id + ' — ' : '';
   return id + (row.name || row.slug || '');
 }
 
 async function selectTab(tableKey) {
   tabsEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.tab === tableKey));
+  if (!window._tableMeta) {
+    try { window._tableMeta = await (await fetch('/admin/api/tables-meta')).json(); }
+    catch (e) { window._tableMeta = {}; }
+  }
   if (tableKey === '__translations__') {
     normalPanel.classList.add('hidden');
     translationsPanel.classList.remove('hidden');
@@ -374,8 +384,12 @@ async function selectTab(tableKey) {
   currentTable = tableKey;
   form.style.display = 'none';
   statusEl.textContent = '';
-  newBtn.classList.toggle('hidden', tableKey !== 'conditions' && tableKey !== 'treatments');
-  newBtn.textContent = tableKey === 'treatments' ? '+ New treatment' : '+ New condition';
+  const m = window._tableMeta[tableKey] || {};
+  newBtn.classList.toggle('hidden', !m.canCreate);
+  newBtn.textContent = m.canCreate ? '+ New ' + String(m.label || 'row').replace(/s$/, '').toLowerCase() : '';
+  window._currentCanDelete = !!m.canDelete;
+  const delBtnRef = document.getElementById('deleteRow');
+  if (delBtnRef) delBtnRef.style.display = m.canDelete ? '' : 'none';
   picker.innerHTML = '<option>Loading…</option>';
   const r = await fetch('/admin/api/list/' + tableKey);
   if (!r.ok) { picker.innerHTML = '<option>Error</option>'; return; }
@@ -390,7 +404,7 @@ async function loadRow(key) {
   const r = await fetch('/admin/api/row/' + currentTable + '/' + encodeURIComponent(key));
   if (!r.ok) { statusEl.textContent = 'Failed to load'; statusEl.className = 'status err'; return; }
   const row = await r.json();
-  renderForm(row);
+  await renderForm(row);
   form.style.display = 'block';
   currentKey = key;
 }
@@ -1188,6 +1202,26 @@ document.getElementById('setting-homepage-hero-clear').addEventListener('click',
   document.getElementById('setting-homepage-hero').value = '';
   document.getElementById('setting-homepage-hero-preview').innerHTML = '';
 });
+
+// ---------- Delete row ----------
+const deleteBtn = document.getElementById('deleteRow');
+if (deleteBtn) {
+  deleteBtn.addEventListener('click', async () => {
+    if (!currentKey || !currentTable) return;
+    if (!window._currentCanDelete) { alert('Deleting is not enabled for this table.'); return; }
+    if (!confirm('Delete this row? This cannot be undone from the console.\n\nA snapshot is kept in edit_history.')) return;
+    statusEl.textContent = 'Deleting…'; statusEl.className = 'status';
+    try {
+      const r = await fetch('/admin/api/row/' + currentTable + '/' + encodeURIComponent(currentKey), { method: 'DELETE' });
+      const out = await r.json();
+      if (!r.ok) throw new Error(out.error || 'Delete failed');
+      statusEl.textContent = 'Deleted ✓'; statusEl.className = 'status ok';
+      await selectTab(currentTable);
+    } catch (err) {
+      statusEl.textContent = 'Error: ' + err.message; statusEl.className = 'status err';
+    }
+  });
+}
 
 loadTabs();
 </script>
