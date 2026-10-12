@@ -270,6 +270,17 @@
   </div>
 </div>
 
+<div id="genericCreateModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:50px 20px;">
+  <div style="background:#fff;border-radius:8px;max-width:560px;width:100%;padding:28px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <h2 id="genericCreateTitle" style="margin:0;font-size:18px;">New row</h2>
+      <button type="button" id="genericCreateClose" style="background:none;border:none;font-size:22px;cursor:pointer;">&times;</button>
+    </div>
+    <p class="hint" style="color:#666;font-size:13px;margin-top:0;">Fill in what you need. Empty fields will be saved as blank. You can edit any field afterwards.</p>
+    <form id="genericCreateForm"></form>
+  </div>
+</div>
+
 <script>
 const HIDDEN = {
   conditions: new Set(['id','slug','created_at','updated_at','search_vector','ai_summary']),
@@ -742,11 +753,15 @@ async function openGenericCreate(tableKey) {
   };
 }
 
-document.getElementById('genericCreateClose').addEventListener('click', () => {
-  document.getElementById('genericCreateModal').classList.add('hidden');
-});
-document.getElementById('genericCreateModal').addEventListener('click', (e) => {
-  if (e.target.id === 'genericCreateModal') e.target.classList.add('hidden');
+document.addEventListener('DOMContentLoaded', () => {
+  const gc = document.getElementById('genericCreateClose');
+  if (gc) gc.addEventListener('click', () => {
+    document.getElementById('genericCreateModal').classList.add('hidden');
+  });
+  const gm = document.getElementById('genericCreateModal');
+  if (gm) gm.addEventListener('click', (e) => {
+    if (e.target.id === 'genericCreateModal') e.target.classList.add('hidden');
+  });
 });
 
 document.getElementById('cancelTreatmentBtn').addEventListener('click', () => {
@@ -1306,16 +1321,7 @@ if (deleteBtn) {
 loadTabs();
 </script>
 
-<div id="genericCreateModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:50px 20px;">
-  <div style="background:#fff;border-radius:8px;max-width:560px;width:100%;padding:28px;max-height:85vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-      <h2 id="genericCreateTitle" style="margin:0;font-size:18px;">New row</h2>
-      <button type="button" id="genericCreateClose" style="background:none;border:none;font-size:22px;cursor:pointer;">&times;</button>
-    </div>
-    <p class="hint" style="color:#666;font-size:13px;margin-top:0;">Fill in what you need. Empty fields will be saved as blank. You can edit any field afterwards.</p>
-    <form id="genericCreateForm"></form>
-  </div>
-</div>
+
 
 </body>
 </html>
