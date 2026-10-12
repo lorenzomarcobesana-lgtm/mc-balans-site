@@ -88,6 +88,7 @@
       <div id="fields"></div>
       <div class="row" style="margin-top:32px;">
         <button class="primary" type="submit" id="save">Save</button>
+        <button class="secondary" type="button" id="saveAndPreview">Save & Preview</button>
         <span class="status" id="status"></span>
       </div>
     </form>
@@ -347,7 +348,6 @@ async function selectTab(tableKey) {
     translationsPanel.classList.remove('hidden');
     relationsPanel.classList.add('hidden');
     mediaPanel.classList.add('hidden');
-    settingsPanel.classList.add('hidden');
     await loadTransPicker();
     return;
   }
@@ -356,7 +356,6 @@ async function selectTab(tableKey) {
     translationsPanel.classList.add('hidden');
     relationsPanel.classList.remove('hidden');
     mediaPanel.classList.add('hidden');
-    settingsPanel.classList.add('hidden');
     await loadRelationsPicker();
     return;
   }
@@ -365,7 +364,6 @@ async function selectTab(tableKey) {
     translationsPanel.classList.add('hidden');
     relationsPanel.classList.add('hidden');
     mediaPanel.classList.remove('hidden');
-    settingsPanel.classList.add('hidden');
     await loadMedia();
     return;
   }
@@ -415,21 +413,34 @@ function renderForm(row) {
   }
 }
 
+async function doSave() {
+  const body = {};
+  for (const el of form.querySelectorAll('input[name], textarea[name]')) body[el.name] = el.value;
+  const r = await fetch('/admin/api/row/' + currentTable + '/' + encodeURIComponent(currentKey), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const out = await r.json();
+  if (!r.ok) throw new Error(out.error || 'Save failed');
+  return out;
+}
+
+function previewUrl(table, key) {
+  if (table === 'conditions') return '/conditions/' + key;
+  if (table === 'treatments') return '/treatments/' + key;
+  if (table === 'practitioners') return '/about/team';
+  if (table === 'ui_strings') return '/';
+  return null;
+}
+
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!currentKey) return;
   saveBtn.disabled = true;
   statusEl.textContent = 'Saving…'; statusEl.className = 'status';
-  const body = {};
-  for (const el of form.querySelectorAll('input[name], textarea[name]')) body[el.name] = el.value;
   try {
-    const r = await fetch('/admin/api/row/' + currentTable + '/' + encodeURIComponent(currentKey), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    const out = await r.json();
-    if (!r.ok) throw new Error(out.error || 'Save failed');
+    await doSave();
     statusEl.textContent = 'Saved ✓'; statusEl.className = 'status ok';
   } catch (err) {
     statusEl.textContent = 'Error: ' + err.message; statusEl.className = 'status err';
@@ -437,6 +448,29 @@ form.addEventListener('submit', async (e) => {
     saveBtn.disabled = false;
   }
 });
+
+const savePreviewBtn = document.getElementById('saveAndPreview');
+if (savePreviewBtn) {
+  savePreviewBtn.addEventListener('click', async () => {
+    if (!currentKey) return;
+    savePreviewBtn.disabled = true;
+    statusEl.textContent = 'Saving…'; statusEl.className = 'status';
+    try {
+      await doSave();
+      const url = previewUrl(currentTable, currentKey);
+      if (url) {
+        statusEl.textContent = 'Saved ✓ Opening preview…'; statusEl.className = 'status ok';
+        window.open(url, '_blank');
+      } else {
+        statusEl.textContent = 'Saved ✓ (no preview page for this section)'; statusEl.className = 'status ok';
+      }
+    } catch (err) {
+      statusEl.textContent = 'Error: ' + err.message; statusEl.className = 'status err';
+    } finally {
+      savePreviewBtn.disabled = false;
+    }
+  });
+}
 
 picker.addEventListener('change', () => loadRow(picker.value));
 
