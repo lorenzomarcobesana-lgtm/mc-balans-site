@@ -311,7 +311,7 @@ async function loadTabs() {
 }
 
 function pickerValue(tableKey, row) {
-  if (tableKey === 'ui_strings' || tableKey === 'shared_content_blocks') return row.id;
+  if (tableKey === 'ui_strings' || tableKey === 'shared_content_blocks' || tableKey === 'practitioners') return row.id;
   return row.slug;
 }
 function pickerLabel(tableKey, row) {
@@ -319,6 +319,9 @@ function pickerLabel(tableKey, row) {
   if (tableKey === 'shared_content_blocks') {
     const preview = (row.value || '').slice(0, 60);
     return row.id + ' — ' + preview + (row.value && row.value.length > 60 ? '…' : '');
+  }
+  if (tableKey === 'practitioners') {
+    return row.id + ' — ' + (row.display_role || row.email || '');
   }
   const id = row.id ? row.id + ' — ' : '';
   return id + (row.name || row.slug || '');
