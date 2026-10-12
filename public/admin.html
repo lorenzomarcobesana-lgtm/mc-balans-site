@@ -158,6 +158,17 @@
     </div>
   </div>
   <div id="mediaPanel" class="hidden">
+    <h3 style="margin-top:0;font-size:15px;">Homepage hero image</h3>
+    <p style="font-size:13px;color:#666;margin:0 0 8px;">Shows on the right side of the homepage hero. Leave blank for the placeholder.</p>
+    <div class="row" style="margin-top:0;">
+      <input type="text" id="setting-homepage-hero" placeholder="/media/1 or full URL" readonly style="flex:1;">
+      <button type="button" class="secondary media-pick-btn" data-target-id="setting-homepage-hero">Pick from library</button>
+      <button type="button" class="secondary" id="setting-homepage-hero-clear">Clear</button>
+      <button type="button" class="primary" id="setting-homepage-hero-save">Save</button>
+      <span class="status" id="setting-homepage-hero-status"></span>
+    </div>
+    <div id="setting-homepage-hero-preview" style="margin-top:8px;"></div>
+    <hr style="border:none;border-top:1px solid var(--line);margin:24px 0;">
     <div class="row" style="margin-top:0;">
       <select id="mediaCategoryFilter">
         <option value="">All images</option>
@@ -190,20 +201,7 @@
     <div id="media-grid" class="media-grid"></div>
   </div>
 
-  <div id="settingsPanel" class="hidden">
-    <h3 style="margin-top:0;font-size:16px;">Homepage hero image</h3>
-    <p style="font-size:14px;color:#666;margin-top:0;">Choose an image from the media library. Shows on the right side of the homepage hero. Leave blank to keep the current placeholder.</p>
-    <div class="row" style="margin-top:12px;">
-      <input type="text" id="setting-homepage-hero" placeholder="/media/1 or full URL" readonly style="flex:1;">
-      <button type="button" class="secondary media-pick-btn" data-for="setting-homepage-hero">Pick from library</button>
-      <button type="button" class="secondary" id="setting-homepage-hero-clear">Clear</button>
-    </div>
-    <div class="row">
-      <button type="button" class="primary" id="setting-homepage-hero-save">Save</button>
-      <span class="status" id="setting-homepage-hero-status"></span>
-    </div>
-    <div id="setting-homepage-hero-preview" style="margin-top:20px;"></div>
-  </div>
+  
 
 </main>
 
@@ -284,7 +282,6 @@ const normalPanel = document.getElementById('normalPanel');
 const translationsPanel = document.getElementById('translationsPanel');
 const relationsPanel = document.getElementById('relationsPanel');
 const mediaPanel = document.getElementById('mediaPanel');
-const settingsPanel = document.getElementById('settingsPanel');
 const picker = document.getElementById('picker');
 const form = document.getElementById('form');
 const fieldsEl = document.getElementById('fields');
@@ -321,8 +318,7 @@ async function loadTabs() {
   tabsEl.innerHTML = tables.map(t => '<button data-tab="' + t.key + '">' + esc(t.label) + '</button>').join('')
     + '<button data-tab="__translations__">Translations</button>'
     + '<button data-tab="__relations__">Relations</button>'
-    + '<button data-tab="__media__">Media</button>'
-    + '<button data-tab="__settings__">Site Settings</button>';
+    + '<button data-tab="__media__">Media</button>';
   tabsEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => selectTab(b.dataset.tab)));
   selectTab(tables[0].key);
 }
@@ -373,20 +369,10 @@ async function selectTab(tableKey) {
     await loadMedia();
     return;
   }
-  if (tableKey === '__settings__') {
-    normalPanel.classList.add('hidden');
-    translationsPanel.classList.add('hidden');
-    relationsPanel.classList.add('hidden');
-    mediaPanel.classList.add('hidden');
-    settingsPanel.classList.remove('hidden');
-    await loadSettings();
-    return;
-  }
   normalPanel.classList.remove('hidden');
   translationsPanel.classList.add('hidden');
   relationsPanel.classList.add('hidden');
   mediaPanel.classList.add('hidden');
-  settingsPanel.classList.add('hidden');
   currentTable = tableKey;
   form.style.display = 'none';
   statusEl.textContent = '';
@@ -898,6 +884,7 @@ relCondition.addEventListener('change', () => loadRelations(relCondition.value))
 let mediaAll = [];
 
 async function loadMedia() {
+  loadSettings();
   const grid = document.getElementById('media-grid');
   const status = document.getElementById('media-upload-status');
   status.textContent = ''; status.className = 'status';
@@ -1038,7 +1025,9 @@ function isUrlField(name) {
 document.addEventListener('click', (e) => {
   const btn = e.target.closest('.media-pick-btn');
   if (!btn) return;
-  const input = document.querySelector('input[name="' + btn.dataset.for + '"]');
+  let input = null;
+  if (btn.dataset.targetId) input = document.getElementById(btn.dataset.targetId);
+  else if (btn.dataset.for) input = document.querySelector('input[name="' + btn.dataset.for + '"]');
   if (!input) return;
   pickerTarget = input;
   openMediaPicker();
