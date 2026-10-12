@@ -70,7 +70,7 @@ function renderConditionBody(c, treatments, practitioners, faqs) {
   b += `<div class="breadcrumb"><a href="/">Home</a> / <a href="/conditions">What We Treat</a> / ${name}</div>`;
   b += `<h1>${name}</h1>`;
   if (c.summary) b += `<p class="lede">${esc(c.summary)}</p>`;
-  if (c.hero_image_url) b += `<img src="${esc(c.hero_image_url)}" alt="${name}" style="width:100%;max-width:800px;margin:24px 0 0;border-radius:6px;">`;
+  if (c.hero_image_url) b += `<img src="${esc(c.hero_image_url)}" alt="${name}" style="width:100%;max-width:720px;max-height:320px;object-fit:cover;margin:24px auto 0;display:block;border-radius:6px;">`;
   b += STAMPS_HTML;
   b += '</div>';
 
