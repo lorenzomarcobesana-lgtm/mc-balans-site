@@ -1105,6 +1105,33 @@ app.get('/herbal-service/apply', async (req, res) => {
   } catch (e) { console.error(e); res.status(500).send('Error'); }
 });
 
+// ---------- MEDIA (image storage in Postgres) ----------
+pool.query(`
+  CREATE TABLE IF NOT EXISTS media (
+    id SERIAL PRIMARY KEY,
+    filename TEXT NOT NULL,
+    mime_type TEXT NOT NULL,
+    data BYTEA NOT NULL,
+    byte_size INTEGER NOT NULL,
+    width INTEGER,
+    height INTEGER,
+    alt_text TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  );
+`).then(() => console.log('media ready')).catch(e => console.error('media init failed:', e));
+
+app.get('/media/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(404).end();
+    const r = await pool.query('SELECT mime_type, data FROM media WHERE id = $1', [id]);
+    if (!r.rows[0]) return res.status(404).end();
+    res.set('Content-Type', r.rows[0].mime_type);
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+    res.send(r.rows[0].data);
+  } catch (e) { console.error('media serve:', e); res.status(500).end(); }
+});
+
 app.get('*', (req, res) => {
   res.send(renderPage(buildSeoHead({
     title: 'MC Balans', description: 'MC Balans — Western & Traditional Chinese Medicine, The Hague.',

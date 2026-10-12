@@ -1,6 +1,10 @@
 const express = require('express');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
+const PgStore = require('connect-pg-simple')(session);
+const multer = require('multer');
+const sharp = require('sharp');
 const path = require('path');
 
 const TABLES = {
@@ -80,11 +84,20 @@ module.exports = function(app, pool) {
     .catch(e => console.error('edit_history init failed:', e));
 
   app.use(session({
+    store: new PgStore({ pool, createTableIfMissing: true }),
     secret: process.env.SESSION_SECRET || 'change-me-please',
     resave: false,
     saveUninitialized: false,
-    cookie: { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 }
+    cookie: { httpOnly: true, sameSite: 'lax', secure: 'auto', maxAge: 7 * 24 * 60 * 60 * 1000 }
   }));
+
+  const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 8,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: 'Too many login attempts. Try again in 15 minutes.'
+  });
 
   const router = express.Router();
 
@@ -96,7 +109,7 @@ module.exports = function(app, pool) {
 
   router.get('/login', (req, res) => res.send(loginPage()));
 
-  router.post('/login', express.urlencoded({ extended: false }), (req, res) => {
+  router.post('/login', loginLimiter, express.urlencoded({ extended: false }), (req, res) => {
     const hash = process.env.ADMIN_PASSWORD_HASH;
     if (!hash) return res.status(500).send('ADMIN_PASSWORD_HASH not set');
     if (!bcrypt.compareSync(req.body.password || '', hash)) {
@@ -219,6 +232,51 @@ module.exports = function(app, pool) {
     } finally {
       client.release();
     }
+  });
+
+  router.post('/api/treatments/create', requireAdmin, async (req, res) => {
+    const { name, slug, author_id, medical_reviewer_id, status, duration, parent_treatment_id } = req.body || {};
+    if (!name || !slug || !author_id) {
+      return res.status(400).json({ error: 'name, slug and author_id are required' });
+    }
+    const cleanSlug = String(slug).toLowerCase().trim()
+      .replace(/[^a-z0-9\-]+/g, '-').replace(/^-+|-+$/g, '').replace(/-{2,}/g, '-');
+    if (!cleanSlug) return res.status(400).json({ error: 'slug contains no valid characters' });
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const dup = await client.query('SELECT 1 FROM treatments WHERE slug = $1', [cleanSlug]);
+      if (dup.rows.length) { await client.query('ROLLBACK'); return res.status(409).json({ error: 'A treatment with this slug already exists' }); }
+
+      const next = await client.query(
+        "SELECT COALESCE(MAX(CAST(SUBSTRING(id FROM 7) AS INTEGER)), 0) + 1 AS n FROM treatments WHERE id ~ '^TREAT-[0-9]+$'"
+      );
+      const newId = 'TREAT-' + String(next.rows[0].n).padStart(4, '0');
+
+      const nextOrder = await client.query("SELECT COALESCE(MAX(sort_order), 0) + 10 AS n FROM treatments");
+
+      await client.query(`
+        INSERT INTO treatments (id, slug, name, author_id, medical_reviewer_id, status, duration, parent_treatment_id, sort_order, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+      `, [newId, cleanSlug, name, author_id, medical_reviewer_id || author_id, status || 'draft', duration || null, parent_treatment_id || null, nextOrder.rows[0].n]);
+
+      await client.query('COMMIT');
+      res.json({ ok: true, id: newId, slug: cleanSlug });
+    } catch (e) {
+      await client.query('ROLLBACK');
+      console.error(e);
+      res.status(500).json({ error: e.message });
+    } finally {
+      client.release();
+    }
+  });
+
+  router.get('/api/treatments-list', requireAdmin, async (req, res) => {
+    try {
+      const r = await pool.query("SELECT id, name, slug FROM treatments ORDER BY name");
+      res.json(r.rows);
+    } catch (e) { res.status(500).json({ error: e.message }); }
   });
 
   router.get('/api/translation-targets', requireAdmin, (req, res) => {
@@ -427,6 +485,68 @@ module.exports = function(app, pool) {
       res.json({ ok: true, saved: items.length });
     } catch (e) { await client.query('ROLLBACK'); console.error(e); res.status(500).json({ error: e.message }); }
     finally { client.release(); }
+  });
+
+  const mediaUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 15 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      if (!/^image\/(jpeg|png|webp|gif)$/.test(file.mimetype)) {
+        return cb(new Error('Only JPEG, PNG, WebP and GIF are accepted.'));
+      }
+      cb(null, true);
+    }
+  });
+
+  router.get('/api/media', requireAdmin, async (req, res) => {
+    try {
+      const r = await pool.query('SELECT id, filename, mime_type, byte_size, width, height, alt_text, created_at FROM media ORDER BY id DESC');
+      res.json(r.rows);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  router.post('/api/media/upload', requireAdmin, mediaUpload.single('file'), async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    try {
+      let buffer = req.file.buffer;
+      let mime = req.file.mimetype;
+      let width = null, height = null;
+
+      if (/^image\/(jpeg|png|webp)$/.test(mime)) {
+        const pipeline = sharp(buffer).rotate().resize({ width: 2000, height: 2000, fit: 'inside', withoutEnlargement: true });
+        const meta = await pipeline.metadata();
+        buffer = await pipeline.jpeg({ quality: 85, mozjpeg: true }).toBuffer();
+        width = meta.width; height = meta.height;
+        mime = 'image/jpeg';
+      }
+
+      const r = await pool.query(
+        'INSERT INTO media (filename, mime_type, data, byte_size, width, height) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, filename, mime_type, byte_size, width, height',
+        [req.file.originalname.slice(0, 200), mime, buffer, buffer.length, width, height]
+      );
+      res.json({ ok: true, media: r.rows[0], url: '/media/' + r.rows[0].id });
+    } catch (e) {
+      console.error('media upload:', e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  router.post('/api/media/:id/alt', requireAdmin, async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ error: 'Bad id' });
+    try {
+      await pool.query('UPDATE media SET alt_text = $1 WHERE id = $2', [String(req.body.alt_text || '').slice(0, 300), id]);
+      res.json({ ok: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  router.delete('/api/media/:id', requireAdmin, async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ error: 'Bad id' });
+    try {
+      await pool.query('DELETE FROM media WHERE id = $1', [id]);
+      res.json({ ok: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
   });
 
   app.use('/admin', router);
