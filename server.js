@@ -9,6 +9,24 @@ const SITE_URL = process.env.SITE_URL || 'https://mc-balans-site.onrender.com';
 
 app.use(express.json());
 
+// ---------- Redirects from the old WordPress site ----------
+const OLD_REDIRECTS = require('./redirects');
+
+function normalisePath(p) {
+  p = String(p || '');
+  if (p.length > 1) p = p.replace(/\/+$/, '');
+  return p.toLowerCase();
+}
+
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const key = normalisePath(req.path);
+  const dest = OLD_REDIRECTS[key];
+  if (dest) return res.redirect(301, dest);
+  next();
+});
+
+
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store, must-revalidate');
   next();
