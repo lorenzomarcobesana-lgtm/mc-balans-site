@@ -233,6 +233,28 @@
   </div>
 </div>
 
+<div id="mediaPickerModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:50px 20px;">
+  <div style="background:#fff;border-radius:8px;max-width:900px;width:100%;padding:24px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <h2 style="margin:0;font-size:18px;">Pick an image</h2>
+      <button type="button" id="mediaPickerClose" style="background:none;border:none;font-size:22px;cursor:pointer;">&times;</button>
+    </div>
+    <div class="row" style="margin-top:0;">
+      <select id="mediaPickerFilter" style="max-width:280px;">
+        <option value="">All categories</option>
+        <option value="uncategorised">Uncategorised</option>
+        <option value="homepage">Homepage</option>
+        <option value="conditions">Conditions</option>
+        <option value="treatments">Treatments</option>
+        <option value="clinic">Clinic</option>
+        <option value="practitioners">Practitioners</option>
+        <option value="resources">Resources</option>
+      </select>
+    </div>
+    <div id="mediaPickerGrid" class="media-grid" style="margin-top:16px;"></div>
+  </div>
+</div>
+
 <script>
 const HIDDEN = {
   conditions: new Set(['id','slug','created_at','updated_at','category_id','author_id','medical_reviewer_id','search_vector','ai_summary']),
@@ -1021,27 +1043,33 @@ function renderPickerGrid() {
   ).join('');
 }
 
-document.getElementById('mediaPickerFilter').addEventListener('change', renderPickerGrid);
+document.addEventListener('DOMContentLoaded', () => {
+  const f = document.getElementById('mediaPickerFilter');
+  if (f) f.addEventListener('change', renderPickerGrid);
 
-document.getElementById('mediaPickerGrid').addEventListener('click', (e) => {
-  const card = e.target.closest('[data-pick-id]');
-  if (!card || !pickerTarget) return;
-  const id = card.dataset.pickId;
-  pickerTarget.value = '/media/' + id;
-  document.getElementById('mediaPickerModal').classList.add('hidden');
-  pickerTarget = null;
-});
-
-document.getElementById('mediaPickerClose').addEventListener('click', () => {
-  document.getElementById('mediaPickerModal').classList.add('hidden');
-  pickerTarget = null;
-});
-
-document.getElementById('mediaPickerModal').addEventListener('click', (e) => {
-  if (e.target.id === 'mediaPickerModal') {
-    e.target.classList.add('hidden');
+  const g = document.getElementById('mediaPickerGrid');
+  if (g) g.addEventListener('click', (e) => {
+    const card = e.target.closest('[data-pick-id]');
+    if (!card || !pickerTarget) return;
+    const id = card.dataset.pickId;
+    pickerTarget.value = '/media/' + id;
+    document.getElementById('mediaPickerModal').classList.add('hidden');
     pickerTarget = null;
-  }
+  });
+
+  const c = document.getElementById('mediaPickerClose');
+  if (c) c.addEventListener('click', () => {
+    document.getElementById('mediaPickerModal').classList.add('hidden');
+    pickerTarget = null;
+  });
+
+  const m = document.getElementById('mediaPickerModal');
+  if (m) m.addEventListener('click', (e) => {
+    if (e.target.id === 'mediaPickerModal') {
+      e.target.classList.add('hidden');
+      pickerTarget = null;
+    }
+  });
 });
 
 // After renderForm, inject "Pick from library" buttons next to URL fields
@@ -1068,26 +1096,6 @@ renderForm = function(row) {
 
 loadTabs();
 </script>
-<div id="mediaPickerModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:50px 20px;">
-  <div style="background:#fff;border-radius:8px;max-width:900px;width:100%;padding:24px;max-height:85vh;overflow-y:auto;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <h2 style="margin:0;font-size:18px;">Pick an image</h2>
-      <button type="button" id="mediaPickerClose" style="background:none;border:none;font-size:22px;cursor:pointer;">&times;</button>
-    </div>
-    <div class="row" style="margin-top:0;">
-      <select id="mediaPickerFilter" style="max-width:280px;">
-        <option value="">All categories</option>
-        <option value="uncategorised">Uncategorised</option>
-        <option value="homepage">Homepage</option>
-        <option value="conditions">Conditions</option>
-        <option value="treatments">Treatments</option>
-        <option value="clinic">Clinic</option>
-        <option value="practitioners">Practitioners</option>
-        <option value="resources">Resources</option>
-      </select>
-    </div>
-    <div id="mediaPickerGrid" class="media-grid" style="margin-top:16px;"></div>
-  </div>
-</div>
+
 </body>
 </html>
