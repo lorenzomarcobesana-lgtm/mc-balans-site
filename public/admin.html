@@ -190,6 +190,21 @@
     <div id="media-grid" class="media-grid"></div>
   </div>
 
+  <div id="settingsPanel" class="hidden">
+    <h3 style="margin-top:0;font-size:16px;">Homepage hero image</h3>
+    <p style="font-size:14px;color:#666;margin-top:0;">Choose an image from the media library. Shows on the right side of the homepage hero. Leave blank to keep the current placeholder.</p>
+    <div class="row" style="margin-top:12px;">
+      <input type="text" id="setting-homepage-hero" placeholder="/media/1 or full URL" readonly style="flex:1;">
+      <button type="button" class="secondary media-pick-btn" data-for="setting-homepage-hero">Pick from library</button>
+      <button type="button" class="secondary" id="setting-homepage-hero-clear">Clear</button>
+    </div>
+    <div class="row">
+      <button type="button" class="primary" id="setting-homepage-hero-save">Save</button>
+      <span class="status" id="setting-homepage-hero-status"></span>
+    </div>
+    <div id="setting-homepage-hero-preview" style="margin-top:20px;"></div>
+  </div>
+
 </main>
 
 <div id="modal-backdrop" class="hidden">
@@ -269,6 +284,7 @@ const normalPanel = document.getElementById('normalPanel');
 const translationsPanel = document.getElementById('translationsPanel');
 const relationsPanel = document.getElementById('relationsPanel');
 const mediaPanel = document.getElementById('mediaPanel');
+const settingsPanel = document.getElementById('settingsPanel');
 const picker = document.getElementById('picker');
 const form = document.getElementById('form');
 const fieldsEl = document.getElementById('fields');
@@ -305,7 +321,8 @@ async function loadTabs() {
   tabsEl.innerHTML = tables.map(t => '<button data-tab="' + t.key + '">' + esc(t.label) + '</button>').join('')
     + '<button data-tab="__translations__">Translations</button>'
     + '<button data-tab="__relations__">Relations</button>'
-    + '<button data-tab="__media__">Media</button>';
+    + '<button data-tab="__media__">Media</button>'
+    + '<button data-tab="__settings__">Site Settings</button>';
   tabsEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => selectTab(b.dataset.tab)));
   selectTab(tables[0].key);
 }
@@ -334,6 +351,7 @@ async function selectTab(tableKey) {
     translationsPanel.classList.remove('hidden');
     relationsPanel.classList.add('hidden');
     mediaPanel.classList.add('hidden');
+    settingsPanel.classList.add('hidden');
     await loadTransPicker();
     return;
   }
@@ -342,6 +360,7 @@ async function selectTab(tableKey) {
     translationsPanel.classList.add('hidden');
     relationsPanel.classList.remove('hidden');
     mediaPanel.classList.add('hidden');
+    settingsPanel.classList.add('hidden');
     await loadRelationsPicker();
     return;
   }
@@ -350,13 +369,24 @@ async function selectTab(tableKey) {
     translationsPanel.classList.add('hidden');
     relationsPanel.classList.add('hidden');
     mediaPanel.classList.remove('hidden');
+    settingsPanel.classList.add('hidden');
     await loadMedia();
+    return;
+  }
+  if (tableKey === '__settings__') {
+    normalPanel.classList.add('hidden');
+    translationsPanel.classList.add('hidden');
+    relationsPanel.classList.add('hidden');
+    mediaPanel.classList.add('hidden');
+    settingsPanel.classList.remove('hidden');
+    await loadSettings();
     return;
   }
   normalPanel.classList.remove('hidden');
   translationsPanel.classList.add('hidden');
   relationsPanel.classList.add('hidden');
   mediaPanel.classList.add('hidden');
+  settingsPanel.classList.add('hidden');
   currentTable = tableKey;
   form.style.display = 'none';
   statusEl.textContent = '';
@@ -1096,6 +1126,45 @@ renderForm = function(row) {
     input.parentNode.insertBefore(btn, input.nextSibling);
   }
 };
+
+// ---------- Site Settings panel ----------
+async function loadSettings() {
+  const input = document.getElementById('setting-homepage-hero');
+  const preview = document.getElementById('setting-homepage-hero-preview');
+  const status = document.getElementById('setting-homepage-hero-status');
+  status.textContent = ''; status.className = 'status';
+  try {
+    const r = await fetch('/admin/api/site-settings');
+    if (!r.ok) { status.textContent = 'Failed to load'; status.className = 'status err'; return; }
+    const s = await r.json();
+    const v = s['homepage_hero_image_url'] || '';
+    input.value = v;
+    preview.innerHTML = v ? '<img src="' + esc(v) + '" alt="Homepage hero preview" style="max-width:320px;border-radius:6px;border:1px solid var(--line);">' : '';
+  } catch (e) { status.textContent = 'Error: ' + e.message; status.className = 'status err'; }
+}
+
+document.getElementById('setting-homepage-hero-save').addEventListener('click', async () => {
+  const input = document.getElementById('setting-homepage-hero');
+  const status = document.getElementById('setting-homepage-hero-status');
+  const preview = document.getElementById('setting-homepage-hero-preview');
+  status.textContent = 'Saving…'; status.className = 'status';
+  try {
+    const r = await fetch('/admin/api/site-settings/homepage_hero_image_url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value: input.value })
+    });
+    const out = await r.json();
+    if (!r.ok) throw new Error(out.error || 'Save failed');
+    status.textContent = 'Saved ✓'; status.className = 'status ok';
+    preview.innerHTML = input.value ? '<img src="' + esc(input.value) + '" alt="Homepage hero preview" style="max-width:320px;border-radius:6px;border:1px solid var(--line);">' : '';
+  } catch (e) { status.textContent = 'Error: ' + e.message; status.className = 'status err'; }
+});
+
+document.getElementById('setting-homepage-hero-clear').addEventListener('click', () => {
+  document.getElementById('setting-homepage-hero').value = '';
+  document.getElementById('setting-homepage-hero-preview').innerHTML = '';
+});
 
 loadTabs();
 </script>

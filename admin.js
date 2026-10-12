@@ -567,6 +567,30 @@ module.exports = function(app, pool) {
     } catch (e) { res.status(500).json({ error: e.message }); }
   });
 
+  pool.query('CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, value TEXT, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())').catch(e => console.error('site_settings init:', e));
+
+  router.get('/api/site-settings', requireAdmin, async (req, res) => {
+    try {
+      const r = await pool.query('SELECT key, value FROM site_settings');
+      const out = {};
+      for (const row of r.rows) out[row.key] = row.value;
+      res.json(out);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  router.post('/api/site-settings/:key', requireAdmin, async (req, res) => {
+    const key = String(req.params.key || '').slice(0, 100);
+    const value = String((req.body && req.body.value) || '').slice(0, 500);
+    if (!key) return res.status(400).json({ error: 'Missing key' });
+    try {
+      await pool.query(
+        'INSERT INTO site_settings (key, value, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()',
+        [key, value]
+      );
+      res.json({ ok: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
   app.use('/admin', router);
 };
 

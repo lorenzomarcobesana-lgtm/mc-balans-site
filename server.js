@@ -203,15 +203,22 @@ function renderTreatmentBody(t, conditions, combines, practitioners, pricing, fa
   return b;
 }
 
-function renderHomeBody(conditions, categories) {
+function renderHomeBody(conditions, categories, settings) {
   let b = '';
+  const heroImg = (settings && settings.homepage_hero_image_url) || '';
 
   // Hero
   b += '<section class="hero"><div class="wrap hero-grid"><div class="hero-copy">';
   b += '<h1>A comprehensive approach, from Dr. Lin.</h1>';
   b += '<p class="lede">A persistent complaint without a clear explanation can still have debilitating consequences. MC Balans\' approach assesses how your body\'s structure, function and regulation relate to your symptoms to address their root cause.</p>';
   b += '<a class="btn btn-primary" href="tel:+31703888111">Call to Book</a>';
-  b += '</div><div class="hero-portrait"><div class="portrait-frame" style="aspect-ratio:4/5;background:linear-gradient(155deg,#DCE3D9,#C7D2C1);border-radius:2px;"></div></div></div></section>';
+  b += '</div><div class="hero-portrait">';
+  if (heroImg) {
+    b += '<div class="portrait-frame" style="aspect-ratio:4/5;border-radius:2px;overflow:hidden;"><img src="' + esc(heroImg) + '" alt="MC Balans" style="width:100%;height:100%;object-fit:cover;display:block;"></div>';
+  } else {
+    b += '<div class="portrait-frame" style="aspect-ratio:4/5;background:linear-gradient(155deg,#DCE3D9,#C7D2C1);border-radius:2px;"></div>';
+  }
+  b += '</div></div></section>';
 
   // Four patient-path cards
   b += '<section class="section" style="padding-top:32px;padding-bottom:0;"><div class="wrap"><div class="path-grid">';
@@ -586,7 +593,10 @@ app.get('/', async (req, res) => {
       canonical: SITE_URL + '/',
       jsonld: { "@context": "https://schema.org", "@type": "MedicalClinic", "name": "MC Balans", "url": SITE_URL }
     });
-    res.send(renderPage(head, renderHomeBody(condR.rows, catR.rows)));
+    const settingsR = await pool.query("SELECT key, value FROM site_settings WHERE key = 'homepage_hero_image_url'").catch(() => ({ rows: [] }));
+    const settings = {};
+    for (const row of settingsR.rows) settings[row.key] = row.value;
+    res.send(renderPage(head, renderHomeBody(condR.rows, catR.rows, settings)));
   } catch (e) {
     console.error(e);
     res.send(renderPage(buildSeoHead({ title: 'MC Balans', description: 'MC Balans, The Hague.', canonical: SITE_URL + '/' }), ''));
