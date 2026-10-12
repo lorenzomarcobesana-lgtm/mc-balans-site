@@ -1144,6 +1144,13 @@ app.get('/media/:id', async (req, res) => {
   } catch (e) { console.error('media serve:', e); res.status(500).end(); }
 });
 
+app.get('/api/site-settings-public', async (req, res) => {
+  try {
+    const r = await pool.query("SELECT value FROM site_settings WHERE key = 'homepage_hero_image_url'");
+    res.json({ homepage_hero_image_url: r.rows[0] ? r.rows[0].value : '' });
+  } catch (e) { res.json({ homepage_hero_image_url: '' }); }
+});
+
 app.get('*', (req, res) => {
   res.send(renderPage(buildSeoHead({
     title: 'MC Balans', description: 'MC Balans — Western & Traditional Chinese Medicine, The Hague.',
