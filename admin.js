@@ -653,6 +653,118 @@ module.exports = function(app, pool) {
     res.json(out);
   });
 
+  router.get('/api/fk-options/:tableKey', requireAdmin, async (req, res) => {
+    const cfg = TABLES[req.params.tableKey];
+    if (!cfg || !cfg.foreignKeys) return res.json({});
+    try {
+      const out = {};
+      for (const [col, spec] of Object.entries(cfg.foreignKeys)) {
+        const r = await pool.query('SELECT ' + spec.keyColumn + ' AS k, ' + spec.labelColumn + ' AS l FROM ' + spec.table + ' ORDER BY ' + spec.keyColumn);
+        out[col] = r.rows.map(x => ({ key: x.k, label: x.l || x.k }));
+      }
+      res.json(out);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  router.get('/api/enum-values/:tableKey', requireAdmin, async (req, res) => {
+    const cfg = TABLES[req.params.tableKey];
+    if (!cfg) return res.status(400).json({ error: 'Unknown table' });
+    try {
+      const cols = await pool.query(
+        "SELECT column_name, udt_name FROM information_schema.columns WHERE table_name = $1 AND data_type = 'USER-DEFINED'",
+        [cfg.table]
+      );
+      const out = {};
+      for (const col of cols.rows) {
+        const vals = await pool.query(
+          "SELECT enumlabel FROM pg_enum WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = $1) ORDER BY enumsortorder",
+          [col.udt_name]
+        );
+        out[col.column_name] = vals.rows.map(v => v.enumlabel);
+      }
+      res.json(out);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  router.get('/api/columns/:tableKey', requireAdmin, async (req, res) => {
+    const cfg = TABLES[req.params.tableKey];
+    if (!cfg) return res.status(400).json({ error: 'Unknown table' });
+    try {
+      const r = await pool.query(
+        "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_name = $1 ORDER BY ordinal_position",
+        [cfg.table]
+      );
+      const cols = r.rows.filter(row => {
+        if (cfg.hideFromEdit && cfg.hideFromEdit.includes(row.column_name)) return false;
+        if (row.data_type === 'tsvector') return false;
+        if (row.column_default && /nextval|now\(\)/i.test(row.column_default)) return false;
+        if (row.column_name === 'created_at' || row.column_name === 'updated_at') return false;
+        return true;
+      });
+      res.json(cols);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+  });
+
+  router.post('/api/row/:tableKey/create', requireAdmin, async (req, res) => {
+    const cfg = TABLES[req.params.tableKey];
+    if (!cfg) return res.status(400).json({ error: 'Unknown table' });
+    if (!cfg.canCreate) return res.status(400).json({ error: 'Creating rows is not supported for this table' });
+    const body = req.body || {};
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const colr = await client.query(
+        "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_name = $1",
+        [cfg.table]
+      );
+      const cols = colr.rows.map(r => r.column_name);
+      const types = {};
+      for (const r of colr.rows) types[r.column_name] = r.data_type;
+
+      let newId = null;
+      if (cfg.idPrefix && cfg.idColumn && cols.includes(cfg.idColumn)) {
+        const q = "SELECT COALESCE(MAX(CAST(SUBSTRING(" + cfg.idColumn + " FROM " + (cfg.idPrefix.length + 1) + ") AS INTEGER)), 0) + 1 AS n FROM " + cfg.table + " WHERE " + cfg.idColumn + " ~ '^" + cfg.idPrefix.replace('-', '\\-') + "[0-9]+$'";
+        const nq = await client.query(q);
+        newId = cfg.idPrefix + String(nq.rows[0].n).padStart(4, '0');
+      }
+
+      const insertCols = [];
+      const insertVals = [];
+      const placeholders = [];
+      let p = 1;
+
+      if (newId) { insertCols.push(cfg.idColumn); placeholders.push('$' + (p++)); insertVals.push(newId); }
+
+      if (cols.includes('slug') && !body.slug && body.name) {
+        body.slug = String(body.name).toLowerCase().trim()
+          .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-{2,}/g, '-').replace(/^-+|-+$/g, '');
+      }
+
+      for (const [k, v] of Object.entries(body)) {
+        if (cfg.hideFromEdit && cfg.hideFromEdit.includes(k)) continue;
+        if (k === cfg.keyColumn && newId) continue;
+        if (!cols.includes(k)) continue;
+        if (types[k] === 'tsvector') continue;
+        insertCols.push(k);
+        placeholders.push('$' + (p++));
+        insertVals.push(v === '' ? null : v);
+      }
+
+      if (!insertCols.length) { await client.query('ROLLBACK'); return res.status(400).json({ error: 'No fields to insert' }); }
+
+      const insertSQL = 'INSERT INTO ' + cfg.table + ' (' + insertCols.map(c => '"' + c + '"').join(', ') + ') VALUES (' + placeholders.join(', ') + ') RETURNING *';
+      const r = await client.query(insertSQL, insertVals);
+      await client.query('COMMIT');
+      res.json({ ok: true, row: r.rows[0] });
+    } catch (e) {
+      await client.query('ROLLBACK');
+      console.error('create error:', e);
+      res.status(500).json({ error: e.message });
+    } finally {
+      client.release();
+    }
+  });
+
   app.use('/admin', router);
 };
 

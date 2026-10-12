@@ -654,19 +654,99 @@ async function loadTreatmentMeta() {
 }
 
 newBtn.addEventListener('click', async () => {
-  if (currentTable === 'treatments') {
-    await loadTreatmentMeta();
-    createTreatmentForm.reset();
-    treatmentModalStatus.textContent = ''; treatmentModalStatus.className = 'status';
-    treatmentBackdrop.classList.remove('hidden');
-    createTreatmentForm.querySelector('[name="name"]').focus();
-  } else if (currentTable === 'conditions') {
-    if (!meta) await loadMeta();
-    createForm.reset();
-    modalStatus.textContent = ''; modalStatus.className = 'status';
-    backdrop.classList.remove('hidden');
-    createForm.querySelector('[name="name"]').focus();
+  if (!currentTable) return;
+  await openGenericCreate(currentTable);
+});
+
+async function openGenericCreate(tableKey) {
+  const modal = document.getElementById('genericCreateModal');
+  const form = document.getElementById('genericCreateForm');
+  const title = document.getElementById('genericCreateTitle');
+  form.innerHTML = '<p style="color:#888;">Loading fields…</p>';
+  modal.classList.remove('hidden');
+
+  const m = (window._tableMeta && window._tableMeta[tableKey]) || {};
+  title.textContent = 'New ' + String(m.label || 'row').replace(/s$/, '').toLowerCase();
+
+  let cols, fkOpts, enumVals;
+  try {
+    cols = await (await fetch('/admin/api/columns/' + tableKey)).json();
+    fkOpts = (m.foreignKeys && m.foreignKeys.length) ? await (await fetch('/admin/api/fk-options/' + tableKey)).json() : {};
+    enumVals = await (await fetch('/admin/api/enum-values/' + tableKey)).json();
+  } catch (e) {
+    form.innerHTML = '<p style="color:#b00;">Failed to load fields: ' + esc(e.message) + '</p>';
+    return;
   }
+
+  form.innerHTML = '';
+  for (const col of cols) {
+    const k = col.column_name;
+    const label = document.createElement('label');
+    label.style.display = 'block';
+    label.style.marginTop = '16px';
+    label.innerHTML = '<strong style="display:block;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;color:#666;margin-bottom:6px;">' + esc(k.replace(/_/g, ' ')) + (col.is_nullable === 'NO' ? ' *' : '') + '</strong>';
+
+    let field;
+    if (fkOpts[k]) {
+      field = document.createElement('select');
+      field.innerHTML = '<option value="">— none —</option>' + fkOpts[k].map(o => '<option value="' + esc(o.key) + '">' + esc(o.key + (o.label && o.label !== o.key ? ' — ' + o.label : '')) + '</option>').join('');
+    } else if (enumVals[k]) {
+      field = document.createElement('select');
+      field.innerHTML = '<option value="">— none —</option>' + enumVals[k].map(v => '<option value="' + esc(v) + '">' + esc(v) + '</option>').join('');
+    } else if (col.data_type === 'boolean') {
+      field = document.createElement('select');
+      field.innerHTML = '<option value="true">true</option><option value="false">false</option>';
+    } else if (col.data_type === 'integer' || col.data_type === 'numeric') {
+      field = document.createElement('input'); field.type = 'number';
+    } else if (col.data_type === 'date' || col.data_type === 'timestamp with time zone') {
+      field = document.createElement('input'); field.type = 'date';
+    } else {
+      field = document.createElement('input'); field.type = 'text';
+    }
+    field.name = k;
+    field.style.cssText = 'width:100%;padding:10px;font-size:15px;border:1px solid #e0e0e0;border-radius:4px;background:#fff;font-family:inherit;';
+    label.appendChild(field);
+    form.appendChild(label);
+  }
+
+  const actions = document.createElement('div');
+  actions.className = 'row';
+  actions.style.marginTop = '28px';
+  actions.innerHTML = '<button type="submit" class="primary">Create</button><button type="button" class="secondary" id="genericCreateCancel">Cancel</button><span class="status" id="genericCreateStatus"></span>';
+  form.appendChild(actions);
+
+  form.querySelector('[name="name"]') && form.querySelector('[name="name"]').focus();
+
+  document.getElementById('genericCreateCancel').onclick = () => modal.classList.add('hidden');
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    const st = document.getElementById('genericCreateStatus');
+    st.textContent = 'Creating…'; st.className = 'status';
+    const body = {};
+    for (const el of form.querySelectorAll('input[name], select[name]')) body[el.name] = el.value;
+    try {
+      const r = await fetch('/admin/api/row/' + tableKey + '/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const out = await r.json();
+      if (!r.ok) throw new Error(out.error || 'Create failed');
+      modal.classList.add('hidden');
+      statusEl.textContent = 'Created ✓'; statusEl.className = 'status ok';
+      await selectTab(tableKey);
+    } catch (err) {
+      st.textContent = 'Error: ' + err.message; st.className = 'status err';
+    }
+  };
+}
+
+document.getElementById('genericCreateClose').addEventListener('click', () => {
+  document.getElementById('genericCreateModal').classList.add('hidden');
+});
+document.getElementById('genericCreateModal').addEventListener('click', (e) => {
+  if (e.target.id === 'genericCreateModal') e.target.classList.add('hidden');
 });
 
 document.getElementById('cancelTreatmentBtn').addEventListener('click', () => {
@@ -1225,6 +1305,17 @@ if (deleteBtn) {
 
 loadTabs();
 </script>
+
+<div id="genericCreateModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:50px 20px;">
+  <div style="background:#fff;border-radius:8px;max-width:560px;width:100%;padding:28px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <h2 id="genericCreateTitle" style="margin:0;font-size:18px;">New row</h2>
+      <button type="button" id="genericCreateClose" style="background:none;border:none;font-size:22px;cursor:pointer;">&times;</button>
+    </div>
+    <p class="hint" style="color:#666;font-size:13px;margin-top:0;">Fill in what you need. Empty fields will be saved as blank. You can edit any field afterwards.</p>
+    <form id="genericCreateForm"></form>
+  </div>
+</div>
 
 </body>
 </html>
